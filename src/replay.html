@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Pokemon Battle Simulation Replay</title>
+<style>
+    body { background: #222; color: #fff; font-family: sans-serif; }
+</style>
+</head><body>
+<h2 style="text-align: center;">Random Blind Search AI Battle</h2>
+<script type="text/plain" class="battle-log-data">|t:|1779477789
+|gametype|singles
+|player|p1|Player 1||
+|player|p2|Player 2||
+|teamsize|p1|6
+|teamsize|p2|6
+|gen|3
+|tier|[Gen 3] Random Battle
+|rule|Sleep Clause Mod: Limit one foe put to sleep
+|rule|Switch Priority Clause Mod: Faster Pokémon switch first
+|rule|Species Clause: Limit one of each Pokémon
+|rule|OHKO Clause: OHKO moves are banned
+|rule|Evasion Items Clause: Evasion items are banned
+|rule|Evasion Moves Clause: Evasion moves are banned
+|rule|Endless Battle Clause: Forcing endless battles is banned
+|rule|HP Percentage Mod: HP is shown in percentages
+|
+|t:|1779477789
+|start
+|switch|p1a: Heracross|Heracross, L77, M|100/100
+|switch|p2a: Altaria|Altaria, L85, F|100/100
+|turn|1
+|
+|t:|1779477842
+|switch|p2a: Dewgong|Dewgong, L87, M|100/100
+|move|p1a: Heracross|Rock Slide|p2a: Dewgong
+|-supereffective|p2a: Dewgong
+|-damage|p2a: Dewgong|65/100
+|
+|-heal|p2a: Dewgong|71/100|[from] item: Leftovers
+|upkeep
+|turn|2
+|
+|t:|1779477894
+|switch|p1a: Aggron|Aggron, L85, M|100/100
+|switch|p2a: Togetic|Togetic, L97, M|100/100
+|
+|upkeep
+|turn|3
+|
+|t:|1779477948
+|switch|p1a: Heracross|Heracross, L77, M|100/100
+|move|p2a: Togetic|Toxic|p1a: Heracross
+|-status|p1a: Heracross|tox
+|
+|-damage|p1a: Heracross|94/100 tox|[from] psn
+|upkeep
+|turn|4
+|
+|t:|1779477999
+|switch|p2a: Altaria|Altaria, L85, F|100/100
+|move|p1a: Heracross|Endure||[still]
+|-fail|p1a: Heracross
+|
+|-damage|p1a: Heracross|82/100 tox|[from] psn
+|upkeep
+|turn|5
+|
+|t:|1779478050
+|switch|p1a: Girafarig|Girafarig, L85, F|100/100
+|move|p2a: Altaria|Hidden Power|p1a: Girafarig
+|-damage|p1a: Girafarig|70/100
+|
+|-heal|p1a: Girafarig|76/100|[from] item: Leftovers
+|upkeep
+|turn|6
+|
+|t:|1779478099
+|switch|p2a: Hitmonchan|Hitmonchan, L87, M|100/100
+|move|p1a: Girafarig|Thunder Wave|p2a: Hitmonchan
+|-status|p2a: Hitmonchan|par
+|
+|-heal|p1a: Girafarig|82/100|[from] item: Leftovers
+|upkeep
+|turn|7
+|
+|t:|1779478149
+|switch|p1a: Aggron|Aggron, L85, M|100/100
+|move|p2a: Hitmonchan|Rock Slide|p1a: Aggron
+|-resisted|p1a: Aggron
+|-damage|p1a: Aggron|91/100
+|
+|upkeep
+|turn|8
+|
+|t:|1779478199
+|switch|p2a: Togetic|Togetic, L97, M|100/100
+|move|p1a: Aggron|Iron Tail|p2a: Togetic
+|-damage|p2a: Togetic|38/100
+|
+|-heal|p2a: Togetic|44/100|[from] item: Leftovers
+|upkeep
+|turn|9
+|
+|t:|1779478248
+|switch|p2a: Snorlax|Snorlax, L72, M|100/100
+|move|p1a: Aggron|Iron Tail|p2a: Snorlax
+|-damage|p2a: Snorlax|20/100
+|
+|upkeep
+|turn|10
+|
+|t:|1779478294
+|move|p1a: Aggron|Iron Tail|p2a: Snorlax
+|-damage|p2a: Snorlax|0 fnt
+|faint|p2a: Snorlax
+|
+|t:|1779478338
+|switch|p2a: Altaria|Altaria, L85, F|100/100
+|
+|upkeep
+|turn|11
+|
+|t:|1779478381
+|move|p2a: Altaria|Earthquake|p1a: Aggron
+|-supereffective|p1a: Aggron
+|-damage|p1a: Aggron|43/100
+|move|p1a: Aggron|Iron Tail|p2a: Altaria
+|-damage|p2a: Altaria|28/100
+|
+|-heal|p2a: Altaria|34/100|[from] item: Leftovers
+|upkeep
+|turn|12
+|
+|t:|1779478423
+|switch|p2a: Vileplume|Vileplume, L85, F|100/100
+|move|p1a: Aggron|Iron Tail|p2a: Vileplume
+|-damage|p2a: Vileplume|26/100
+|-unboost|p2a: Vileplume|def|1
+|
+|-heal|p2a: Vileplume|32/100|[from] item: Leftovers
+|upkeep
+|turn|13
+|
+|t:|1779478463
+|move|p1a: Aggron|Iron Tail|p2a: Vileplume
+|-damage|p2a: Vileplume|0 fnt
+|faint|p2a: Vileplume
+|
+|t:|1779478497
+|switch|p2a: Togetic|Togetic, L97, M|44/100
+|
+|-heal|p2a: Togetic|50/100|[from] item: Leftovers
+|upkeep
+|turn|14
+|
+|t:|1779478532
+|switch|p1a: Metagross|Metagross, L73|100/100
+|switch|p2a: Dewgong|Dewgong, L87, M|71/100
+|
+|-heal|p2a: Dewgong|77/100|[from] item: Leftovers
+|upkeep
+|turn|15
+|
+|t:|1779478567
+|switch|p1a: Heracross|Heracross, L77, M|82/100 tox
+|move|p2a: Dewgong|Ice Beam|p1a: Heracross
+|-damage|p1a: Heracross|45/100 tox
+|
+|-damage|p1a: Heracross|39/100 tox|[from] psn
+|-heal|p2a: Dewgong|83/100|[from] item: Leftovers
+|upkeep
+|turn|16
+|
+|t:|1779478603
+|switch|p2a: Altaria|Altaria, L85, F|34/100
+|move|p1a: Heracross|Rock Slide|p2a: Altaria
+|-supereffective|p2a: Altaria
+|-damage|p2a: Altaria|0 fnt
+|faint|p2a: Altaria
+|
+|t:|1779478631
+|switch|p2a: Hitmonchan|Hitmonchan, L87, M|100/100 par
+|
+|-damage|p1a: Heracross|27/100 tox|[from] psn
+|upkeep
+|turn|17
+|
+|t:|1779478656
+|move|p1a: Heracross|Endure|p1a: Heracross
+|-singleturn|p1a: Heracross|move: Endure
+|move|p2a: Hitmonchan|Rapid Spin|p1a: Heracross
+|-damage|p1a: Heracross|15/100 tox
+|
+|-enditem|p1a: Heracross|Salac Berry|[eat]
+|-boost|p1a: Heracross|spe|1|[from] item: Salac Berry
+|-damage|p1a: Heracross|0 fnt|[from] psn
+|faint|p1a: Heracross
+|upkeep
+|
+|t:|1779478681
+|switch|p1a: Politoed|Politoed, L84, M|100/100
+|turn|18
+|
+|t:|1779478706
+|move|p1a: Politoed|Toxic||[still]
+|-fail|p1a: Politoed
+|move|p2a: Hitmonchan|Rapid Spin|p1a: Politoed
+|-damage|p1a: Politoed|92/100
+|
+|-heal|p1a: Politoed|98/100|[from] item: Leftovers
+|upkeep
+|turn|19
+|
+|t:|1779478732
+|switch|p1a: Aggron|Aggron, L85, M|43/100
+|move|p2a: Hitmonchan|Rapid Spin|p1a: Aggron
+|-resisted|p1a: Aggron
+|-damage|p1a: Aggron|42/100
+|
+|upkeep
+|turn|20
+|
+|t:|1779478755
+|move|p1a: Aggron|Iron Tail|p2a: Hitmonchan
+|-damage|p2a: Hitmonchan|23/100 par
+|move|p2a: Hitmonchan|Rapid Spin|p1a: Aggron
+|-resisted|p1a: Aggron
+|-damage|p1a: Aggron|40/100
+|
+|upkeep
+|turn|21
+|
+|t:|1779478775
+|switch|p1a: Metagross|Metagross, L73|100/100
+|switch|p2a: Dewgong|Dewgong, L87, M|83/100
+|
+|-heal|p2a: Dewgong|89/100|[from] item: Leftovers
+|upkeep
+|turn|22
+|
+|t:|1779478798
+|switch|p1a: Politoed|Politoed, L84, M|98/100
+|move|p2a: Dewgong|Protect||[still]
+|-fail|p2a: Dewgong
+|
+|-heal|p2a: Dewgong|95/100|[from] item: Leftovers
+|-heal|p1a: Politoed|100/100|[from] item: Leftovers
+|upkeep
+|turn|23
+|
+|t:|1779478822
+|switch|p2a: Hitmonchan|Hitmonchan, L87, M|23/100 par
+|move|p1a: Politoed|Toxic||[still]
+|-fail|p1a: Politoed
+|
+|upkeep
+|turn|24
+|
+|t:|1779478845
+|switch|p1a: Metagross|Metagross, L73|100/100
+|switch|p2a: Dewgong|Dewgong, L87, M|95/100
+|
+|-heal|p2a: Dewgong|100/100|[from] item: Leftovers
+|upkeep
+|turn|25
+|
+|t:|1779478868
+|move|p2a: Dewgong|Protect|p2a: Dewgong
+|-singleturn|p2a: Dewgong|Protect
+|move|p1a: Metagross|Earthquake|p2a: Dewgong
+|-activate|p2a: Dewgong|Protect
+|
+|upkeep
+|turn|26
+|
+|t:|1779478892
+|switch|p2a: Hitmonchan|Hitmonchan, L87, M|23/100 par
+|move|p1a: Metagross|Explosion|p2a: Hitmonchan
+|-damage|p2a: Hitmonchan|0 fnt
+|faint|p1a: Metagross
+|faint|p2a: Hitmonchan
+|
+|t:|1779478916
+|switch|p2a: Dewgong|Dewgong, L87, M|100/100
+|switch|p1a: Aggron|Aggron, L85, M|40/100
+|
+|upkeep
+|turn|27
+|
+|t:|1779478935
+|move|p2a: Dewgong|Protect|p2a: Dewgong
+|-singleturn|p2a: Dewgong|Protect
+|move|p1a: Aggron|Earthquake|p2a: Dewgong
+|-activate|p2a: Dewgong|Protect
+|
+|upkeep
+|turn|28
+|
+|t:|1779478956
+|switch|p1a: Politoed|Politoed, L84, M|100/100
+|move|p2a: Dewgong|Ice Beam|p1a: Politoed
+|-resisted|p1a: Politoed
+|-damage|p1a: Politoed|87/100
+|-status|p1a: Politoed|frz
+|
+|-heal|p1a: Politoed|93/100 frz|[from] item: Leftovers
+|upkeep
+|turn|29
+|
+|t:|1779478982
+|switch|p2a: Togetic|Togetic, L97, M|50/100
+|switch|p1a: Girafarig|Girafarig, L85, F|82/100
+|
+|-heal|p1a: Girafarig|88/100|[from] item: Leftovers
+|-heal|p2a: Togetic|56/100|[from] item: Leftovers
+|upkeep
+|turn|30
+|
+|t:|1779479008
+|switch|p1a: Aggron|Aggron, L85, M|40/100
+|move|p2a: Togetic|Soft-Boiled|p2a: Togetic
+|-heal|p2a: Togetic|100/100
+|
+|upkeep
+|turn|31
+|
+|t:|1779479039
+|move|p1a: Aggron|Rock Slide|p2a: Togetic
+|-supereffective|p2a: Togetic
+|-damage|p2a: Togetic|11/100
+|cant|p2a: Togetic|flinch
+|
+|-heal|p2a: Togetic|17/100|[from] item: Leftovers
+|upkeep
+|turn|32
+|
+|t:|1779479060
+|switch|p1a: Girafarig|Girafarig, L85, F|88/100
+|move|p2a: Togetic|Seismic Toss|p1a: Girafarig
+|-damage|p1a: Girafarig|51/100
+|
+|-heal|p1a: Girafarig|57/100|[from] item: Leftovers
+|-heal|p2a: Togetic|23/100|[from] item: Leftovers
+|upkeep
+|turn|33
+|
+|t:|1779479081
+|move|p1a: Girafarig|Return|p2a: Togetic
+|-damage|p2a: Togetic|0 fnt
+|faint|p2a: Togetic
+|
+|t:|1779479091
+|switch|p2a: Dewgong|Dewgong, L87, M|100/100
+|
+|-heal|p1a: Girafarig|63/100|[from] item: Leftovers
+|upkeep
+|turn|34
+|
+|t:|1779479102
+|move|p2a: Dewgong|Protect|p2a: Dewgong
+|-singleturn|p2a: Dewgong|Protect
+|move|p1a: Girafarig|Thunderbolt|p2a: Dewgong
+|-activate|p2a: Dewgong|Protect
+|
+|-heal|p1a: Girafarig|69/100|[from] item: Leftovers
+|upkeep
+|turn|35
+|
+|t:|1779479115
+|switch|p1a: Politoed|Politoed, L84, M|93/100 frz
+|move|p2a: Dewgong|Protect||[still]
+|-fail|p2a: Dewgong
+|
+|-heal|p1a: Politoed|99/100 frz|[from] item: Leftovers
+|upkeep
+|turn|36
+|
+|t:|1779479130
+|switch|p1a: Girafarig|Girafarig, L85, F|69/100
+|move|p2a: Dewgong|Ice Beam|p1a: Girafarig
+|-crit|p1a: Girafarig
+|-damage|p1a: Girafarig|0 fnt
+|faint|p1a: Girafarig
+|
+|t:|1779479139
+|switch|p1a: Politoed|Politoed, L84, M|99/100 frz
+|
+|-heal|p1a: Politoed|100/100 frz|[from] item: Leftovers
+|upkeep
+|turn|37
+|
+|t:|1779479149
+|switch|p1a: Aggron|Aggron, L85, M|40/100
+|move|p2a: Dewgong|Toxic|p1a: Aggron
+|-immune|p1a: Aggron
+|
+|upkeep
+|turn|38
+|
+|t:|1779479157
+|switch|p1a: Politoed|Politoed, L84, M|100/100 frz
+|move|p2a: Dewgong|Ice Beam|p1a: Politoed
+|-resisted|p1a: Politoed
+|-damage|p1a: Politoed|87/100 frz
+|
+|-heal|p1a: Politoed|94/100 frz|[from] item: Leftovers
+|upkeep
+|turn|39
+|
+|t:|1779479167
+|move|p2a: Dewgong|Protect|p2a: Dewgong
+|-singleturn|p2a: Dewgong|Protect
+|cant|p1a: Politoed|frz
+|
+|-heal|p1a: Politoed|99/100 frz|[from] item: Leftovers
+|upkeep
+|turn|40
+|
+|t:|1779479176
+|-curestatus|p1a: Politoed|frz|[msg]
+|move|p1a: Politoed|Protect|p1a: Politoed
+|-singleturn|p1a: Politoed|Protect
+|move|p2a: Dewgong|Ice Beam|p1a: Politoed
+|-activate|p1a: Politoed|Protect
+|
+|-heal|p1a: Politoed|100/100|[from] item: Leftovers
+|upkeep
+|turn|41
+|
+|t:|1779479183
+|move|p2a: Dewgong|Ice Beam|p1a: Politoed
+|-resisted|p1a: Politoed
+|-damage|p1a: Politoed|86/100
+|move|p1a: Politoed|Ice Beam|p2a: Dewgong
+|-resisted|p2a: Dewgong
+|-damage|p2a: Dewgong|98/100
+|
+|-heal|p2a: Dewgong|100/100|[from] item: Leftovers
+|-heal|p1a: Politoed|93/100|[from] item: Leftovers
+|upkeep
+|turn|42
+|
+|t:|1779479191
+|switch|p1a: Hitmonchan|Hitmonchan, L87, M|100/100
+|move|p2a: Dewgong|Toxic|p1a: Hitmonchan
+|-status|p1a: Hitmonchan|tox
+|
+|-damage|p1a: Hitmonchan|94/100 tox|[from] psn
+|upkeep
+|turn|43
+|
+|t:|1779479197
+|move|p2a: Dewgong|Protect|p2a: Dewgong
+|-singleturn|p2a: Dewgong|Protect
+|move|p1a: Hitmonchan|Sky Uppercut|p2a: Dewgong
+|-activate|p2a: Dewgong|Protect
+|
+|-heal|p1a: Hitmonchan|100/100 tox|[from] item: Leftovers
+|-damage|p1a: Hitmonchan|88/100 tox|[from] psn
+|upkeep
+|turn|44
+|
+|t:|1779479203
+|move|p1a: Hitmonchan|Toxic|p2a: Dewgong
+|-status|p2a: Dewgong|tox
+|move|p2a: Dewgong|Surf|p1a: Hitmonchan
+|-damage|p1a: Hitmonchan|58/100 tox
+|
+|-heal|p1a: Hitmonchan|64/100 tox|[from] item: Leftovers
+|-damage|p1a: Hitmonchan|46/100 tox|[from] psn
+|-damage|p2a: Dewgong|94/100 tox|[from] psn
+|upkeep
+|turn|45
+|
+|t:|1779479205
+|move|p1a: Hitmonchan|Sky Uppercut|p2a: Dewgong
+|-supereffective|p2a: Dewgong
+|-damage|p2a: Dewgong|17/100 tox
+|move|p2a: Dewgong|Surf|p1a: Hitmonchan
+|-damage|p1a: Hitmonchan|18/100 tox
+|
+|-heal|p1a: Hitmonchan|24/100 tox|[from] item: Leftovers
+|-damage|p1a: Hitmonchan|0 fnt|[from] psn
+|faint|p1a: Hitmonchan
+|-heal|p2a: Dewgong|23/100 tox|[from] item: Leftovers
+|-damage|p2a: Dewgong|11/100 tox|[from] psn
+|upkeep
+|
+|t:|1779479205
+|switch|p1a: Politoed|Politoed, L84, M|93/100
+|turn|46
+|
+|t:|1779479205
+|switch|p1a: Aggron|Aggron, L85, M|40/100
+|move|p2a: Dewgong|Protect||[still]
+|-fail|p2a: Dewgong
+|
+|-heal|p2a: Dewgong|17/100 tox|[from] item: Leftovers
+|-damage|p2a: Dewgong|0 fnt|[from] psn
+|faint|p2a: Dewgong
+|
+|win|Player 1</script>
+<script src="https://play.pokemonshowdown.com/js/replay-embed.js"></script>
+</body></html>

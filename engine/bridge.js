@@ -32,6 +32,7 @@ rl.on('line', (line) => {
                 type: "success", 
                 state: battle.toJSON(),
                 request: battle.p1.activeRequest,
+                p2_request: battle.p2.activeRequest,
                 winner: battle.winner,
                 log: extractChannelMessages(battle.log.join('\n'), [0])[0]
             };
@@ -53,6 +54,7 @@ rl.on('line', (line) => {
                 type: "success", 
                 state: battle.toJSON(),
                 request: battle.p1.activeRequest,
+                p2_request: battle.p2.activeRequest,
                 winner: battle.winner,
                 log: extractChannelMessages(battle.log.join('\n'), [0])[0]
             };

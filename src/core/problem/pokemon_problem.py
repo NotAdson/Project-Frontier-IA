@@ -1,13 +1,15 @@
 import json
 import os
-from aima_problem import Problem
-from showdown_client import ShowdownClient
+from core.problem.aima_problem import Problem
+from core.client.showdown_client import ShowdownClient
 
 class PokemonState:
-    def __init__(self, state_dict, request_dict=None, log=None):
+    def __init__(self, state_dict, request_dict=None, p2_request_dict=None, log=None, winner=None):
         self.state_dict = state_dict
         self.request_dict = request_dict
+        self.p2_request_dict = p2_request_dict
         self.log = log or []
+        self.winner = winner
         
     def __eq__(self, other):
         # Using string comparison for simplicity, though feature extraction is better for large scale search.
@@ -20,13 +22,13 @@ class PokemonProblem(Problem):
     def __init__(self, client: ShowdownClient, formatid='gen3randombattle'):
         self.client = client
         resp = self.client.init_battle(formatid=formatid)
-        initial_state = PokemonState(resp['state'], resp.get('request'), resp.get('log'))
+        initial_state = PokemonState(resp['state'], resp.get('request'), resp.get('p2_request'), resp.get('log'), resp.get('winner'))
         super().__init__(initial_state)
 
-    def actions(self, state: PokemonState):
-        """ Returns valid actions from the given state for Player 1. """
+    def actions(self, state: PokemonState, player="p1"):
+        """ Returns valid actions from the given state for the specified player. """
         actions = []
-        request = state.request_dict
+        request = state.request_dict if player == "p1" else state.p2_request_dict
         
         if not request: return ["pass"]
         
@@ -58,24 +60,18 @@ class PokemonProblem(Problem):
             
         return actions
 
-    def result(self, state: PokemonState, action: str):
-        """ Returns the next state after executing the action. """
-        resp = self.client.get_result(state.state_dict, p1_action=action)
-        return PokemonState(resp['state'], resp.get('request'), resp.get('log'))
+    def result(self, state: PokemonState, p1_action: str, p2_action: str = None):
+        """ Returns the next state after executing the actions. """
+        resp = self.client.get_result(state.state_dict, p1_action=p1_action, p2_action=p2_action)
+        return PokemonState(resp['state'], resp.get('request'), resp.get('p2_request'), resp.get('log'), resp.get('winner'))
+
+    def is_terminal(self, state: PokemonState):
+        """ Returns True if the match has ended. """
+        return state.winner is not None
 
     def is_goal(self, state: PokemonState):
         """ Returns True if Player 1 won the match. """
-        # Check if Player 2 has any alive pokemon
-        p2_side = state.state_dict.get('sides', [{}, {}])[1]
-        
-        all_fainted = True
-        for p in p2_side.get('pokemon', []):
-            # 'hp' is 0 if fainted, or condition is '0 fnt'
-            if p.get('hp', 0) > 0:
-                all_fainted = False
-                break
-        
-        return all_fainted
+        return state.winner == 'Player 1'
 
 if __name__ == "__main__":
     # Simple Breadth First Search simulation wrapper test

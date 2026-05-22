@@ -1,8 +1,9 @@
 import os
 import html
-from pokemon_problem import PokemonProblem
-from showdown_client import ShowdownClient
-from search_algorithms import random_blind_search
+from core.problem.pokemon_problem import PokemonProblem
+from core.client.showdown_client import ShowdownClient
+from agents.mcts.mcts_agent import MCTSAgent
+from agents.random.random_agent import RandomAgent
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html><head>
@@ -30,25 +31,37 @@ def generate_replay_html(full_log, filename="replay.html"):
     print(f"Replay saved to {filename}. Open this file in your browser!")
 
 if __name__ == "__main__":
-    engine_path = os.path.abspath("../battle_engine")
+    engine_path = os.path.abspath("../engine")
     client = ShowdownClient(engine_path)
     
     try:
         print("Initializing Battle Simulator...")
         problem = PokemonProblem(client, formatid="gen3randombattle")
         
-        print("Running Random Blind Search Simulation...")
-        final_node = random_blind_search(problem, max_depth=1000)
+        print("Running Monte Carlo Tree Search (MCTS) Simulation...")
+        state = problem.initial
+        turn = 1
         
-        print(f"Simulation ended at depth {final_node.depth}.")
-        if problem.is_goal(final_node.state):
+        # Instantiate our multi-agent framework
+        p1_agent = MCTSAgent(problem, iterations=240, max_rollout_depth=120)
+        p2_agent = MCTSAgent(problem, iterations=80, max_rollout_depth=40)
+        
+        while not problem.is_terminal(state):
+            print(f"\n--- Turn {turn} ---")
+            p1_action = p1_agent.get_action(state, player="p1")
+            p2_action = p2_agent.get_action(state, player="p2")
+            state = problem.result(state, p1_action=p1_action, p2_action=p2_action)
+            turn += 1
+            
+        print(f"\nSimulation ended at turn {turn-1}.")
+        if problem.is_goal(state):
             print("Player 1 won the match!")
         else:
             print("Match ended or Player 1 lost.")
             
         # Extract full battle log from the final state
         # The battle engine returns the complete log history at each step
-        full_log = final_node.state.log if final_node.state.log else []
+        full_log = state.log if state.log else []
                 
         # Generate the replay
         replay_filename = "replay.html"
