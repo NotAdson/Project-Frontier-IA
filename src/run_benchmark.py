@@ -4,6 +4,7 @@ from benchmarks.round_robin import RoundRobinBenchmark
 from benchmarks.tournament import TournamentBenchmark
 from agents.random.random_agent import RandomAgent
 from agents.mcts.mcts_agent import MCTSAgent
+from agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 
 if __name__ == "__main__":
     print("Initializing Showdown Engine for Benchmarking...")
@@ -14,10 +15,9 @@ if __name__ == "__main__":
         # Define our agents using factory lambdas. 
         # This ensures every game creates a fresh agent connected to that game's specific Problem instance.
         agents = {
-            "MCTS (Heavy)": lambda prob: MCTSAgent(prob, iterations=50, max_rollout_depth=20),
-            "MCTS (Light)": lambda prob: MCTSAgent(prob, iterations=10, max_rollout_depth=10),
-            "Random Agent 1": lambda prob: RandomAgent(prob),
-            "Random Agent 2": lambda prob: RandomAgent(prob)
+            "MCTS (Cheater)": lambda prob: MCTSAgent(prob, iterations=50, max_rollout_depth=20),
+            "MCTS (Blind)": lambda prob: BlindMCTSAgent(prob, iterations=50, max_rollout_depth=20),
+            "Random Agent": lambda prob: RandomAgent(prob)
         }
         
         # Run a Bracket Tournament!
