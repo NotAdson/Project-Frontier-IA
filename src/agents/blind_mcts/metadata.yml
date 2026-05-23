@@ -1,0 +1,7 @@
+name: "Blind Monte Carlo Tree Search"
+description: "An honest implementation of MCTS that strictly respects imperfect information bounds. It does not peek at the opponent's valid moves, and instead passes empty actions to the Engine's default fallback logic during simulations."
+version: "1.0.0"
+author: "AI"
+dependencies:
+  - "math"
+  - "random"
