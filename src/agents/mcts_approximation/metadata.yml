@@ -1,0 +1,5 @@
+name: "MCTS Approximation"
+variant: "Neural Network Value"
+cheat: False
+author: "Adson"
+description: "An MCTS agent that replaces random rollouts with a TensorFlow Neural Network to approximate the win probability of a state."

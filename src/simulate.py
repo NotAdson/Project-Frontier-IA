@@ -43,8 +43,9 @@ if __name__ == "__main__":
         turn = 1
         
         # Instantiate our multi-agent framework
-        p1_agent = MCTSAgent(problem, iterations=240, max_rollout_depth=120)
-        p2_agent = MCTSAgent(problem, iterations=80, max_rollout_depth=40)
+        from agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
+        p1_agent = MCTSApproximationAgent(problem, iterations=80)
+        p2_agent = MCTSAgent(problem, iterations=50, max_rollout_depth=20)
         
         while not problem.is_terminal(state):
             print(f"\n--- Turn {turn} ---")

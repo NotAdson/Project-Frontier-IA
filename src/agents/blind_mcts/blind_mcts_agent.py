@@ -33,7 +33,7 @@ class BlindMCTSAgent(Agent):
         self.iterations = iterations
         self.max_rollout_depth = max_rollout_depth
 
-    def get_action(self, state, player="p1") -> str:
+    def get_action(self, state, player="p1", return_probs=False):
         root = MCTSNode(state=state)
         root.untried_actions = self.problem.actions(root.state, player)
         
@@ -91,8 +91,22 @@ class BlindMCTSAgent(Agent):
                 
         if not root.children:
             actions = self.problem.actions(state, player)
-            return random.choice(actions) if actions else "pass"
+            best_action = random.choice(actions) if actions else "pass"
+            if return_probs:
+                return best_action, {best_action: 1.0}
+            return best_action
             
         best_node = max(root.children, key=lambda c: c.visits)
+        
+        if return_probs:
+            total_visits = sum(c.visits for c in root.children)
+            # If total_visits is 0 (which shouldn't happen with valid iterations), fallback to uniform
+            if total_visits == 0:
+                prob = 1.0 / len(root.children)
+                action_probs = {c.action: prob for c in root.children}
+            else:
+                action_probs = {c.action: c.visits / total_visits for c in root.children}
+            return best_node.action, action_probs
+            
         # print(f"  [BlindMCTS {player}] Evaluated {self.iterations} rollouts. Selected '{best_node.action}' (Visits: {best_node.visits}/{self.iterations}, Value: {best_node.value/best_node.visits:.2f})")
         return best_node.action
