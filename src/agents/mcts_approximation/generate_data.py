@@ -8,6 +8,8 @@ from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
 from agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 from agents.mcts_approximation.state_encoder import encode_state
+from tqdm import tqdm
+
 
 def run_simulation(args):
     """
@@ -52,10 +54,9 @@ def run_simulation(args):
     finally:
         client.close()
 
-def generate_dataset(num_games=10000, processes=None, output_dir="data/games"):
+def generate_dataset(num_games=1000, processes=None, output_dir="data/games"):
     if processes is None:
-        # Use all available CPUs for cloud environments (Colab/Kaggle)
-        processes = max(1, multiprocessing.cpu_count())
+        processes = max(1, multiprocessing.cpu_count() - 2)
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -86,7 +87,8 @@ def generate_dataset(num_games=10000, processes=None, output_dir="data/games"):
     # Use imap_unordered to process and save games AS SOON as they finish.
     # This ensures no data is lost if the cloud instance times out.
     with multiprocessing.Pool(processes) as pool:
-        for res in pool.imap_unordered(run_simulation, args):
+        pbar = tqdm(pool.imap_unordered(run_simulation, args), total=remaining_games, desc="Generating games")
+        for res in pbar:
             if res is None:
                 continue
                 
@@ -115,9 +117,7 @@ def generate_dataset(num_games=10000, processes=None, output_dir="data/games"):
                 json.dump(game_data, f)
                 
             saved_count += 1
-            if saved_count % 10 == 0 or saved_count == remaining_games:
-                print(f"Progress: Generated {existing_files + saved_count}/{num_games} total games...")
-                
+            
     print(f"Successfully generated and saved {saved_count} new games to {output_dir}")
 
 if __name__ == "__main__":

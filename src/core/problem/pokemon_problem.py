@@ -65,6 +65,9 @@ class PokemonProblem(Problem):
         resp = self.client.get_result(state.state_dict, p1_action=p1_action, p2_action=p2_action)
         return PokemonState(resp['state'], resp.get('request'), resp.get('p2_request'), resp.get('log'), resp.get('winner'))
 
+    def rollout(self, state: PokemonState, player: str, max_depth: int):
+        return self.client.rollout(state.state_dict, player, max_depth)
+
     def is_terminal(self, state: PokemonState):
         """ Returns True if the match has ended. """
         return state.winner is not None

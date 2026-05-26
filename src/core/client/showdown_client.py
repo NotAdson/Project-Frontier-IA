@@ -63,6 +63,20 @@ class ShowdownClient:
             raise Exception(f"Error executing action: {resp.get('error')}\nStack: {resp.get('stack')}")
         return resp
 
+    def rollout(self, state, player, max_depth):
+        req = {
+            "type": "rollout",
+            "state": state,
+            "player": player,
+            "max_depth": max_depth
+        }
+        
+        self._send_request(req)
+        resp = self._read_response()
+        if resp.get('type') == 'error':
+            raise Exception(f"Error executing rollout: {resp.get('error')}\nStack: {resp.get('stack')}")
+        return resp.get('reward')
+
     def close(self):
         if self.process:
             self.process.stdin.close()

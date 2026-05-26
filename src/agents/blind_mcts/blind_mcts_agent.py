@@ -63,26 +63,29 @@ class BlindMCTSAgent(Agent):
                 node = child
                 
             # 3. Simulation (Rollout)
-            current_state = node.state
-            depth = 0
-            while not self.problem.is_terminal(current_state) and depth < self.max_rollout_depth:
-                p_actions = self.problem.actions(current_state, player)
-                p_act = random.choice(p_actions) if p_actions else "pass"
-                
-                # BLIND MCTS: Again, we pass None for the opponent.
-                if player == "p1":
-                    current_state = self.problem.result(current_state, p1_action=p_act, p2_action=None)
-                else:
-                    current_state = self.problem.result(current_state, p1_action=None, p2_action=p_act)
-                    
-                depth += 1
-                
-            # 4. Backpropagation
-            if self.problem.is_terminal(current_state):
-                p1_won = self.problem.is_goal(current_state)
-                reward = 1.0 if (p1_won and player == "p1") or (not p1_won and player == "p2") else 0.0
+            if hasattr(self.problem, 'rollout'):
+                reward = self.problem.rollout(node.state, player, self.max_rollout_depth)
             else:
-                reward = 0.5
+                current_state = node.state
+                depth = 0
+                while not self.problem.is_terminal(current_state) and depth < self.max_rollout_depth:
+                    p_actions = self.problem.actions(current_state, player)
+                    p_act = random.choice(p_actions) if p_actions else "pass"
+                    
+                    # BLIND MCTS: Again, we pass None for the opponent.
+                    if player == "p1":
+                        current_state = self.problem.result(current_state, p1_action=p_act, p2_action=None)
+                    else:
+                        current_state = self.problem.result(current_state, p1_action=None, p2_action=p_act)
+                        
+                    depth += 1
+                    
+                # 4. Backpropagation
+                if self.problem.is_terminal(current_state):
+                    p1_won = self.problem.is_goal(current_state)
+                    reward = 1.0 if (p1_won and player == "p1") or (not p1_won and player == "p2") else 0.0
+                else:
+                    reward = 0.5
                 
             while node is not None:
                 node.visits += 1
