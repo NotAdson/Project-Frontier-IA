@@ -436,3 +436,11 @@ OFF_BENCH_MOVES  = OFF_ABILITIES    + NUM_ABILITY_INDICES           # [181:205]
 OFF_ACTIVE_MOVES = OFF_BENCH_MOVES  + NUM_BENCH_MOVE_INDICES        # [205:209]
 OFF_OPP_SPECIES  = OFF_ACTIVE_MOVES + NUM_ACTIVE_MOVE_INDICES       # [209:215]
 OFF_OPP_MOVES    = OFF_OPP_SPECIES  + NUM_OPP_SPECIES_INDICES       # [215:239]
+
+# Define fixed action space for Policy Network mapping
+ACTION_SPACE = [
+    "move 1", "move 2", "move 3", "move 4",
+    "switch 1", "switch 2", "switch 3", "switch 4", "switch 5", "switch 6",
+    "pass"
+]
+

@@ -1,9 +1,9 @@
 """
-Trains the Neural Network value function for MCTSApproximationAgent.
+Trains the Neural Network value and policy functions for MCTSApproximationAgent.
 
 The model uses a multi-input Functional API (8 inputs):
   Own side:
-    - dense_features    : 145 continuous features
+    - dense_features    : 163 continuous features
     - species_indices   : 6 integers   → Embedding(num_species, 16)
     - item_indices      : 6 integers   → Embedding(num_items,    8)
     - ability_indices   : 6 integers   → Embedding(num_abilities, 8)
@@ -13,7 +13,9 @@ The model uses a multi-input Functional API (8 inputs):
     - opp_species_indices: 6 integers  → Embedding(num_species, 16)
     - opp_move_indices   : 24 integers → Embedding(num_moves,   16)
 
-Output: sigmoid scalar in [0, 1] representing P(player wins from this state).
+Outputs:
+  - value: sigmoid scalar in [0, 1] representing P(player wins from this state).
+  - policy: softmax vector of size 11 representing P(action | state).
 """
 import os
 import json
@@ -33,6 +35,7 @@ from agents.mcts_approximation.state_encoder import (
     OFF_SPECIES, OFF_ITEMS, OFF_ABILITIES, OFF_BENCH_MOVES, OFF_ACTIVE_MOVES,
     OFF_OPP_SPECIES, OFF_OPP_MOVES,
     NUM_SPECIES_INDICES, NUM_ITEM_INDICES, NUM_ABILITY_INDICES, NUM_ACTIVE_MOVE_INDICES,
+    ACTION_SPACE,
 )
 
 
@@ -41,14 +44,14 @@ from agents.mcts_approximation.state_encoder import (
 def _split_features(X: np.ndarray):
     """
     Splits the flat feature array into the 8 model inputs.
-    Embedding index layout (after the 145 dense features):
-        [145:151] species           (6)
-        [151:157] items             (6)
-        [157:163] abilities         (6)
-        [163:187] bench_moves       (6 × 4 = 24)
-        [187:191] active_moves      (4)
-        [191:197] opp_species       (6, 0 if not revealed)
-        [197:221] opp_used_moves    (6 × 4 = 24, 0 if not yet seen)
+    Embedding index layout (after the 163 dense features):
+        [163:169] species           (6)
+        [169:175] items             (6)
+        [175:181] abilities         (6)
+        [181:205] bench_moves       (6 × 4 = 24)
+        [205:209] active_moves      (4)
+        [209:215] opp_species       (6, 0 if not revealed)
+        [215:239] opp_used_moves    (6 × 4 = 24, 0 if not yet seen)
     """
     n = NUM_DENSE_FEATURES
     X_dense        = X[:, :n].astype(np.float32)
@@ -63,13 +66,25 @@ def _split_features(X: np.ndarray):
 
 
 def load_data(data_dir: str = "data/games"):
-    X, y = [], []
+    X, y_value, y_policy = [], [], []
     for f in Path(data_dir).glob("*.json"):
         game_data = json.loads(f.read_text())
         for step in game_data:
             X.append(step["features"])
-            y.append(step["value"])
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
+            y_value.append(step["value"])
+            
+            # Extract policy distribution as a fixed-size vector
+            policy_dict = step.get("policy", {})
+            policy_array = [policy_dict.get(action, 0.0) for action in ACTION_SPACE]
+            s = sum(policy_array)
+            if s > 0:
+                policy_array = [p / s for p in policy_array]
+            else:
+                policy_array = [1.0 / len(ACTION_SPACE)] * len(ACTION_SPACE)
+                
+            y_policy.append(policy_array)
+            
+    return np.array(X, dtype=np.float32), np.array(y_value, dtype=np.float32), np.array(y_policy, dtype=np.float32)
 
 
 def build_model(num_dense: int, num_moves: int, num_species: int,
@@ -116,20 +131,30 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     x = tf.keras.layers.Dropout(0.2)(x)
     x = tf.keras.layers.Dense(128, activation="relu")(x)
     x = tf.keras.layers.Dense(64,  activation="relu")(x)
-    output = tf.keras.layers.Dense(1, activation="sigmoid")(x)
+    
+    # Value Head (Probability of winning)
+    out_value = tf.keras.layers.Dense(1, activation="sigmoid", name="value")(x)
+    
+    # Policy Head (Probability distribution over actions)
+    out_policy = tf.keras.layers.Dense(len(ACTION_SPACE), activation="softmax", name="policy")(x)
 
     model = tf.keras.models.Model(
         inputs=[inp_dense, inp_species, inp_items, inp_abilities,
                 inp_bench_moves, inp_moves, inp_opp_species, inp_opp_moves],
-        outputs=output,
+        outputs=[out_value, out_policy],
     )
-    model.compile(optimizer="adam", loss="mse", metrics=["mae"])
+    model.compile(
+        optimizer="adam", 
+        loss={"value": "mse", "policy": "categorical_crossentropy"},
+        loss_weights={"value": 1.0, "policy": 1.0},
+        metrics={"value": "mae", "policy": "accuracy"}
+    )
     return model
 
 
 def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.keras"):
     print(f"Loading data from {data_dir}...")
-    X, y = load_data(data_dir)
+    X, y_value, y_policy = load_data(data_dir)
 
     if len(X) == 0:
         print("No data found. Please run generate_data.py first.")
@@ -158,7 +183,15 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
         f"Abilities vocab: {num_abilities}  |  Moves vocab: {num_moves}"
     )
 
-    model = build_model(X_dense.shape[1], num_moves, num_species, num_items, num_abilities)
+    if os.path.exists(model_save_path):
+        print(f"Loading existing model from {model_save_path} for fine-tuning...")
+        model = tf.keras.models.load_model(model_save_path)
+        # Optional: reduce learning rate for fine-tuning if desired
+        # tf.keras.backend.set_value(model.optimizer.learning_rate, 0.0001)
+    else:
+        print("Building new model from scratch...")
+        model = build_model(X_dense.shape[1], num_moves, num_species, num_items, num_abilities)
+        
     model.summary()
 
     model.fit(
@@ -172,7 +205,7 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
             "opp_species_indices": X_opp_species,
             "opp_move_indices":   X_opp_moves,
         },
-        y,
+        {"value": y_value, "policy": y_policy},
         epochs=15,
         batch_size=64,
         validation_split=0.2,

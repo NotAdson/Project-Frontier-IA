@@ -6,7 +6,7 @@ import multiprocessing
 import traceback
 from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
-from agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
+from agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
 from agents.mcts_approximation.state_encoder import encode_state
 from tqdm import tqdm
 
@@ -23,8 +23,10 @@ def run_simulation(args):
     try:
         problem = PokemonProblem(client, formatid=formatid)
         
-        agent_p1 = BlindMCTSAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth)
-        agent_p2 = BlindMCTSAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth)
+        # For AlphaZero self-play, we use the MCTSApproximationAgent which loads the Neural Network.
+        # (If you need to generate INITIAL heuristic data without a model, you can import and use BlindMCTSAgent here instead).
+        agent_p1 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth)
+        agent_p2 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth)
         
         state = problem.initial
         states_history_p1 = []
@@ -37,8 +39,9 @@ def run_simulation(args):
             # Record state for P2 perspective
             encoded_p2 = encode_state(state, player="p2")
             
-            action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True)
-            action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True)
+            # Use add_noise=True to inject Dirichlet noise during self-play for exploration
+            action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True, add_noise=True)
+            action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True, add_noise=True)
             
             states_history_p1.append((encoded_p1.tolist(), probs_p1))
             states_history_p2.append((encoded_p2.tolist(), probs_p2))

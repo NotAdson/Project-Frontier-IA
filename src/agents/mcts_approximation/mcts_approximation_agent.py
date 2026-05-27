@@ -21,12 +21,36 @@ from agents.mcts_approximation.state_encoder import (
 )
 
 
+class MCTSApproximationNode:
+    def __init__(self, state, parent=None, action=None, prior_prob=0.0):
+        self.state = state
+        self.parent = parent
+        self.action = action
+        self.prior_prob = prior_prob
+        self.children = []
+        self.visits = 0
+        self.value = 0.0
+        self.is_expanded = False
+
+    def best_child(self, c_param=1.414):
+        best_score = -float('inf')
+        best_c = None
+        for c in self.children:
+            q = c.value / c.visits if c.visits > 0 else 0.0
+            u = c_param * c.prior_prob * math.sqrt(self.visits) / (1 + c.visits)
+            score = q + u
+            if score > best_score:
+                best_score = score
+                best_c = c
+        return best_c
+
+
 class MCTSApproximationAgent(BlindMCTSAgent):
     """
     MCTS Approximation Agent.
     Replaces random rollouts with a Neural Network evaluation of the state.
-    The model uses 5 inputs:
-        dense_features, species_indices, item_indices, ability_indices, move_indices
+    The model uses 8 inputs and outputs both a value (probability of winning) 
+    and a policy (probability distribution over actions).
     """
     def __init__(self, problem, iterations=50, max_rollout_depth=0,
                  model_path="data/mcts_model.keras"):
@@ -52,19 +76,19 @@ class MCTSApproximationAgent(BlindMCTSAgent):
 
     def _build_inputs(self, features: np.ndarray) -> dict:
         """
-        Splits the 221-element feature vector into the 8 named model inputs.
+        Splits the feature vector into the 8 named model inputs.
 
         Feature layout:
-            [0:145]   dense_features
-            [145:151] species_indices     (6)
-            [151:157] item_indices        (6)
-            [157:163] ability_indices     (6)
-            [163:187] bench_move_indices  (24)
-            [187:191] move_indices        (4)
-            [191:197] opp_species_indices (6, 0 if not revealed)
-            [197:221] opp_move_indices    (24, 0 if not yet seen)
+            [0:163]   dense_features
+            [163:169] species_indices     (6)
+            [169:175] item_indices        (6)
+            [175:181] ability_indices     (6)
+            [181:205] bench_move_indices  (24)
+            [205:209] move_indices        (4)
+            [209:215] opp_species_indices (6, 0 if not revealed)
+            [215:239] opp_move_indices    (24, 0 if not yet seen)
         """
-        n = NUM_DENSE_FEATURES  # 145
+        n = NUM_DENSE_FEATURES  # 163
         dense        = features[:n]
         species      = features[n + OFF_SPECIES     : n + OFF_SPECIES     + NUM_SPECIES_INDICES    ].astype(np.int32)
         items        = features[n + OFF_ITEMS       : n + OFF_ITEMS       + NUM_ITEM_INDICES       ].astype(np.int32)
@@ -87,59 +111,51 @@ class MCTSApproximationAgent(BlindMCTSAgent):
 
     # ─── MCTS loop ──────────────────────────────────────────────────────────
 
-    def get_action(self, state, player="p1", return_probs=False):
-        root = MCTSNode(state=state)
-        root.untried_actions = self.problem.actions(root.state, player)
+    def get_action(self, state, player="p1", return_probs=False, add_noise=False):
+        from agents.mcts_approximation.state_encoder import ACTION_SPACE
+        
+        root = MCTSApproximationNode(state=state)
+        
+        # Initial expansion
+        self._expand(root, player, ACTION_SPACE)
+        
+        # Add Dirichlet noise to the root node for exploration during self-play
+        if add_noise and root.children:
+            alpha = 0.3
+            epsilon = 0.25
+            noise = np.random.dirichlet([alpha] * len(root.children))
+            for i, child in enumerate(root.children):
+                child.prior_prob = (1 - epsilon) * child.prior_prob + epsilon * noise[i]
 
         for _ in range(self.iterations):
             node = root
-
+            
             # 1. Selection
-            while node.is_fully_expanded() and not self.problem.is_terminal(node.state):
+            while node.is_expanded and not self.problem.is_terminal(node.state):
                 node = node.best_child()
+                # Lazy state generation to avoid expensive engine calls for all leaves
+                if node.state is None:
+                    opp_player = "p2" if player == "p1" else "p1"
+                    opp_actions = self.problem.actions(node.parent.state, opp_player)
+                    opp_action = random.choice(opp_actions) if opp_actions else None
+                    if player == "p1":
+                        node.state = self.problem.result(node.parent.state, p1_action=node.action, p2_action=opp_action)
+                    else:
+                        node.state = self.problem.result(node.parent.state, p1_action=opp_action, p2_action=node.action)
 
-            # 2. Expansion
-            if not self.problem.is_terminal(node.state) and len(node.untried_actions) > 0:
-                action = random.choice(node.untried_actions)
-                node.untried_actions.remove(action)
-
-                # Sample a random but valid opponent action (improvement over None/engine-default).
-                # The engine default is likely random anyway, but this ensures we explore
-                # realistic simultaneous-action pairs during tree expansion.
-                opp_player = "p2" if player == "p1" else "p1"
-                opp_actions = self.problem.actions(node.state, opp_player)
-                opp_action = random.choice(opp_actions) if opp_actions else None
-
-                if player == "p1":
-                    next_state = self.problem.result(node.state, p1_action=action, p2_action=opp_action)
-                else:
-                    next_state = self.problem.result(node.state, p1_action=opp_action, p2_action=action)
-
-                child = MCTSNode(state=next_state, parent=node, action=action)
-                child.untried_actions = self.problem.actions(child.state, player)
-                node.children.append(child)
-                node = child
-
-            # 3. Approximation (Neural Network instead of rollout)
-            current_state = node.state
-
-            if self.problem.is_terminal(current_state):
-                p1_won = self.problem.is_goal(current_state)
+            # 2. Expansion & Evaluation
+            if self.problem.is_terminal(node.state):
+                p1_won = self.problem.is_goal(node.state)
                 reward = 1.0 if (p1_won and player == "p1") or (not p1_won and player == "p2") else 0.0
             else:
-                if self.model is not None:
-                    features = encode_state(current_state, player)
-                    inputs = self._build_inputs(features)
-                    prediction = self.model.predict(inputs, verbose=0)[0][0]
-                    reward = float(prediction)
-                else:
-                    reward = 0.5
+                reward = self._expand(node, player, ACTION_SPACE)
 
-            # 4. Backpropagation
-            while node is not None:
-                node.visits += 1
-                node.value += reward
-                node = node.parent
+            # 3. Backpropagation
+            curr = node
+            while curr is not None:
+                curr.visits += 1
+                curr.value += reward
+                curr = curr.parent
 
         if not root.children:
             actions = self.problem.actions(state, player)
@@ -160,3 +176,47 @@ class MCTSApproximationAgent(BlindMCTSAgent):
             return best_node.action, action_probs
             
         return best_node.action
+
+    def _expand(self, node, player, action_space):
+        """Evaluates node with NN and creates lazily-evaluated children."""
+        valid_actions = self.problem.actions(node.state, player)
+        if not valid_actions:
+            node.is_expanded = True
+            return 0.5
+            
+        action_probs = {}
+        if self.model is not None:
+            features = encode_state(node.state, player)
+            inputs = self._build_inputs(features)
+            pred = self.model.predict(inputs, verbose=0)
+            
+            # Handle both single output (old model) and multiple outputs (new model) gracefully
+            if isinstance(pred, list) and len(pred) == 2:
+                value_pred, policy_pred = pred
+                reward = float(value_pred[0][0])
+                policy_probs = policy_pred[0]
+                
+                for a in valid_actions:
+                    idx = action_space.index(a) if a in action_space else action_space.index("pass")
+                    action_probs[a] = float(policy_probs[idx])
+                    
+                s = sum(action_probs.values())
+                if s > 0:
+                    for a in action_probs: action_probs[a] /= s
+                else:
+                    for a in action_probs: action_probs[a] = 1.0 / len(valid_actions)
+            else:
+                reward = float(pred[0][0]) if not isinstance(pred, list) else float(pred[0][0][0])
+                for a in valid_actions:
+                    action_probs[a] = 1.0 / len(valid_actions)
+        else:
+            reward = 0.5
+            for a in valid_actions:
+                action_probs[a] = 1.0 / len(valid_actions)
+                
+        for a in valid_actions:
+            child = MCTSApproximationNode(state=None, parent=node, action=a, prior_prob=action_probs[a])
+            node.children.append(child)
+            
+        node.is_expanded = True
+        return reward
