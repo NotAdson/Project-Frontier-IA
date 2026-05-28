@@ -127,10 +127,29 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     )
 
     # Feed-forward trunk
-    x = tf.keras.layers.Dense(256, activation="relu")(concat)
+    x = tf.keras.layers.Dense(2048)(concat)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Activation("relu")(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
+
+    x = tf.keras.layers.Dense(1024)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Activation("relu")(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
+
+    x = tf.keras.layers.Dense(512)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Activation("relu")(x)
     x = tf.keras.layers.Dropout(0.2)(x)
-    x = tf.keras.layers.Dense(128, activation="relu")(x)
-    x = tf.keras.layers.Dense(64,  activation="relu")(x)
+
+    x = tf.keras.layers.Dense(256)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Activation("relu")(x)
+    x = tf.keras.layers.Dropout(0.1)(x)
+
+    x = tf.keras.layers.Dense(128)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Activation("relu")(x)
     
     # Value Head (Probability of winning)
     out_value = tf.keras.layers.Dense(1, activation="sigmoid", name="value")(x)
@@ -170,6 +189,13 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
         )
         return
 
+    # Manually shuffle data before validation_split takes the last 20%
+    indices = np.arange(len(X))
+    np.random.shuffle(indices)
+    X = X[indices]
+    y_value = y_value[indices]
+    y_policy = y_policy[indices]
+
     X_dense, X_species, X_items, X_abilities, X_bench_moves, X_moves, X_opp_species, X_opp_moves = _split_features(X)
 
     num_moves     = get_num_moves()
@@ -207,7 +233,7 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
         },
         {"value": y_value, "policy": y_policy},
         epochs=15,
-        batch_size=64,
+        batch_size=512,
         validation_split=0.2,
     )
 

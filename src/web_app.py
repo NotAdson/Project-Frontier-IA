@@ -30,10 +30,9 @@ def init_game():
     engine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "engine"))
     client = ShowdownClient(engine_path)
     problem = PokemonProblem(client, formatid="gen3randombattle")
-    # Using BlindMCTSAgent temporarily so it's a competent opponent while your Neural Network trains!
-    # (Since BlindMCTS actually does rollouts to the end of the game to find real wins/losses)
-    # Bumping iterations up to 1000 so it actually poses a challenge!
-    agent = BlindMCTSAgent(problem, iterations=1000, max_rollout_depth=150) 
+    # Using the trained Neural Network MCTS agent
+    # The neural network evaluates states instantly, so 400 iterations is fast and strong
+    agent = MCTSApproximationAgent(problem, iterations=400, max_rollout_depth=0)
     current_state = problem.initial
     
     # Start AI thinking immediately

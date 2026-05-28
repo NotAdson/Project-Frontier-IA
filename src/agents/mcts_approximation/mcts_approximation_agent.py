@@ -5,8 +5,14 @@ import numpy as np
 
 try:
     import tensorflow as tf
+    # Enable memory growth so multiprocessing doesn't crash from OOM
+    gpus = tf.config.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
 except ImportError:
     tf = None
+except Exception as e:
+    print(f"[Warning] Failed to configure GPU memory growth: {e}")
 
 from core.agent import Agent
 from agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent, MCTSNode
@@ -188,7 +194,8 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         if self.model is not None:
             features = encode_state(node.state, player)
             inputs = self._build_inputs(features)
-            pred = self.model.predict(inputs, verbose=0)
+            # predict_on_batch is roughly 10x faster than predict() for single items on CPUs
+            pred = self.model.predict_on_batch(inputs)
             
             # Handle both single output (old model) and multiple outputs (new model) gracefully
             if isinstance(pred, list) and len(pred) == 2:
