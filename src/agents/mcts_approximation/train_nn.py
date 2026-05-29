@@ -87,6 +87,33 @@ def load_data(data_dir: str = "data/games"):
     return np.array(X, dtype=np.float32), np.array(y_value, dtype=np.float32), np.array(y_policy, dtype=np.float32)
 
 
+def load_data_from_files(files):
+    X, y_value, y_policy = [], [], []
+    for f in files:
+        game_data = json.loads(f.read_text())
+        for step in game_data:
+            X.append(step["features"])
+            y_value.append(step["value"])
+            
+            # Extract policy distribution as a fixed-size vector
+            policy_dict = step.get("policy", {})
+            policy_array = [policy_dict.get(action, 0.0) for action in ACTION_SPACE]
+            s = sum(policy_array)
+            if s > 0:
+                policy_array = [p / s for p in policy_array]
+            else:
+                policy_array = [1.0 / len(ACTION_SPACE)] * len(ACTION_SPACE)
+                
+            y_policy.append(policy_array)
+            
+    if len(X) == 0:
+        return (np.empty((0, TOTAL_FEATURES), dtype=np.float32),
+                np.empty((0,), dtype=np.float32),
+                np.empty((0, len(ACTION_SPACE)), dtype=np.float32))
+    return np.array(X, dtype=np.float32), np.array(y_value, dtype=np.float32), np.array(y_policy, dtype=np.float32)
+
+
+
 def build_model(num_dense: int, num_moves: int, num_species: int,
                 num_items: int, num_abilities: int) -> tf.keras.Model:
     """Builds the multi-input value network (8 inputs)."""
@@ -126,30 +153,21 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
          emb_opp_species, emb_opp_moves]
     )
 
-    # Feed-forward trunk
-    x = tf.keras.layers.Dense(2048)(concat)
+    # Feed-forward trunk (Shrunk from 2048-1024-512 to prevent overfitting and boost MCTS search speed)
+    x = tf.keras.layers.Dense(512)(concat)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation("relu")(x)
     x = tf.keras.layers.Dropout(0.3)(x)
-
-    x = tf.keras.layers.Dense(1024)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Activation("relu")(x)
-    x = tf.keras.layers.Dropout(0.3)(x)
-
-    x = tf.keras.layers.Dense(512)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Activation("relu")(x)
-    x = tf.keras.layers.Dropout(0.2)(x)
 
     x = tf.keras.layers.Dense(256)(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation("relu")(x)
-    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
 
     x = tf.keras.layers.Dense(128)(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation("relu")(x)
+    x = tf.keras.layers.Dropout(0.1)(x)
     
     # Value Head (Probability of winning)
     out_value = tf.keras.layers.Dense(1, activation="sigmoid", name="value")(x)
@@ -172,31 +190,84 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
 
 
 def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.keras"):
-    print(f"Loading data from {data_dir}...")
-    X, y_value, y_policy = load_data(data_dir)
-
-    if len(X) == 0:
+    print(f"Locating game files in {data_dir}...")
+    all_files = list(Path(data_dir).glob("*.json"))
+    if len(all_files) == 0:
         print("No data found. Please run generate_data.py first.")
         return
 
-    print(f"Loaded {len(X)} samples. Total features per sample: {X.shape[1]} (expected {TOTAL_FEATURES})")
+    # Shuffle files first to randomly allocate whole games to train/val
+    np.random.shuffle(all_files)
+    
+    # Split files 80% train, 20% validation
+    split_idx = int(len(all_files) * 0.8)
+    train_files = all_files[:split_idx]
+    val_files = all_files[split_idx:]
+    
+    # Handle edge case where there is only 1 file
+    if len(train_files) == 0:
+        train_files = all_files
+        val_files = all_files
+        print("[WARNING] Very little data found. Using same file for train and validation.")
+    elif len(val_files) == 0:
+        val_files = train_files[:1]
+        print("[WARNING] Very little data found. Sharing some training files for validation.")
 
-    if X.shape[1] != TOTAL_FEATURES:
+    print(f"Split {len(all_files)} game files into {len(train_files)} training games and {len(val_files)} validation games.")
+
+    print("Loading training data turns...")
+    X_train, y_value_train, y_policy_train = load_data_from_files(train_files)
+    print("Loading validation data turns...")
+    X_val, y_value_val, y_policy_val = load_data_from_files(val_files)
+
+    print(f"Loaded {len(X_train)} training turns and {len(X_val)} validation turns.")
+
+    if len(X_train) == 0:
+        print("Error: No training turns found.")
+        return
+
+    if X_train.shape[1] != TOTAL_FEATURES:
         print(
-            f"[WARNING] Feature count mismatch: got {X.shape[1]}, expected {TOTAL_FEATURES}.\n"
+            f"[WARNING] Feature count mismatch: got {X_train.shape[1]}, expected {TOTAL_FEATURES}.\n"
             "Your saved data was generated with the old encoder. "
             "Please delete data/games/ and re-run generate_data.py."
         )
         return
 
-    # Manually shuffle data before validation_split takes the last 20%
-    indices = np.arange(len(X))
-    np.random.shuffle(indices)
-    X = X[indices]
-    y_value = y_value[indices]
-    y_policy = y_policy[indices]
+    # Shuffle turns within each split individually so consecutive turns are mixed inside batches
+    train_indices = np.arange(len(X_train))
+    np.random.shuffle(train_indices)
+    X_train = X_train[train_indices]
+    y_value_train = y_value_train[train_indices]
+    y_policy_train = y_policy_train[train_indices]
 
-    X_dense, X_species, X_items, X_abilities, X_bench_moves, X_moves, X_opp_species, X_opp_moves = _split_features(X)
+    if len(X_val) > 0:
+        val_indices = np.arange(len(X_val))
+        np.random.shuffle(val_indices)
+        X_val = X_val[val_indices]
+        y_value_val = y_value_val[val_indices]
+        y_policy_val = y_policy_val[val_indices]
+
+    # Split features into 8 sub-arrays
+    X_dense_train, X_species_train, X_items_train, X_abilities_train, X_bench_moves_train, X_moves_train, X_opp_species_train, X_opp_moves_train = _split_features(X_train)
+    
+    if len(X_val) > 0:
+        X_dense_val, X_species_val, X_items_val, X_abilities_val, X_bench_moves_val, X_moves_val, X_opp_species_val, X_opp_moves_val = _split_features(X_val)
+        val_data = (
+            {
+                "dense_features":     X_dense_val,
+                "species_indices":    X_species_val,
+                "item_indices":       X_items_val,
+                "ability_indices":    X_abilities_val,
+                "bench_move_indices": X_bench_moves_val,
+                "move_indices":       X_moves_val,
+                "opp_species_indices": X_opp_species_val,
+                "opp_move_indices":   X_opp_moves_val,
+            },
+            {"value": y_value_val, "policy": y_policy_val}
+        )
+    else:
+        val_data = None
 
     num_moves     = get_num_moves()
     num_species   = get_num_species()
@@ -204,7 +275,7 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
     num_abilities = get_num_abilities()
 
     print(
-        f"  Dense: {X_dense.shape[1]}  |  "
+        f"  Dense: {X_dense_train.shape[1]}  |  "
         f"Species vocab: {num_species}  |  Items vocab: {num_items}  |  "
         f"Abilities vocab: {num_abilities}  |  Moves vocab: {num_moves}"
     )
@@ -212,29 +283,39 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path} for fine-tuning...")
         model = tf.keras.models.load_model(model_save_path)
-        # Optional: reduce learning rate for fine-tuning if desired
-        # tf.keras.backend.set_value(model.optimizer.learning_rate, 0.0001)
     else:
         print("Building new model from scratch...")
-        model = build_model(X_dense.shape[1], num_moves, num_species, num_items, num_abilities)
+        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
         
     model.summary()
 
+    # Define early stopping to halt training once validation loss starts degrading
+    callbacks = []
+    if val_data is not None:
+        early_stopping = tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss",
+            patience=3,
+            restore_best_weights=True,
+            verbose=1
+        )
+        callbacks.append(early_stopping)
+
     model.fit(
         {
-            "dense_features":     X_dense,
-            "species_indices":    X_species,
-            "item_indices":       X_items,
-            "ability_indices":    X_abilities,
-            "bench_move_indices": X_bench_moves,
-            "move_indices":       X_moves,
-            "opp_species_indices": X_opp_species,
-            "opp_move_indices":   X_opp_moves,
+            "dense_features":     X_dense_train,
+            "species_indices":    X_species_train,
+            "item_indices":       X_items_train,
+            "ability_indices":    X_abilities_train,
+            "bench_move_indices": X_bench_moves_train,
+            "move_indices":       X_moves_train,
+            "opp_species_indices": X_opp_species_train,
+            "opp_move_indices":   X_opp_moves_train,
         },
-        {"value": y_value, "policy": y_policy},
+        {"value": y_value_train, "policy": y_policy_train},
         epochs=15,
         batch_size=512,
-        validation_split=0.2,
+        validation_data=val_data,
+        callbacks=callbacks,
     )
 
     save_path = Path(model_save_path)

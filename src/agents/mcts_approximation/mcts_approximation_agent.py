@@ -118,6 +118,13 @@ class MCTSApproximationAgent(BlindMCTSAgent):
     # ─── MCTS loop ──────────────────────────────────────────────────────────
 
     def get_action(self, state, player="p1", return_probs=False, add_noise=False):
+        valid_actions = self.problem.actions(state, player)
+        if len(valid_actions) <= 1:
+            action = valid_actions[0] if valid_actions else "pass"
+            if return_probs:
+                return action, {action: 1.0}
+            return action
+
         from agents.mcts_approximation.state_encoder import ACTION_SPACE
         
         root = MCTSApproximationNode(state=state)
