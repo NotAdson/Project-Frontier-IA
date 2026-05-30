@@ -4,15 +4,9 @@ import os
 import numpy as np
 
 try:
-    import tensorflow as tf
-    # Enable memory growth so multiprocessing doesn't crash from OOM
-    gpus = tf.config.list_physical_devices('GPU')
-    for gpu in gpus:
-        tf.config.experimental.set_memory_growth(gpu, True)
+    import keras
 except ImportError:
-    tf = None
-except Exception as e:
-    print(f"[Warning] Failed to configure GPU memory growth: {e}")
+    keras = None
 
 from core.agent import Agent
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent, MCTSNode
@@ -63,20 +57,19 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         super().__init__(problem, iterations=iterations, max_rollout_depth=0)
 
         self.model = None
-        if tf is not None:
+        if keras is not None:
             fallback = "data/mcts_model.h5"
             actual_path = (model_path if os.path.exists(model_path)
                            else fallback if os.path.exists(fallback)
                            else None)
             if actual_path:
-                os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-                self.model = tf.keras.models.load_model(actual_path, compile=False)
+                self.model = keras.models.load_model(actual_path, compile=False)
             else:
                 print(f"[Warning] MCTS Approximation model not found at {model_path}. "
                       "Will predict 0.5 for all states.")
         else:
-            print("[Error] TensorFlow not installed. Cannot use Neural Network. "
-                  "Please pip install tensorflow.")
+            print("[Error] Keras is not installed. Cannot use Neural Network. "
+                  "Please pip install keras and a backend (tensorflow / torch / jax).")
 
     # ─── Feature vector → model inputs ─────────────────────────────────────
 
@@ -215,26 +208,28 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         if self.model is not None:
             features = encode_state(node.state, player)
             inputs = self._build_inputs(features)
-            # predict_on_batch is roughly 10x faster than predict() for single items on CPUs
-            pred = self.model.predict_on_batch(inputs)
-            
-            # Handle both single output (old model) and multiple outputs (new model) gracefully
-            if isinstance(pred, list) and len(pred) == 2:
+            # Direct model call with training=False — works on all Keras 3 backends
+            # and is equivalent in speed to the deprecated predict_on_batch
+            pred = self.model(inputs, training=False)
+
+            # pred is a list of two tensors: [value (1,1), policy (1, ACTION_SPACE)]
+            if isinstance(pred, (list, tuple)) and len(pred) == 2:
                 value_pred, policy_pred = pred
-                reward = float(value_pred[0][0])
-                policy_probs = policy_pred[0]
-                
+                reward = float(np.array(value_pred)[0][0])
+                policy_probs = np.array(policy_pred)[0]
+
                 for a in valid_actions:
                     idx = action_space.index(a) if a in action_space else action_space.index("pass")
                     action_probs[a] = float(policy_probs[idx])
-                    
+
                 s = sum(action_probs.values())
                 if s > 0:
                     for a in action_probs: action_probs[a] /= s
                 else:
                     for a in action_probs: action_probs[a] = 1.0 / len(valid_actions)
             else:
-                reward = float(pred[0][0]) if not isinstance(pred, list) else float(pred[0][0][0])
+                # Fallback: single-output model (value only)
+                reward = float(np.array(pred)[0][0])
                 for a in valid_actions:
                     action_probs[a] = 1.0 / len(valid_actions)
         else:

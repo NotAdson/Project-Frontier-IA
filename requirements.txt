@@ -1,3 +1,15 @@
-tensorflow>=2.10.0
+# Core
+keras>=3.0.0
 numpy>=1.23.0
 pyyaml>=6.0
+
+# ── Backend (install exactly ONE) ──────────────────────────────────────────
+# TensorFlow  : pip install tensorflow
+# PyTorch     : pip install torch
+# JAX (CPU)   : pip install jax
+# JAX (GPU)   : pip install "jax[cuda12]"
+#
+# Select the active backend with the env-var:
+#   KERAS_BACKEND=tensorflow   (default if TF is installed)
+#   KERAS_BACKEND=torch
+#   KERAS_BACKEND=jax
