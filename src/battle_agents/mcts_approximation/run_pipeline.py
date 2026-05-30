@@ -16,7 +16,7 @@ from battle_agents.random.random_agent import RandomAgent
 from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
 
 
-def run_pipeline(num_games=1000, num_generations=1):
+def run_pipeline(num_games=1000, num_generations=1, processes=None):
     print(f"=== AlphaZero Pipeline Automation ({num_generations} Generations) ===")
     
     for gen_idx in range(num_generations):
@@ -44,7 +44,7 @@ def run_pipeline(num_games=1000, num_generations=1):
         
         # 2. Self-Play
         print(f"\n--- Phase 1: Generating Data into {next_gen_dir} ---")
-        generate_dataset(num_games=num_games, output_dir=next_gen_dir)
+        generate_dataset(num_games=num_games, output_dir=next_gen_dir, processes=processes)
         
         # 3. Train
         print("\n--- Phase 2: Training Neural Network ---")
@@ -94,4 +94,5 @@ def run_pipeline(num_games=1000, num_generations=1):
         print(f"\n=== Pipeline for Generation {next_gen} Finished successfully! ===")
 
 if __name__ == "__main__":
-    run_pipeline(num_games=2500, num_generations=8)
+    # processes=None uses (CPU_CORES - 2). You can hardcode it (e.g., processes=4) to restrict CPU usage.
+    run_pipeline(num_games=2500, num_generations=8, processes=None)
