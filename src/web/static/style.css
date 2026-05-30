@@ -1,0 +1,407 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+    box-sizing: border-box;
+    image-rendering: pixelated;
+}
+
+body {
+    background-color: #222;
+    color: #333;
+    font-family: 'Press Start 2P', cursive;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.gba-container {
+    width: 800px;
+    height: 533px;
+    background: #e8f8e8;
+    /* Default fallback */
+    position: relative;
+    border: 8px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    background-image: linear-gradient(to bottom, #d0f8d0 0%, #b8f8b8 40%, #70c8a0 100%);
+    /* Grass background */
+}
+
+/* --- SCENE (Top 2/3) --- */
+.scene {
+    position: relative;
+    height: 380px;
+    width: 100%;
+}
+
+/* Opponent (Top Right) */
+.hud-opponent {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 320px;
+    background: #f8f8f8;
+    border: 4px solid #4a4a4a;
+    border-radius: 12px 0 12px 0;
+    padding: 10px;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.sprite-opponent {
+    position: absolute;
+    top: 50px;
+    right: 50px;
+    width: 160px;
+    height: 160px;
+    background: url('https://play.pokemonshowdown.com/sprites/gen5/substitute.png') bottom center no-repeat;
+    background-size: contain;
+    filter: drop-shadow(0 20px 10px rgba(0, 0, 0, 0.3));
+}
+
+/* Player (Bottom Left) */
+.hud-player {
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+    width: 340px;
+    background: #f8f8f8;
+    border: 4px solid #4a4a4a;
+    border-radius: 12px 0 12px 0;
+    padding: 10px;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.sprite-player {
+    position: absolute;
+    bottom: 20px;
+    left: 40px;
+    width: 180px;
+    height: 180px;
+    background: url('https://play.pokemonshowdown.com/sprites/gen5b/substitute.png') bottom center no-repeat;
+    background-size: contain;
+    filter: drop-shadow(0 20px 10px rgba(0, 0, 0, 0.3));
+}
+
+/* HUD Text */
+.pokemon-name {
+    font-size: 14px;
+    text-transform: uppercase;
+    float: left;
+}
+
+.pokemon-level {
+    font-size: 14px;
+    float: right;
+}
+
+.clear {
+    clear: both;
+}
+
+/* HP Bar Container */
+.hp-container {
+    background: #4a4a4a;
+    border: 2px solid #333;
+    border-radius: 10px;
+    height: 14px;
+    width: 100%;
+    margin-top: 10px;
+    position: relative;
+}
+
+.hp-label {
+    position: absolute;
+    left: -24px;
+    top: -2px;
+    color: #ffaa00;
+    font-size: 10px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.hp-fill {
+    height: 100%;
+    background: #48f858;
+    border-radius: 8px;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+.hp-fill.yellow {
+    background: #f8e838;
+}
+
+.hp-fill.red {
+    background: #f84838;
+}
+
+.hp-text {
+    text-align: right;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Pokeball icons */
+.party-balls {
+    margin-top: 5px;
+    display: flex;
+    gap: 4px;
+}
+
+.ball-icon {
+    width: 16px;
+    height: 16px;
+    background: #ff5555;
+    border: 2px solid #222;
+    border-radius: 50%;
+    position: relative;
+}
+
+.ball-icon::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: #fff;
+    border-top: 2px solid #222;
+    border-radius: 0 0 10px 10px;
+}
+
+.ball-icon.fainted {
+    opacity: 0.3;
+    filter: grayscale(1);
+}
+
+/* --- CONTROL PANEL (Bottom 1/3) --- */
+.control-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 153px;
+    display: flex;
+    background: #506860;
+    border-top: 4px solid #222;
+}
+
+.dialog-box {
+    flex: 1;
+    background: #f8f8f8;
+    border: 6px solid #d05050;
+    border-radius: 8px;
+    margin: 8px;
+    padding: 15px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #222;
+    overflow-y: auto;
+    /* Custom Scrollbar */
+}
+
+/* Main Menu Options */
+.menu-box {
+    width: 300px;
+    height: 137px;
+    background: #f8f8f8;
+    border: 6px solid #4a50a0;
+    border-radius: 8px;
+    margin: 8px 8px 8px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    /* Support up to 3 rows without resizing */
+    overflow-y: auto;
+    padding: 10px;
+    gap: 10px;
+}
+
+.menu-btn {
+    font-family: 'Press Start 2P', cursive;
+    background: none;
+    border: none;
+    font-size: 14px;
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    padding-left: 20px;
+}
+
+.menu-btn:hover::before {
+    content: '▶';
+    position: absolute;
+    left: 0;
+    color: #222;
+}
+
+/* Moves Grid View */
+.moves-grid {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    height: 100%;
+}
+
+.move-btn {
+    font-family: 'Press Start 2P', cursive;
+    background: #f8f8f8;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    font-size: 11px;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 8px;
+    box-shadow: 2px 2px 0 #ccc;
+}
+
+.move-btn:hover {
+    background: #e0e0e0;
+    border-color: #222;
+}
+
+/* Pokemon Bench View (Overlay) */
+.bench-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(40, 80, 120, 0.95);
+    z-index: 10;
+    display: none;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.bench-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.bench-card {
+    background: #f8f8f8;
+    border: 4px solid #222;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.bench-card:hover {
+    border-color: #ffaa00;
+}
+
+.bench-card.fainted {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+
+.bench-name {
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.bench-hp-bar {
+    height: 8px;
+    background: #4a4a4a;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+/* Status condition badges */
+.status-badge {
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: #fff;
+    margin-left: 5px;
+}
+
+.status-brn {
+    background: #f85838;
+}
+
+.status-par {
+    background: #c8b000;
+}
+
+.status-psn {
+    background: #a040a0;
+}
+
+.status-tox {
+    background: #802080;
+}
+
+.status-slp {
+    background: #88a0d0;
+}
+
+.status-frz {
+    background: #38c8f8;
+}
+
+.status-fnt {
+    background: #a0a0a0;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Animations */
+@keyframes shake {
+    0% {
+        transform: translate(1px, 1px) rotate(0deg);
+    }
+
+    10% {
+        transform: translate(-1px, -2px) rotate(-1deg);
+    }
+
+    20% {
+        transform: translate(-3px, 0px) rotate(1deg);
+    }
+
+    30% {
+        transform: translate(3px, 2px) rotate(0deg);
+    }
+
+    40% {
+        transform: translate(1px, -1px) rotate(1deg);
+    }
+
+    50% {
+        transform: translate(-1px, 2px) rotate(-1deg);
+    }
+
+    60% {
+        transform: translate(-3px, 1px) rotate(0deg);
+    }
+
+    70% {
+        transform: translate(3px, 1px) rotate(-1deg);
+    }
+
+    80% {
+        transform: translate(-1px, -1px) rotate(1deg);
+    }
+
+    90% {
+        transform: translate(1px, 2px) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(1px, -2px) rotate(-1deg);
+    }
+}
+
+.shake {
+    animation: shake 0.5s;
+}

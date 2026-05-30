@@ -18,7 +18,7 @@ This ensures the Python MCTS AI algorithm can statistically evaluate future stat
 To use this agent in the simulation, simply import it and pass it to your runtime environment:
 
 ```python
-from agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
+from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 
 # Play with 100 iterations and a max depth of 50 turns per rollout
 agent = BlindMCTSAgent(problem, iterations=100, max_rollout_depth=50)

@@ -3,7 +3,7 @@
  * them to JSON files used by species_db.py, items_db.py, and abilities_db.py.
  *
  * Must be run from the engine/ directory:
- *   cd engine && node ../src/agents/mcts_approximation/extract_dex.js
+ *   cd engine && node ../src/battle_agents/mcts_approximation/extract_dex.js
  */
 const { Dex } = require('./dist/sim/dex');
 const fs = require('fs');

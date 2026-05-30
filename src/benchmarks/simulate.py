@@ -2,8 +2,8 @@ import os
 import html
 from core.problem.pokemon_problem import PokemonProblem
 from core.client.showdown_client import ShowdownClient
-from agents.mcts.mcts_agent import MCTSAgent
-from agents.random.random_agent import RandomAgent
+from battle_agents.mcts.mcts_agent import MCTSAgent
+from battle_agents.random.random_agent import RandomAgent
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html><head>
@@ -30,8 +30,11 @@ def generate_replay_html(full_log, filename="replay.html"):
         f.write(html_content)
     print(f"Replay saved to {filename}. Open this file in your browser!")
 
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 if __name__ == "__main__":
-    engine_path = os.path.abspath("../engine")
+    engine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "engine"))
     client = ShowdownClient(engine_path)
     
     try:
@@ -43,7 +46,7 @@ if __name__ == "__main__":
         turn = 1
         
         # Instantiate our multi-agent framework
-        from agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
+        from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
         p1_agent = MCTSApproximationAgent(problem, iterations=80)
         p2_agent = MCTSAgent(problem, iterations=50, max_rollout_depth=20)
         

@@ -69,10 +69,10 @@ To utilize this agent, you must first generate self-play data and train your mod
 
 1. **Generate Data:** Run self-play games to build a dataset. This outputs individual `.json` files to `data/games/`.
    ```bash
-   python3 -m src.agents.mcts_approximation.generate_data
+   python3 -m src.battle_agents.mcts_approximation.generate_data
    ```
 2. **Train the Network:** Parse the generated data and train the TensorFlow model. This saves the weights to `data/mcts_model.h5`.
    ```bash
-   python3 -m src.agents.mcts_approximation.train_nn
+   python3 -m src.battle_agents.mcts_approximation.train_nn
    ```
 3. **Play:** Load the `MCTSApproximationAgent` in your tournament suite or `simulate.py`. The agent will automatically detect and use `data/mcts_model.h5`.

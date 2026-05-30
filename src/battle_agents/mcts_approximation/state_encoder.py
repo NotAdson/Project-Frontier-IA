@@ -27,8 +27,8 @@ moves that have already been used, and shared field conditions (weather/hazards)
 
 import numpy as np
 
-from agents.mcts_approximation.moves_db import get_move_data, get_move_idx
-from agents.mcts_approximation.species_db import get_species_idx, get_item_idx, get_ability_idx
+from battle_agents.mcts_approximation.moves_db import get_move_data, get_move_idx
+from battle_agents.mcts_approximation.species_db import get_species_idx, get_item_idx, get_ability_idx
 
 STATUSES = ["tox", "brn", "par", "slp", "frz"]
 BOOST_STATS = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]

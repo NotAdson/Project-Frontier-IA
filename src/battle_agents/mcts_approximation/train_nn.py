@@ -23,9 +23,9 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 
-from agents.mcts_approximation.moves_db import get_num_moves
-from agents.mcts_approximation.species_db import get_num_species, get_num_items, get_num_abilities
-from agents.mcts_approximation.state_encoder import (
+from battle_agents.mcts_approximation.moves_db import get_num_moves
+from battle_agents.mcts_approximation.species_db import get_num_species, get_num_items, get_num_abilities
+from battle_agents.mcts_approximation.state_encoder import (
     NUM_DENSE_FEATURES,
     NUM_EMBEDDING_INDICES,
     TOTAL_FEATURES,
@@ -189,12 +189,18 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     return model
 
 
-def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.keras"):
-    print(f"Locating game files in {data_dir}...")
-    all_files = list(Path(data_dir).glob("*.json"))
+def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500):
+    print(f"Locating game files in {data_dir}/gen*...")
+    all_files = list(Path(data_dir).glob("gen*/*.json"))
     if len(all_files) == 0:
         print("No data found. Please run generate_data.py first.")
         return
+
+    # Replay Buffer: Sort files by modification time (newest first)
+    all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+    if len(all_files) > max_games_buffer:
+        print(f"Replay Buffer: Keeping only the most recent {max_games_buffer} games out of {len(all_files)}.")
+        all_files = all_files[:max_games_buffer]
 
     # Shuffle files first to randomly allocate whole games to train/val
     np.random.shuffle(all_files)
@@ -283,6 +289,15 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path} for fine-tuning...")
         model = tf.keras.models.load_model(model_save_path)
+        
+        # Recompile with a lower learning rate to prevent catastrophic forgetting
+        print("Recompiling model with lower learning rate for fine-tuning (1e-4)...")
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+            loss={"value": "mse", "policy": "categorical_crossentropy"},
+            loss_weights={"value": 1.0, "policy": 1.0},
+            metrics={"value": "mae", "policy": "accuracy"}
+        )
     else:
         print("Building new model from scratch...")
         model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
@@ -293,10 +308,11 @@ def train(data_dir: str = "data/games", model_save_path: str = "data/mcts_model.
     callbacks = []
     if val_data is not None:
         early_stopping = tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            patience=3,
+            monitor="val_policy_loss",
+            patience=5,
             restore_best_weights=True,
-            verbose=1
+            verbose=1,
+            mode="min"
         )
         callbacks.append(early_stopping)
 

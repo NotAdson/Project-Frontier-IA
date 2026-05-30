@@ -2,13 +2,16 @@ import os
 from core.client.showdown_client import ShowdownClient
 from benchmarks.round_robin import RoundRobinBenchmark
 from benchmarks.tournament import TournamentBenchmark
-from agents.random.random_agent import RandomAgent
-from agents.mcts.mcts_agent import MCTSAgent
-from agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
+from battle_agents.random.random_agent import RandomAgent
+from battle_agents.mcts.mcts_agent import MCTSAgent
+from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
+
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 if __name__ == "__main__":
     print("Initializing Showdown Engine for Benchmarking...")
-    engine_path = os.path.abspath("../engine")
+    engine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "engine"))
     client = ShowdownClient(engine_path)
     
     try:

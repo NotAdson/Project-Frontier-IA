@@ -19,4 +19,4 @@ export LD_LIBRARY_PATH="$NVIDIA_PATHS:$LD_LIBRARY_PATH"
 echo "[GPU Setup] NVIDIA paths loaded into LD_LIBRARY_PATH"
 
 # Run the training script
-python3 -m agents.mcts_approximation.train_nn
+python3 -m battle_agents.mcts_approximation.train_nn

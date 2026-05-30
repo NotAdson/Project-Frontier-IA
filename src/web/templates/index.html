@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon AI Battle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="gba-container">
+    
+    <!-- Bench Overlay -->
+    <div id="benchOverlay" class="bench-overlay">
+        <h2 style="color: white; margin-top: 0; font-size: 14px;">Choose a Pokémon</h2>
+        <div id="benchGrid" class="bench-grid">
+            <!-- Dynamically filled -->
+        </div>
+        <button onclick="closeBench()" class="move-btn" style="margin-top: 20px;">CANCEL</button>
+    </div>
+
+    <!-- Battle Scene -->
+    <div class="scene">
+        <!-- Opponent HUD -->
+        <div class="hud-opponent" id="hudOpponent">
+            <div class="pokemon-name" id="p2Name">Loading...</div>
+            <div class="pokemon-level">Lv100</div>
+            <div class="clear"></div>
+            
+            <div style="margin-top: 5px;">
+                <span id="p2Status" class="status-badge hidden"></span>
+            </div>
+            
+            <div class="hp-container">
+                <div class="hp-label">HP</div>
+                <div class="hp-fill" id="p2HpFill" style="width: 100%;"></div>
+            </div>
+            
+            <div class="party-balls" id="p2PartyBalls">
+                <!-- 6 balls rendered by JS -->
+            </div>
+        </div>
+        
+        <!-- Opponent Sprite -->
+        <div class="sprite-opponent" id="spriteOpponent"></div>
+        
+        <!-- Player HUD -->
+        <div class="hud-player" id="hudPlayer">
+            <div class="pokemon-name" id="p1Name">Loading...</div>
+            <div class="pokemon-level">Lv100</div>
+            <div class="clear"></div>
+            
+            <div style="margin-top: 5px; display: flex; justify-content: space-between;">
+                <span id="p1Status" class="status-badge hidden"></span>
+                <div style="font-size: 10px; color: #666;">Item: <span id="p1Item">None</span></div>
+            </div>
+            
+            <div class="hp-container">
+                <div class="hp-label">HP</div>
+                <div class="hp-fill" id="p1HpFill" style="width: 100%;"></div>
+            </div>
+            <div class="hp-text" id="p1HpText">100/100</div>
+        </div>
+        
+        <!-- Player Sprite -->
+        <div class="sprite-player" id="spritePlayer"></div>
+    </div>
+    
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <div class="dialog-box" id="dialogBox">
+            What will <span id="dialogActiveName">POKéMON</span> do?
+        </div>
+        
+        <div class="menu-box" id="mainMenu">
+            <button class="menu-btn" onclick="showMoves()">FIGHT</button>
+            <button class="menu-btn" onclick="showBench()">POKéMON</button>
+            <button class="menu-btn" style="color: #888;">BAG</button>
+            <button class="menu-btn" onclick="resetGame()">RUN</button>
+        </div>
+        
+        <div class="menu-box moves-grid" id="movesMenu">
+            <!-- Dynamically filled -->
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

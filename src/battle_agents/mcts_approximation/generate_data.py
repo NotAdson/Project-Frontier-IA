@@ -6,8 +6,8 @@ import multiprocessing
 import traceback
 from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
-from agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
-from agents.mcts_approximation.state_encoder import encode_state
+from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
+from battle_agents.mcts_approximation.state_encoder import encode_state
 from tqdm import tqdm
 
 
@@ -23,16 +23,26 @@ def run_simulation(args):
     try:
         problem = PokemonProblem(client, formatid=formatid)
         
+        # Resolve the absolute path to the latest mcts_model.keras
+        data_dir = Path(__file__).resolve().parents[2] / "data"
+        model_path = str(data_dir / "mcts_model.keras")
+        
         # For AlphaZero self-play, we use the MCTSApproximationAgent which loads the Neural Network.
-        # (If you need to generate INITIAL heuristic data without a model, you can import and use BlindMCTSAgent here instead).
-        agent_p1 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth)
-        agent_p2 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth)
+        agent_p1 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth, model_path=model_path)
+        agent_p2 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth, model_path=model_path)
         
         state = problem.initial
         states_history_p1 = []
         states_history_p2 = []
         
+        turn_count = 0
         while not problem.is_terminal(state):
+            # Exponential decay for temperature. 
+            # Starts at 1.0 (high exploration), and smoothly decays.
+            # By turn 5, it's ~0.44 (starts favoring best moves heavily).
+            # By turn 10, it's ~0.20 (almost pure exploitation).
+            temp = max(0.01, (0.85 ** turn_count))
+
             # Record state for P1 perspective
             encoded_p1 = encode_state(state, player="p1")
             
@@ -40,8 +50,10 @@ def run_simulation(args):
             encoded_p2 = encode_state(state, player="p2")
             
             # Use add_noise=True to inject Dirichlet noise during self-play for exploration
-            action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True, add_noise=True)
-            action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True, add_noise=True)
+            action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True, add_noise=True, temperature=temp)
+            action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True, add_noise=True, temperature=temp)
+            
+            turn_count += 1
             
             states_history_p1.append((encoded_p1.tolist(), probs_p1))
             states_history_p2.append((encoded_p2.tolist(), probs_p2))
@@ -74,15 +86,15 @@ def generate_dataset(num_games=1000, processes=None, output_dir="data/games"):
         
     print(f"Found {existing_files} existing games. Generating {remaining_games} more.")
     
-    # Path(__file__) resolves to src/agents/mcts_approximation/generate_data.py
+    # Path(__file__) resolves to src/battle_agents/mcts_approximation/generate_data.py
     # .parents[3] takes us up to the project root (Pokemon/)
     engine_path = str(Path(__file__).resolve().parents[3] / "engine")
     
     # HIGH QUALITY DATA PARAMS:
-    # 200 iterations gives the MCTS a lot of time to build a smart tree.
+    # 400 iterations gives the MCTS a massive amount of time to build a smart tree.
     # 150 depth ensures rollouts almost always hit a terminal Win/Loss state 
     # instead of timing out and returning a useless 0.5 (draw) evaluation.
-    args = [(engine_path, "gen3randombattle", 200, 150) for _ in range(remaining_games)]
+    args = [(engine_path, "gen3randombattle", 400, 150) for _ in range(remaining_games)]
     
     print(f"Starting {remaining_games} simulations using {processes} processes...")
     

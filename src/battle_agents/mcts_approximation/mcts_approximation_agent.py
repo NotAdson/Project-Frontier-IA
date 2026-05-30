@@ -15,8 +15,8 @@ except Exception as e:
     print(f"[Warning] Failed to configure GPU memory growth: {e}")
 
 from core.agent import Agent
-from agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent, MCTSNode
-from agents.mcts_approximation.state_encoder import (
+from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent, MCTSNode
+from battle_agents.mcts_approximation.state_encoder import (
     encode_state,
     NUM_DENSE_FEATURES,
     NUM_SPECIES_INDICES, NUM_ITEM_INDICES, NUM_ABILITY_INDICES,
@@ -117,7 +117,7 @@ class MCTSApproximationAgent(BlindMCTSAgent):
 
     # ─── MCTS loop ──────────────────────────────────────────────────────────
 
-    def get_action(self, state, player="p1", return_probs=False, add_noise=False):
+    def get_action(self, state, player="p1", return_probs=False, add_noise=False, temperature=0.0):
         valid_actions = self.problem.actions(state, player)
         if len(valid_actions) <= 1:
             action = valid_actions[0] if valid_actions else "pass"
@@ -125,7 +125,7 @@ class MCTSApproximationAgent(BlindMCTSAgent):
                 return action, {action: 1.0}
             return action
 
-        from agents.mcts_approximation.state_encoder import ACTION_SPACE
+        from battle_agents.mcts_approximation.state_encoder import ACTION_SPACE
         
         root = MCTSApproximationNode(state=state)
         
@@ -177,18 +177,32 @@ class MCTSApproximationAgent(BlindMCTSAgent):
                 return best_action, {best_action: 1.0}
             return best_action
 
-        best_node = max(root.children, key=lambda c: c.visits)
+        total_visits = sum(c.visits for c in root.children)
+        
+        if total_visits == 0:
+            prob = 1.0 / len(root.children)
+            action_probs = {c.action: prob for c in root.children}
+        else:
+            action_probs = {c.action: c.visits / total_visits for c in root.children}
+
+        if temperature > 0.0 and total_visits > 0:
+            if temperature == 1.0:
+                probs = [action_probs[c.action] for c in root.children]
+            else:
+                weights = [math.pow(c.visits, 1.0 / temperature) for c in root.children]
+                total_weight = sum(weights)
+                probs = [w / total_weight for w in weights]
+                
+            actions = [c.action for c in root.children]
+            chosen_action = np.random.choice(actions, p=probs)
+        else:
+            best_node = max(root.children, key=lambda c: c.visits)
+            chosen_action = best_node.action
         
         if return_probs:
-            total_visits = sum(c.visits for c in root.children)
-            if total_visits == 0:
-                prob = 1.0 / len(root.children)
-                action_probs = {c.action: prob for c in root.children}
-            else:
-                action_probs = {c.action: c.visits / total_visits for c in root.children}
-            return best_node.action, action_probs
+            return chosen_action, action_probs
             
-        return best_node.action
+        return chosen_action
 
     def _expand(self, node, player, action_space):
         """Evaluates node with NN and creates lazily-evaluated children."""
