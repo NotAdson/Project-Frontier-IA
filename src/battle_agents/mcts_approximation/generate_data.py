@@ -17,7 +17,7 @@ def run_simulation(args):
     Player 1 is BlindMCTS, Player 2 is also BlindMCTS (Self-play).
     Returns a list of tuples (encoded_state_list, p1_win)
     """
-    engine_path, formatid, mcts_iterations, mcts_depth = args
+    engine_path, formatid, mcts_iterations = args
     
     client = ShowdownClient(engine_path)
     try:
@@ -28,8 +28,8 @@ def run_simulation(args):
         model_path = str(data_dir / "mcts_model.keras")
         
         # For AlphaZero self-play, we use the MCTSApproximationAgent which loads the Neural Network.
-        agent_p1 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth, model_path=model_path)
-        agent_p2 = MCTSApproximationAgent(problem, iterations=mcts_iterations, max_rollout_depth=mcts_depth, model_path=model_path)
+        agent_p1 = MCTSApproximationAgent(problem, iterations=mcts_iterations, model_path=model_path)
+        agent_p2 = MCTSApproximationAgent(problem, iterations=mcts_iterations, model_path=model_path)
         
         state = problem.initial
         states_history_p1 = []
@@ -92,9 +92,8 @@ def generate_dataset(num_games=1000, processes=None, output_dir="data/games"):
     
     # HIGH QUALITY DATA PARAMS:
     # 400 iterations gives the MCTS a massive amount of time to build a smart tree.
-    # 150 depth ensures rollouts almost always hit a terminal Win/Loss state 
-    # instead of timing out and returning a useless 0.5 (draw) evaluation.
-    args = [(engine_path, "gen3randombattle", 400, 150) for _ in range(remaining_games)]
+    # Evaluating leaf states directly using the Neural Network eliminates the need for slow, random rollouts.
+    args = [(engine_path, "gen3randombattle", 100) for _ in range(remaining_games)]
     
     print(f"Starting {remaining_games} simulations using {processes} processes...")
     

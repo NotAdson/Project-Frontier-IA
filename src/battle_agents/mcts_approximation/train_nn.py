@@ -139,6 +139,97 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     return model
 
 
+def export_to_onnx(model, onnx_path):
+    print(f"Exporting model to ONNX format at {onnx_path}...")
+    
+    # 1. Try Keras 3 direct model.export
+    try:
+        model.export(str(onnx_path), format="onnx")
+        print("ONNX export completed successfully using model.export!")
+        return True
+    except Exception as e:
+        print(f"[Warning] Direct model.export to ONNX failed: {e}")
+
+    # 2. Try torch backend specific export if Keras is using torch backend
+    try:
+        import keras
+        if keras.backend.backend() == "torch":
+            print("Keras is using 'torch' backend. Attempting torch.onnx.export...")
+            import torch
+            
+            dummy_inputs = (
+                torch.zeros((1, 163), dtype=torch.float32),  # dense_features
+                torch.zeros((1, 6), dtype=torch.int32),     # species_indices
+                torch.zeros((1, 6), dtype=torch.int32),     # item_indices
+                torch.zeros((1, 6), dtype=torch.int32),     # ability_indices
+                torch.zeros((1, 24), dtype=torch.int32),    # bench_move_indices
+                torch.zeros((1, 4), dtype=torch.int32),     # move_indices
+                torch.zeros((1, 6), dtype=torch.int32),     # opp_species_indices
+                torch.zeros((1, 24), dtype=torch.int32),    # opp_move_indices
+            )
+            
+            torch.onnx.export(
+                model,
+                dummy_inputs,
+                str(onnx_path),
+                input_names=[
+                    "dense_features", "species_indices", "item_indices", "ability_indices",
+                    "bench_move_indices", "move_indices", "opp_species_indices", "opp_move_indices"
+                ],
+                output_names=["value", "policy"],
+                dynamic_axes={
+                    "dense_features": {0: "batch_size"},
+                    "species_indices": {0: "batch_size"},
+                    "item_indices": {0: "batch_size"},
+                    "ability_indices": {0: "batch_size"},
+                    "bench_move_indices": {0: "batch_size"},
+                    "move_indices": {0: "batch_size"},
+                    "opp_species_indices": {0: "batch_size"},
+                    "opp_move_indices": {0: "batch_size"},
+                    "value": {0: "batch_size"},
+                    "policy": {0: "batch_size"},
+                },
+                opset_version=14,
+            )
+            print("ONNX export completed successfully using torch.onnx.export!")
+            return True
+    except Exception as e_torch:
+        print(f"[Warning] torch.onnx.export failed: {e_torch}")
+
+    # 3. Try tensorflow backend specific export if Keras is using tensorflow backend
+    try:
+        import keras
+        if keras.backend.backend() == "tensorflow":
+            print("Keras is using 'tensorflow' backend. Attempting tf2onnx conversion...")
+            import tensorflow as tf
+            import tf2onnx
+            
+            spec = (
+                tf.TensorSpec((None, 163), tf.float32, name="dense_features"),
+                tf.TensorSpec((None, 6), tf.int32, name="species_indices"),
+                tf.TensorSpec((None, 6), tf.int32, name="item_indices"),
+                tf.TensorSpec((None, 6), tf.int32, name="ability_indices"),
+                tf.TensorSpec((None, 24), tf.int32, name="bench_move_indices"),
+                tf.TensorSpec((None, 4), tf.int32, name="move_indices"),
+                tf.TensorSpec((None, 6), tf.int32, name="opp_species_indices"),
+                tf.TensorSpec((None, 24), tf.int32, name="opp_move_indices"),
+            )
+            
+            tf2onnx.convert.from_keras(
+                model,
+                input_signature=spec,
+                opset=14,
+                output_path=str(onnx_path)
+            )
+            print("ONNX export completed successfully using tf2onnx!")
+            return True
+    except Exception as e_tf:
+        print(f"[Warning] tf2onnx export failed: {e_tf}")
+
+    print("[Error] All ONNX export methods failed.")
+    return False
+
+
 def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500):
     print(f"[Keras backend: {keras.backend.backend()}]")
     print(f"Locating game files in {data_dir}/gen*...")
@@ -276,6 +367,10 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     save_path.parent.mkdir(parents=True, exist_ok=True)
     model.save(str(save_path))
     print(f"Model saved to {model_save_path}")
+
+    # Export to ONNX
+    onnx_path = save_path.with_suffix(".onnx")
+    export_to_onnx(model, onnx_path)
 
 
 if __name__ == "__main__":

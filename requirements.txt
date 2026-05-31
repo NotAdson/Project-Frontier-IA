@@ -13,3 +13,11 @@ pyyaml>=6.0
 #   KERAS_BACKEND=tensorflow   (default if TF is installed)
 #   KERAS_BACKEND=torch
 #   KERAS_BACKEND=jax
+
+# ONNX Inference & Export Optimization
+onnx>=1.15.0
+onnxruntime>=1.16.0
+tf2onnx>=1.15.0
+
+# JIT Compilation Optimization
+numba>=0.58.0

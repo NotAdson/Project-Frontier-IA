@@ -1,4 +1,5 @@
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import glob
 import shutil
 import sys
@@ -34,7 +35,16 @@ def run_pipeline(num_games=1000, num_generations=1, processes=None):
         if not gen_nums:
             next_gen = 1
         else:
-            next_gen = max(gen_nums) + 1
+            latest_gen = max(gen_nums)
+            latest_gen_dir = os.path.join(data_dir, f"gen{latest_gen}")
+            existing_games = len(glob.glob(os.path.join(latest_gen_dir, "game_*.json")))
+            
+            if existing_games < num_games:
+                print(f"\n[Resuming] Latest generation {latest_gen} is incomplete: {existing_games}/{num_games} games. Continuing it.")
+                next_gen = latest_gen
+            else:
+                print(f"\n[New Gen] Latest generation {latest_gen} is complete: {existing_games}/{num_games} games. Starting next generation.")
+                next_gen = latest_gen + 1
             
         next_gen_dir = os.path.join(data_dir, f"gen{next_gen}")
         os.makedirs(next_gen_dir, exist_ok=True)
@@ -54,42 +64,9 @@ def run_pipeline(num_games=1000, num_generations=1, processes=None):
         # 4. Archive
         print(f"\n--- Phase 3: Archiving Model to {next_gen_dir} ---")
         shutil.copy(model_save_path, os.path.join(next_gen_dir, "mcts_model.keras"))
-        
-        # 5. Benchmark
-        print("\n--- Phase 4: Benchmarking against previous generations ---")
-        engine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "engine"))
-            
-        client = ShowdownClient(engine_path)
-        
-        try:
-            agents = {
-                "Random": lambda prob: RandomAgent(prob)
-            }
-            
-            # Load all available generation models
-            for i in range(1, next_gen + 1):
-                mp = os.path.join(data_dir, f"gen{i}", "mcts_model.keras")
-                if os.path.exists(mp):
-                    # Use default arguments trick to capture the variable `mp` properly in the lambda
-                    agents[f"Gen{i}"] = lambda prob, p=mp: MCTSApproximationAgent(prob, iterations=50, max_rollout_depth=0, model_path=p)
-            
-            benchmark = RoundRobinBenchmark(client, agents, games_per_matchup=5, shuffle=True)
-            benchmark.run()
-            
-            report_path = os.path.join(next_gen_dir, "benchmark_report.txt")
-            print(f"Saving benchmark report to {report_path}")
-            
-            # Redirect stdout to save report
-            original_stdout = sys.stdout
-            with open(report_path, "w") as f:
-                sys.stdout = f
-                benchmark.print_report()
-                sys.stdout = original_stdout
-                
-            print("Benchmark Complete! Check the report.")
-            
-        finally:
-            client.close()
+        onnx_save_path = model_save_path.replace(".keras", ".onnx")
+        if os.path.exists(onnx_save_path):
+            shutil.copy(onnx_save_path, os.path.join(next_gen_dir, "mcts_model.onnx"))
             
         print(f"\n=== Pipeline for Generation {next_gen} Finished successfully! ===")
 
