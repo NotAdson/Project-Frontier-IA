@@ -97,11 +97,22 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         if onnx_path:
             try:
                 import onnxruntime as ort
+                
+                # Configure thread pools to avoid "pthread_create failed" (EAGAIN / Resource temporarily unavailable) in VMs
+                opts = ort.SessionOptions()
+                opts.intra_op_num_threads = 1
+                opts.inter_op_num_threads = 1
+                opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+                
                 # Load with CPU Execution Provider to ensure strictly CPU execution
-                self.onnx_session = ort.InferenceSession(onnx_path, providers=['CPUExecutionProvider'])
+                self.onnx_session = ort.InferenceSession(
+                    onnx_path, 
+                    sess_options=opts, 
+                    providers=['CPUExecutionProvider']
+                )
                 self.input_names = [inp.name for inp in self.onnx_session.get_inputs()]
                 self.output_names = [out.name for out in self.onnx_session.get_outputs()]
-                print(f"[MCTSApproximationAgent] Loaded ONNX model from {onnx_path} using onnxruntime (CPU)")
+                print(f"[MCTSApproximationAgent] Loaded ONNX model from {onnx_path} using onnxruntime (CPU, 1 thread)")
             except Exception as e:
                 print(f"[Warning] Failed to load ONNX model using onnxruntime: {e}. Falling back to Keras.")
 
@@ -120,8 +131,12 @@ class MCTSApproximationAgent(BlindMCTSAgent):
                                else fallback if os.path.exists(fallback)
                                else None)
                 if actual_path:
-                    self.model = keras.models.load_model(actual_path, compile=False)
-                    print(f"[MCTSApproximationAgent] Loaded Keras model from {actual_path} as fallback")
+                    try:
+                        self.model = keras.models.load_model(actual_path, compile=False)
+                        print(f"[MCTSApproximationAgent] Loaded Keras model from {actual_path} as fallback")
+                    except Exception as err_keras:
+                        print(f"[Warning] Failed to load Keras model due to Keras version mismatch/deserialization issues: {err_keras}. "
+                              "Search will continue with default (0.5 value) predictions.")
                 else:
                     print(f"[Warning] MCTS Approximation model not found at {model_path}. "
                           "Will predict 0.5 for all states.")
