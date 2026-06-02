@@ -1,0 +1,518 @@
+{
+  "aguavberry": {
+    "id": "aguavberry",
+    "name": "Aguav Berry"
+  },
+  "apicotberry": {
+    "id": "apicotberry",
+    "name": "Apicot Berry"
+  },
+  "berryjuice": {
+    "id": "berryjuice",
+    "name": "Berry Juice"
+  },
+  "blackbelt": {
+    "id": "blackbelt",
+    "name": "Black Belt"
+  },
+  "blackglasses": {
+    "id": "blackglasses",
+    "name": "Black Glasses"
+  },
+  "charcoal": {
+    "id": "charcoal",
+    "name": "Charcoal"
+  },
+  "dragonfang": {
+    "id": "dragonfang",
+    "name": "Dragon Fang"
+  },
+  "enigmaberry": {
+    "id": "enigmaberry",
+    "name": "Enigma Berry"
+  },
+  "fastball": {
+    "id": "fastball",
+    "name": "Fast Ball"
+  },
+  "figyberry": {
+    "id": "figyberry",
+    "name": "Figy Berry"
+  },
+  "ganlonberry": {
+    "id": "ganlonberry",
+    "name": "Ganlon Berry"
+  },
+  "hardstone": {
+    "id": "hardstone",
+    "name": "Hard Stone"
+  },
+  "heavyball": {
+    "id": "heavyball",
+    "name": "Heavy Ball"
+  },
+  "iapapaberry": {
+    "id": "iapapaberry",
+    "name": "Iapapa Berry"
+  },
+  "kingsrock": {
+    "id": "kingsrock",
+    "name": "King's Rock"
+  },
+  "lansatberry": {
+    "id": "lansatberry",
+    "name": "Lansat Berry"
+  },
+  "laxincense": {
+    "id": "laxincense",
+    "name": "Lax Incense"
+  },
+  "levelball": {
+    "id": "levelball",
+    "name": "Level Ball"
+  },
+  "liechiberry": {
+    "id": "liechiberry",
+    "name": "Liechi Berry"
+  },
+  "lightball": {
+    "id": "lightball",
+    "name": "Light Ball"
+  },
+  "loveball": {
+    "id": "loveball",
+    "name": "Love Ball"
+  },
+  "lureball": {
+    "id": "lureball",
+    "name": "Lure Ball"
+  },
+  "magnet": {
+    "id": "magnet",
+    "name": "Magnet"
+  },
+  "magoberry": {
+    "id": "magoberry",
+    "name": "Mago Berry"
+  },
+  "metalcoat": {
+    "id": "metalcoat",
+    "name": "Metal Coat"
+  },
+  "miracleseed": {
+    "id": "miracleseed",
+    "name": "Miracle Seed"
+  },
+  "moonball": {
+    "id": "moonball",
+    "name": "Moon Ball"
+  },
+  "mysticwater": {
+    "id": "mysticwater",
+    "name": "Mystic Water"
+  },
+  "nevermeltice": {
+    "id": "nevermeltice",
+    "name": "Never-Melt Ice"
+  },
+  "oranberry": {
+    "id": "oranberry",
+    "name": "Oran Berry"
+  },
+  "petayaberry": {
+    "id": "petayaberry",
+    "name": "Petaya Berry"
+  },
+  "poisonbarb": {
+    "id": "poisonbarb",
+    "name": "Poison Barb"
+  },
+  "quickclaw": {
+    "id": "quickclaw",
+    "name": "Quick Claw"
+  },
+  "salacberry": {
+    "id": "salacberry",
+    "name": "Salac Berry"
+  },
+  "seaincense": {
+    "id": "seaincense",
+    "name": "Sea Incense"
+  },
+  "sharpbeak": {
+    "id": "sharpbeak",
+    "name": "Sharp Beak"
+  },
+  "silkscarf": {
+    "id": "silkscarf",
+    "name": "Silk Scarf"
+  },
+  "silverpowder": {
+    "id": "silverpowder",
+    "name": "Silver Powder"
+  },
+  "sitrusberry": {
+    "id": "sitrusberry",
+    "name": "Sitrus Berry"
+  },
+  "softsand": {
+    "id": "softsand",
+    "name": "Soft Sand"
+  },
+  "spelltag": {
+    "id": "spelltag",
+    "name": "Spell Tag"
+  },
+  "sportball": {
+    "id": "sportball",
+    "name": "Sport Ball"
+  },
+  "starfberry": {
+    "id": "starfberry",
+    "name": "Starf Berry"
+  },
+  "twistedspoon": {
+    "id": "twistedspoon",
+    "name": "Twisted Spoon"
+  },
+  "wikiberry": {
+    "id": "wikiberry",
+    "name": "Wiki Berry"
+  },
+  "brightpowder": {
+    "id": "brightpowder",
+    "name": "Bright Powder"
+  },
+  "choiceband": {
+    "id": "choiceband",
+    "name": "Choice Band"
+  },
+  "deepseascale": {
+    "id": "deepseascale",
+    "name": "Deep Sea Scale"
+  },
+  "deepseatooth": {
+    "id": "deepseatooth",
+    "name": "Deep Sea Tooth"
+  },
+  "leftovers": {
+    "id": "leftovers",
+    "name": "Leftovers"
+  },
+  "luckypunch": {
+    "id": "luckypunch",
+    "name": "Lucky Punch"
+  },
+  "mentalherb": {
+    "id": "mentalherb",
+    "name": "Mental Herb"
+  },
+  "stick": {
+    "id": "stick",
+    "name": "Stick"
+  },
+  "thickclub": {
+    "id": "thickclub",
+    "name": "Thick Club"
+  },
+  "aspearberry": {
+    "id": "aspearberry",
+    "name": "Aspear Berry"
+  },
+  "belueberry": {
+    "id": "belueberry",
+    "name": "Belue Berry"
+  },
+  "blukberry": {
+    "id": "blukberry",
+    "name": "Bluk Berry"
+  },
+  "cheriberry": {
+    "id": "cheriberry",
+    "name": "Cheri Berry"
+  },
+  "chestoberry": {
+    "id": "chestoberry",
+    "name": "Chesto Berry"
+  },
+  "cornnberry": {
+    "id": "cornnberry",
+    "name": "Cornn Berry"
+  },
+  "durinberry": {
+    "id": "durinberry",
+    "name": "Durin Berry"
+  },
+  "grepaberry": {
+    "id": "grepaberry",
+    "name": "Grepa Berry"
+  },
+  "hondewberry": {
+    "id": "hondewberry",
+    "name": "Hondew Berry"
+  },
+  "kelpsyberry": {
+    "id": "kelpsyberry",
+    "name": "Kelpsy Berry"
+  },
+  "leppaberry": {
+    "id": "leppaberry",
+    "name": "Leppa Berry"
+  },
+  "lumberry": {
+    "id": "lumberry",
+    "name": "Lum Berry"
+  },
+  "mail": {
+    "id": "mail",
+    "name": "Mail"
+  },
+  "magostberry": {
+    "id": "magostberry",
+    "name": "Magost Berry"
+  },
+  "nanabberry": {
+    "id": "nanabberry",
+    "name": "Nanab Berry"
+  },
+  "nomelberry": {
+    "id": "nomelberry",
+    "name": "Nomel Berry"
+  },
+  "pamtreberry": {
+    "id": "pamtreberry",
+    "name": "Pamtre Berry"
+  },
+  "pechaberry": {
+    "id": "pechaberry",
+    "name": "Pecha Berry"
+  },
+  "persimberry": {
+    "id": "persimberry",
+    "name": "Persim Berry"
+  },
+  "pinapberry": {
+    "id": "pinapberry",
+    "name": "Pinap Berry"
+  },
+  "pomegberry": {
+    "id": "pomegberry",
+    "name": "Pomeg Berry"
+  },
+  "qualotberry": {
+    "id": "qualotberry",
+    "name": "Qualot Berry"
+  },
+  "rabutaberry": {
+    "id": "rabutaberry",
+    "name": "Rabuta Berry"
+  },
+  "rawstberry": {
+    "id": "rawstberry",
+    "name": "Rawst Berry"
+  },
+  "razzberry": {
+    "id": "razzberry",
+    "name": "Razz Berry"
+  },
+  "spelonberry": {
+    "id": "spelonberry",
+    "name": "Spelon Berry"
+  },
+  "tamatoberry": {
+    "id": "tamatoberry",
+    "name": "Tamato Berry"
+  },
+  "watmelberry": {
+    "id": "watmelberry",
+    "name": "Watmel Berry"
+  },
+  "wepearberry": {
+    "id": "wepearberry",
+    "name": "Wepear Berry"
+  },
+  "machobrace": {
+    "id": "machobrace",
+    "name": "Macho Brace"
+  },
+  "oldamber": {
+    "id": "oldamber",
+    "name": "Old Amber"
+  },
+  "souldew": {
+    "id": "souldew",
+    "name": "Soul Dew"
+  },
+  "clawfossil": {
+    "id": "clawfossil",
+    "name": "Claw Fossil"
+  },
+  "domefossil": {
+    "id": "domefossil",
+    "name": "Dome Fossil"
+  },
+  "helixfossil": {
+    "id": "helixfossil",
+    "name": "Helix Fossil"
+  },
+  "rootfossil": {
+    "id": "rootfossil",
+    "name": "Root Fossil"
+  },
+  "safariball": {
+    "id": "safariball",
+    "name": "Safari Ball"
+  },
+  "dragonscale": {
+    "id": "dragonscale",
+    "name": "Dragon Scale"
+  },
+  "metalpowder": {
+    "id": "metalpowder",
+    "name": "Metal Powder"
+  },
+  "upgrade": {
+    "id": "upgrade",
+    "name": "Up-Grade"
+  },
+  "diveball": {
+    "id": "diveball",
+    "name": "Dive Ball"
+  },
+  "firestone": {
+    "id": "firestone",
+    "name": "Fire Stone"
+  },
+  "focusband": {
+    "id": "focusband",
+    "name": "Focus Band"
+  },
+  "friendball": {
+    "id": "friendball",
+    "name": "Friend Ball"
+  },
+  "greatball": {
+    "id": "greatball",
+    "name": "Great Ball"
+  },
+  "leafstone": {
+    "id": "leafstone",
+    "name": "Leaf Stone"
+  },
+  "luxuryball": {
+    "id": "luxuryball",
+    "name": "Luxury Ball"
+  },
+  "masterball": {
+    "id": "masterball",
+    "name": "Master Ball"
+  },
+  "moonstone": {
+    "id": "moonstone",
+    "name": "Moon Stone"
+  },
+  "nestball": {
+    "id": "nestball",
+    "name": "Nest Ball"
+  },
+  "netball": {
+    "id": "netball",
+    "name": "Net Ball"
+  },
+  "pokeball": {
+    "id": "pokeball",
+    "name": "Poke Ball"
+  },
+  "premierball": {
+    "id": "premierball",
+    "name": "Premier Ball"
+  },
+  "repeatball": {
+    "id": "repeatball",
+    "name": "Repeat Ball"
+  },
+  "scopelens": {
+    "id": "scopelens",
+    "name": "Scope Lens"
+  },
+  "shellbell": {
+    "id": "shellbell",
+    "name": "Shell Bell"
+  },
+  "sunstone": {
+    "id": "sunstone",
+    "name": "Sun Stone"
+  },
+  "thunderstone": {
+    "id": "thunderstone",
+    "name": "Thunder Stone"
+  },
+  "timerball": {
+    "id": "timerball",
+    "name": "Timer Ball"
+  },
+  "ultraball": {
+    "id": "ultraball",
+    "name": "Ultra Ball"
+  },
+  "waterstone": {
+    "id": "waterstone",
+    "name": "Water Stone"
+  },
+  "whiteherb": {
+    "id": "whiteherb",
+    "name": "White Herb"
+  },
+  "berserkgene": {
+    "id": "berserkgene",
+    "name": "Berserk Gene"
+  },
+  "berry": {
+    "id": "berry",
+    "name": "Berry"
+  },
+  "bitterberry": {
+    "id": "bitterberry",
+    "name": "Bitter Berry"
+  },
+  "burntberry": {
+    "id": "burntberry",
+    "name": "Burnt Berry"
+  },
+  "goldberry": {
+    "id": "goldberry",
+    "name": "Gold Berry"
+  },
+  "iceberry": {
+    "id": "iceberry",
+    "name": "Ice Berry"
+  },
+  "mintberry": {
+    "id": "mintberry",
+    "name": "Mint Berry"
+  },
+  "miracleberry": {
+    "id": "miracleberry",
+    "name": "Miracle Berry"
+  },
+  "mysteryberry": {
+    "id": "mysteryberry",
+    "name": "Mystery Berry"
+  },
+  "pinkbow": {
+    "id": "pinkbow",
+    "name": "Pink Bow"
+  },
+  "polkadotbow": {
+    "id": "polkadotbow",
+    "name": "Polkadot Bow"
+  },
+  "przcureberry": {
+    "id": "przcureberry",
+    "name": "PRZ Cure Berry"
+  },
+  "psncureberry": {
+    "id": "psncureberry",
+    "name": "PSN Cure Berry"
+  }
+}

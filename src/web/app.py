@@ -11,7 +11,7 @@ from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
 from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
 
-from battle_agents.mcts_approximation.moves_db import get_move_data
+from battle_agents.mcts_approximation.db.moves_db import get_move_data
 
 class GameController:
     def __init__(self):

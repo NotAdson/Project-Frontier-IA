@@ -1,37 +1,50 @@
 """
 Encodes a PokemonState into a flat numeric vector for the Neural Network.
 
-Feature layout (total 239 elements):
+Feature layout (total 738 elements):
 
-  DENSE [0:163]:
-    OWN TEAM        — 6 Pokémon × 13 = 78  (hp_ratio, fainted, 5 statuses, 6 boosts)
-    OWN ACTIVE      — 5 base stats + 4 moves × 5 = 25  (power, accuracy, 3 category flags)
-    OPP REVEALED    — 6 Pokémon × 7 = 42  (hp_ratio, fainted, 5 statuses — public only)
+  DENSE [0:654]:
+    OWN TEAM        — 6 Pokémon × 52 = 312  (hp_ratio, fainted, 5 statuses, is_active, level, 5 actual level-scaled stats, 18 types, 4 moves × 5 dense details)
+    OWN ACTIVE      — 6 active boosts (6)
+    OPP REVEALED    — 6 Pokémon × 52 = 312  (hp_ratio, fainted, 5 statuses, is_active, level, 5 base stats, 18 types, 4 moves × 5 dense details — public only)
+    OPP ACTIVE      — 6 active boosts (6)
     FIELD           — 18  (weather ×4, own hazards/screens ×5, opp hazards/screens ×5,
                            own active volatiles ×4)
 
-  EMBEDDING INDICES [163:239] (integers, 0 = unknown/padding):
-    own_species[6]          → species ID per own bench slot
-    own_items[6]            → item ID per own bench slot
-    own_abilities[6]        → ability ID per own bench slot
-    own_bench_moves[6][4]   → 4 move IDs per own bench Pokémon  (24 total)
-    own_active_moves[4]     → 4 move IDs for the currently active Pokémon
-    opp_species[6]          → species ID once revealed; 0 if never sent out
-    opp_used_moves[6][4]    → move IDs used so far; 0 for unrevealed moves  (24 total)
-    Total: 6+6+6+24+4+6+24 = 76
+  EMBEDDING INDICES [654:738] (integers, 0 = unknown/padding):
+    species_indices[12]     → own_species[6] + opp_species[6]
+    move_indices[48]        → own_bench_moves[24] + opp_used_moves[24]
+    item_indices[12]        → own_items[6] + opp_items[6]
+    ability_indices[12]     → own_abilities[6] + opp_abilities[6]
+    Total: 12 + 48 + 12 + 12 = 84
 
 The encoder is "Blind" — for the opponent it only encodes what is publicly
-visible in a real match: species and HP of Pokémon that have been sent out,
-moves that have already been used, and shared field conditions (weather/hazards).
+visible in a real match. Once an opponent's Pokémon is revealed (sent out or fainted),
+we symmetrically encode its species, level, normalized base stats, types, current HP ratio,
+active status, and any active conditions. Moves are only encoded once they are actually
+used (revealed) in battle, maintaining strict compliance with fog-of-war rules.
 """
+
 
 import numpy as np
 
-from battle_agents.mcts_approximation.moves_db import get_move_data, get_move_idx
-from battle_agents.mcts_approximation.species_db import get_species_idx, get_item_idx, get_ability_idx
+from battle_agents.mcts_approximation.db.moves_db import get_move_data, get_move_idx
+from battle_agents.mcts_approximation.db.species_db import get_species_idx, get_item_idx, get_ability_idx, get_species_data
 
 STATUSES = ["tox", "brn", "par", "slp", "frz"]
 BOOST_STATS = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
+
+TYPES = ["Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Steel", "Dark", "Fairy"]
+
+def _encode_types(types_list: list) -> list:
+    """Returns an 18-element binary list indicating the active types."""
+    res = [0.0] * len(TYPES)
+    if not types_list:
+        return res
+    for t in types_list:
+        if t in TYPES:
+            res[TYPES.index(t)] = 1.0
+    return res
 
 NUM_BENCH = 6  # Total Pokémon per team
 NUM_MOVES = 4  # Move slots per Pokémon
@@ -75,15 +88,16 @@ def _species_id_from_ident(ident: str) -> str:
     return ""
 
 
-# ─── Own team from state_dict sides (has full data including bench) ────────────
+# ─── Own team encoding ─────────────────────────────────────────────────────────
 
 def _encode_own_team(state_dict: dict, player: str):
     """
     Encodes all 6 own Pokémon from the full state_dict.
     Returns (dense_features, species_indices, item_indices, ability_indices, bench_move_indices).
 
-    Per Pokémon (13 dense):
-        hp_ratio (1) + fainted (1) + 5 statuses + 6 boosts = 13
+    Per Pokémon (52 dense):
+        hp_ratio (1) + fainted (1) + 5 statuses + isActive (1) + level (1) + 5 stats + 18 types
+        + 4 moves × 5 dense details (20) = 52
 
     Per Pokémon (4 embedding IDs):
         move IDs from moveSlots (padded with 0 if fewer than 4 moves)
@@ -111,10 +125,15 @@ def _encode_own_team(state_dict: dict, player: str):
             status = p.get("status", "")
             statuses = _status_onehot(status)
 
-            boosts = p.get("boosts", {})
-            boost_feats = _normalise_boosts(boosts)
+            is_active = 1.0 if (p.get("isActive", False) or p.get("active", False)) else 0.0
+            level = p.get("level", 100) / 100.0
 
-            dense.extend([hp_ratio, fainted] + statuses + boost_feats)
+            p_stats = p.get("stats", p.get("storedStats", p.get("baseStoredStats", {})))
+            atk = p_stats.get("atk", 0) / 500.0
+            def_ = p_stats.get("def", 0) / 500.0
+            spa = p_stats.get("spa", 0) / 500.0
+            spd = p_stats.get("spd", 0) / 500.0
+            spe = p_stats.get("spe", 0) / 500.0
 
             # Species ID from speciesState.id or details string
             species_id = ""
@@ -125,12 +144,38 @@ def _encode_own_team(state_dict: dict, player: str):
                 details = p.get("details", "")
                 species_id = _species_id_from_details(details) if details else ""
 
+            species_data = get_species_data(species_id)
+            species_types = species_data.get("types", [])
+            types_encoded = _encode_types(species_types)
+
+            # 4 moves dense features
+            move_slots = p.get("moveSlots", [])
+            moves_dense = []
+            for j in range(NUM_MOVES):
+                if j < len(move_slots):
+                    m = move_slots[j]
+                    move_id = m.get("id", "")
+                    db_move = get_move_data(move_id)
+                    power = db_move.get("basePower", 0) / 150.0
+                    accuracy = db_move.get("accuracy", 100) / 100.0
+                    cat = db_move.get("category", "Status")
+                    moves_dense.extend([
+                        power,
+                        accuracy,
+                        1.0 if cat == "Physical" else 0.0,
+                        1.0 if cat == "Special" else 0.0,
+                        1.0 if cat == "Status" else 0.0,
+                    ])
+                else:
+                    moves_dense.extend([0.0] * 5)
+
+            dense.extend([hp_ratio, fainted] + statuses + [is_active, level, atk, def_, spa, spd, spe] + types_encoded + moves_dense)
+
             species_idxs.append(get_species_idx(species_id))
             item_idxs.append(get_item_idx(p.get("item", "")))
             ability_idxs.append(get_ability_idx(p.get("ability", p.get("baseAbility", ""))))
 
             # Moves from moveSlots (available for all bench Pokémon in state_dict)
-            move_slots = p.get("moveSlots", [])
             for j in range(NUM_MOVES):
                 if j < len(move_slots):
                     bench_move_idxs.append(get_move_idx(move_slots[j].get("id", "")))
@@ -138,78 +183,28 @@ def _encode_own_team(state_dict: dict, player: str):
                     bench_move_idxs.append(0)
         else:
             # Pad missing slots
-            dense.extend([0.0] * 13)
+            dense.extend([0.0] * 52)
             species_idxs.append(0)
             item_idxs.append(0)
             ability_idxs.append(0)
             bench_move_idxs.extend([0] * NUM_MOVES)
-
     return dense, species_idxs, item_idxs, ability_idxs, bench_move_idxs
 
 
-# ─── Active Pokémon moves (from request_dict) ─────────────────────────────────
 
-def _encode_active_moves(request: dict):
-    """
-    Encodes the 4 move slots of the active Pokémon using the move database.
-    Returns (dense_features, move_indices).
-    
-    Per move (5 dense): base_power + accuracy + 3 category one-hot
-    """
-    dense = []
-    move_idxs = []
-    
-    active_moves = []
-    if request and "active" in request and len(request["active"]) > 0:
-        active_moves = request["active"][0].get("moves", [])
-    
-    for i in range(NUM_MOVES):
-        if i < len(active_moves):
-            move_info = active_moves[i]
-            move_id = move_info.get("id") if isinstance(move_info, dict) else move_info
-            
-            db_move = get_move_data(move_id)
-            power = db_move.get("basePower", 0) / 150.0
-            accuracy = db_move.get("accuracy", 100) / 100.0
-            cat = db_move.get("category", "Status")
-            
-            dense.extend([
-                power,
-                accuracy,
-                1.0 if cat == "Physical" else 0.0,
-                1.0 if cat == "Special" else 0.0,
-                1.0 if cat == "Status" else 0.0,
-            ])
-            move_idxs.append(get_move_idx(move_id))
-        else:
-            dense.extend([0.0] * 5)
-            move_idxs.append(0)
-    
-    return dense, move_idxs
+# ─── Active Pokémon boosts ───────────────────────────────────────────────────
 
 
-# ─── Active Pokémon stats (from state_dict own side) ──────────────────────────
-
-def _encode_active_stats(state_dict: dict, player: str):
+def _encode_active_boosts(side: dict) -> list:
     """
-    Encodes the normalised base stats of the currently active Pokémon.
-    Returns 5 floats: atk, def, spa, spd, spe all / 500.
+    Encodes the boosts of the currently active Pokémon on the given side.
+    Returns 6 floats normalised from [-6, 6] to [-1, 1].
     """
-    side_idx = 0 if player == "p1" else 1
-    sides = state_dict.get("sides", [])
-    own_side = sides[side_idx] if len(sides) > side_idx else {}
-    
-    for p in own_side.get("pokemon", []):
+    for p in side.get("pokemon", []):
         if p.get("isActive", False):
-            stats = p.get("storedStats", p.get("baseStoredStats", {}))
-            return [
-                stats.get("atk", 0) / 500.0,
-                stats.get("def", 0) / 500.0,
-                stats.get("spa", 0) / 500.0,
-                stats.get("spd", 0) / 500.0,
-                stats.get("spe", 0) / 500.0,
-            ]
-    return [0.0] * 5
+            boosts = p.get("boosts", {})
+            return _normalise_boosts(boosts)
+    return [0.0] * 6
 
 
 # ─── Field conditions (weather, hazards, screens, volatiles) ─────────────────
@@ -276,15 +271,18 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
     (isActive, newlySwitched, or previouslySwitchedIn > 0) or when it faints.
     Pokémon never sent out are encoded as all-zeros (unknown).
 
-    Per slot (7 dense):
-        hp_ratio (1) + fainted (1) + 5 statuses = 7
+    Per slot (52 dense):
+        hp_ratio (1) + fainted (1) + 5 statuses + isActive (1) + level (1) + 5 stats + 18 types
+        + 4 moves × 5 dense details (20) = 52
         Unknown slots: all 0.0
 
     Per slot (embedding IDs):
         species_idx (1): 0 if not yet revealed
         used_move_idxs (4): move ID if used this battle, 0 if not yet seen
+        item_idx (1): 0 if not yet revealed
+        ability_idx (1): 0 if not yet revealed
 
-    Returns (dense, opp_species_idxs, opp_move_idxs)
+    Returns (dense, opp_species_idxs, opp_move_idxs, opp_item_idxs, opp_ability_idxs)
     """
     opp_idx = 1 if player == "p1" else 0
     sides = state_dict.get("sides", [])
@@ -294,6 +292,8 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
     dense = []
     opp_species_idxs = []
     opp_move_idxs = []  # 4 per Pokémon; 0 = not yet revealed
+    opp_item_idxs = []
+    opp_ability_idxs = []
 
     for i in range(NUM_BENCH):
         if i < len(pokemon_list):
@@ -316,7 +316,8 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
                 hp_ratio = hp / maxhp if maxhp > 0 else 0.0
                 fainted = 1.0 if p.get("fainted", False) or hp == 0 else 0.0
                 status = p.get("status", "")
-                dense.extend([hp_ratio, fainted] + _status_onehot(status))
+                is_active = 1.0 if (p.get("isActive", False) or p.get("active", False)) else 0.0
+                level = p.get("level", 100) / 100.0
 
                 # Species is known once the Pokémon was sent out
                 species_id = ""
@@ -326,10 +327,45 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
                 if not species_id:
                     details = p.get("details", "")
                     species_id = _species_id_from_details(details) if details else ""
+
+                species_data = get_species_data(species_id)
+                species_types = species_data.get("types", [])
+                types_encoded = _encode_types(species_types)
+
+                # Use opponent's species base stats normalized (unscaled by level)
+                base_stats = species_data.get("baseStats", {})
+                atk = base_stats.get("atk", 0) / 500.0
+                def_ = base_stats.get("def", 0) / 500.0
+                spa = base_stats.get("spa", 0) / 500.0
+                spd = base_stats.get("spd", 0) / 500.0
+                spe = base_stats.get("spe", 0) / 500.0
+
+                # 4 moves dense features (only for moves that have been used/revealed in battle)
+                move_slots = p.get("moveSlots", [])
+                moves_dense = []
+                for j in range(NUM_MOVES):
+                    if j < len(move_slots) and move_slots[j].get("used", False):
+                        move_id = move_slots[j].get("id", "")
+                        db_move = get_move_data(move_id)
+                        power = db_move.get("basePower", 0) / 150.0
+                        accuracy = db_move.get("accuracy", 100) / 100.0
+                        cat = db_move.get("category", "Status")
+                        moves_dense.extend([
+                            power,
+                            accuracy,
+                            1.0 if cat == "Physical" else 0.0,
+                            1.0 if cat == "Special" else 0.0,
+                            1.0 if cat == "Status" else 0.0,
+                        ])
+                    else:
+                        moves_dense.extend([0.0] * 5)
+
+                dense.extend([hp_ratio, fainted] + _status_onehot(status) + [is_active, level, atk, def_, spa, spd, spe] + types_encoded + moves_dense)
                 opp_species_idxs.append(get_species_idx(species_id))
+                opp_item_idxs.append(get_item_idx(p.get("item", "")))
+                opp_ability_idxs.append(get_ability_idx(p.get("ability", p.get("baseAbility", ""))))
 
                 # Only include moves that have been used (revealed through battle)
-                move_slots = p.get("moveSlots", [])
                 for j in range(NUM_MOVES):
                     if j < len(move_slots) and move_slots[j].get("used", False):
                         opp_move_idxs.append(get_move_idx(move_slots[j].get("id", "")))
@@ -337,15 +373,19 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
                         opp_move_idxs.append(0)  # Not yet revealed
             else:
                 # Pokémon never entered the battle — treat as unknown
-                dense.extend([0.0] * 7)
+                dense.extend([0.0] * 52)
                 opp_species_idxs.append(0)
                 opp_move_idxs.extend([0] * NUM_MOVES)
+                opp_item_idxs.append(0)
+                opp_ability_idxs.append(0)
         else:
-            dense.extend([0.0] * 7)
+            dense.extend([0.0] * 52)
             opp_species_idxs.append(0)
             opp_move_idxs.extend([0] * NUM_MOVES)
+            opp_item_idxs.append(0)
+            opp_ability_idxs.append(0)
 
-    return dense, opp_species_idxs, opp_move_idxs
+    return dense, opp_species_idxs, opp_move_idxs, opp_item_idxs, opp_ability_idxs
 
 
 # ─── Main encode function ─────────────────────────────────────────────────────
@@ -354,48 +394,57 @@ def encode_state(state, player: str = "p1") -> np.ndarray:
     """
     Encodes the full PokemonState into a flat numeric vector.
 
-    Layout (total 239 elements):
+    Layout (total 738 elements):
 
-    DENSE [0:163]:
-        [0:78]    — own team (6 × 13): hp, fainted, 5 statuses, 6 boosts
-        [78:83]   — own active base stats (5)
-        [83:103]  — own active moves (4 × 5): power, accuracy, 3 category flags
-        [103:145] — opp revealed team (6 × 7): hp, fainted, 5 statuses (public only)
-        [145:163] — field conditions (18): weather, hazards, screens, volatiles
+    DENSE [0:654]:
+        [0:312]   — own team (6 × 52): hp, fainted, 5 statuses, active_flag, level, 5 actual stats, 18 types, 4 moves × 5 dense details
+        [312:318] — own active boosts (6)
+        [318:630] — opp revealed team (6 × 52): hp, fainted, 5 statuses, active_flag, level, 5 base stats, 18 types, 4 moves × 5 dense details (public only)
+        [630:636] — opp active boosts (6)
+        [636:654] — field conditions (18): weather, hazards, screens, volatiles
 
-    EMBEDDING INDICES [163:239] (integers):
-        [163:169] — own species        (6)
-        [169:175] — own items          (6)
-        [175:181] — own abilities      (6)
-        [181:205] — own bench moves    (6 × 4 = 24)
-        [205:209] — own active moves   (4)
-        [209:215] — opp species        (6, 0 if not revealed)
-        [215:239] — opp used moves     (6 × 4 = 24, 0 if not yet seen)
+    EMBEDDING INDICES [654:738] (integers):
+        [654:666] — species indices (12 total: 6 own species, 6 opp species)
+        [666:714] — move indices    (48 total: 24 own bench moves, 24 opp used moves)
+        [714:726] — item indices    (12 total: 6 own items, 6 opp items)
+        [720:738] — ability indices (12 total: 6 own abilities, 6 opp abilities)
     """
-    request = state.request_dict if player == "p1" else state.p2_request_dict
     state_dict = state.state_dict
 
     # 1. Own full team (dense + embedding IDs)
     team_dense, species_idxs, item_idxs, ability_idxs, bench_move_idxs = \
         _encode_own_team(state_dict, player)
 
-    # 2. Own active Pokémon stats
-    active_stats = _encode_active_stats(state_dict, player)
+    own_idx = 0 if player == "p1" else 1
+    opp_idx = 1 - own_idx
+    sides = state_dict.get("sides", [{}, {}])
+    own_side = sides[own_idx] if len(sides) > own_idx else {}
+    opp_side = sides[opp_idx] if len(sides) > opp_idx else {}
 
-    # 3. Own active Pokémon moves (dense + move embedding IDs)
-    moves_dense, move_idxs = _encode_active_moves(request)
+    # 2. Own active Pokémon boosts
+    active_boosts = _encode_active_boosts(own_side)
 
-    # 4. Opponent team — only revealed public information
-    opp_dense, opp_species_idxs, opp_move_idxs = _encode_opp_team_revealed(state_dict, player)
+    # 3. Opponent team — only revealed public information
+    opp_dense, opp_species_idxs, opp_move_idxs, opp_item_idxs, opp_ability_idxs = \
+        _encode_opp_team_revealed(state_dict, player)
+
+    # 4. Opponent active Pokémon boosts
+    opp_boosts = _encode_active_boosts(opp_side)
 
     # 5. Field conditions (weather, hazards, screens, active volatiles)
     field_feats = _encode_field_conditions(state_dict, player)
 
-    # Assemble: all dense first, then all embedding indices
-    dense_features = team_dense + active_stats + moves_dense + opp_dense + field_feats
-    embedding_indices = (species_idxs + item_idxs + ability_idxs +
-                         bench_move_idxs + move_idxs +
-                         opp_species_idxs + opp_move_idxs)
+    # Assemble: all dense first, then all embedding indices grouped by category
+    dense_features = (team_dense + active_boosts +
+                      opp_dense + opp_boosts + field_feats)
+    
+    # Category Groupings
+    species_category = species_idxs + opp_species_idxs  # 12 indices
+    moves_category = bench_move_idxs + opp_move_idxs     # 48 indices
+    items_category = item_idxs + opp_item_idxs          # 12 indices
+    abilities_category = ability_idxs + opp_ability_idxs  # 12 indices
+
+    embedding_indices = species_category + moves_category + items_category + abilities_category
 
     all_features = dense_features + embedding_indices
     return np.array(all_features, dtype=np.float32)
@@ -404,38 +453,28 @@ def encode_state(state, player: str = "p1") -> np.ndarray:
 # ─── Feature shape constants (used by train_nn.py and agent) ─────────────────
 
 # Dense features:
-#   6×13 own team (78) + 5 active stats + 4×5 active moves (20)
-#   + 6×7 opp revealed team (42) + 18 field conditions
+#   6×52 own team (312) + 6 active boosts (6)
+#   + 6×52 opp revealed team (312) + 6 opp active boosts (6) + 18 field conditions
 NUM_FIELD_FEATURES   = len(WEATHERS) + len(SIDE_CONDS) * 2 + len(ACTIVE_VOLS)  # = 4+10+4 = 18
-NUM_DENSE_FEATURES   = 6 * 13 + 5 + 4 * 5 + 6 * 7 + NUM_FIELD_FEATURES        # = 145+18 = 163
+NUM_DENSE_FEATURES   = 6 * 52 + 6 + 6 * 52 + 6 + NUM_FIELD_FEATURES   # = 636+18 = 654
 
-# Embedding index counts (own side)
-NUM_SPECIES_INDICES      = 6
-NUM_ITEM_INDICES         = 6
-NUM_ABILITY_INDICES      = 6
-NUM_BENCH_MOVE_INDICES   = 6 * 4   # = 24
-NUM_ACTIVE_MOVE_INDICES  = 4
-
-# Embedding index counts (opponent — publicly revealed only)
-NUM_OPP_SPECIES_INDICES  = 6
-NUM_OPP_MOVE_INDICES     = 6 * 4   # = 24  (0 for each unrevealed move)
+# Grouped category counts
+NUM_SPECIES_INDICES      = 12  # 6 own + 6 opp
+NUM_MOVE_INDICES         = 48  # 24 own bench moves + 24 opp used moves
+NUM_ITEM_INDICES         = 12  # 6 own items + 6 opp items
+NUM_ABILITY_INDICES      = 12  # 6 own abilities + 6 opp abilities
 
 NUM_EMBEDDING_INDICES = (
-    NUM_SPECIES_INDICES + NUM_ITEM_INDICES + NUM_ABILITY_INDICES +
-    NUM_BENCH_MOVE_INDICES + NUM_ACTIVE_MOVE_INDICES +
-    NUM_OPP_SPECIES_INDICES + NUM_OPP_MOVE_INDICES
-)  # = 6+6+6+24+4+6+24 = 76
+    NUM_SPECIES_INDICES + NUM_MOVE_INDICES + NUM_ITEM_INDICES + NUM_ABILITY_INDICES
+)  # = 12 + 48 + 12 + 12 = 84
 
-TOTAL_FEATURES = NUM_DENSE_FEATURES + NUM_EMBEDDING_INDICES  # = 163+76 = 239
+TOTAL_FEATURES = NUM_DENSE_FEATURES + NUM_EMBEDDING_INDICES  # = 654 + 84 = 738
 
-# Slice offsets within the embedding block (relative to NUM_DENSE_FEATURES = 163)
-OFF_SPECIES      = 0                                                # [163:169]
-OFF_ITEMS        = OFF_SPECIES      + NUM_SPECIES_INDICES           # [169:175]
-OFF_ABILITIES    = OFF_ITEMS        + NUM_ITEM_INDICES              # [175:181]
-OFF_BENCH_MOVES  = OFF_ABILITIES    + NUM_ABILITY_INDICES           # [181:205]
-OFF_ACTIVE_MOVES = OFF_BENCH_MOVES  + NUM_BENCH_MOVE_INDICES        # [205:209]
-OFF_OPP_SPECIES  = OFF_ACTIVE_MOVES + NUM_ACTIVE_MOVE_INDICES       # [209:215]
-OFF_OPP_MOVES    = OFF_OPP_SPECIES  + NUM_OPP_SPECIES_INDICES       # [215:239]
+# Slice offsets within the embedding block (relative to NUM_DENSE_FEATURES = 654)
+OFF_SPECIES      = 0                                                # [654:666]
+OFF_MOVES        = OFF_SPECIES      + NUM_SPECIES_INDICES           # [666:714]
+OFF_ITEMS        = OFF_MOVES        + NUM_MOVE_INDICES              # [714:726]
+OFF_ABILITIES    = OFF_ITEMS        + NUM_ITEM_INDICES              # [726:738]
 
 # Define fixed action space for Policy Network mapping
 ACTION_SPACE = [

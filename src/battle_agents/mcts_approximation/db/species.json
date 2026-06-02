@@ -1,0 +1,6445 @@
+{
+  "milotic": {
+    "id": "milotic",
+    "name": "Milotic",
+    "num": 350,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 60,
+      "def": 79,
+      "spa": 100,
+      "spd": 125,
+      "spe": 81
+    }
+  },
+  "bulbasaur": {
+    "id": "bulbasaur",
+    "name": "Bulbasaur",
+    "num": 1,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 49,
+      "def": 49,
+      "spa": 65,
+      "spd": 65,
+      "spe": 45
+    }
+  },
+  "ivysaur": {
+    "id": "ivysaur",
+    "name": "Ivysaur",
+    "num": 2,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 62,
+      "def": 63,
+      "spa": 80,
+      "spd": 80,
+      "spe": 60
+    }
+  },
+  "venusaur": {
+    "id": "venusaur",
+    "name": "Venusaur",
+    "num": 3,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 82,
+      "def": 83,
+      "spa": 100,
+      "spd": 100,
+      "spe": 80
+    }
+  },
+  "charmander": {
+    "id": "charmander",
+    "name": "Charmander",
+    "num": 4,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 39,
+      "atk": 52,
+      "def": 43,
+      "spa": 60,
+      "spd": 50,
+      "spe": 65
+    }
+  },
+  "charmeleon": {
+    "id": "charmeleon",
+    "name": "Charmeleon",
+    "num": 5,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 58,
+      "atk": 64,
+      "def": 58,
+      "spa": 80,
+      "spd": 65,
+      "spe": 80
+    }
+  },
+  "charizard": {
+    "id": "charizard",
+    "name": "Charizard",
+    "num": 6,
+    "types": [
+      "Fire",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 78,
+      "atk": 84,
+      "def": 78,
+      "spa": 109,
+      "spd": 85,
+      "spe": 100
+    }
+  },
+  "squirtle": {
+    "id": "squirtle",
+    "name": "Squirtle",
+    "num": 7,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 44,
+      "atk": 48,
+      "def": 65,
+      "spa": 50,
+      "spd": 64,
+      "spe": 43
+    }
+  },
+  "wartortle": {
+    "id": "wartortle",
+    "name": "Wartortle",
+    "num": 8,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 59,
+      "atk": 63,
+      "def": 80,
+      "spa": 65,
+      "spd": 80,
+      "spe": 58
+    }
+  },
+  "blastoise": {
+    "id": "blastoise",
+    "name": "Blastoise",
+    "num": 9,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 79,
+      "atk": 83,
+      "def": 100,
+      "spa": 85,
+      "spd": 105,
+      "spe": 78
+    }
+  },
+  "butterfree": {
+    "id": "butterfree",
+    "name": "Butterfree",
+    "num": 12,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 45,
+      "def": 50,
+      "spa": 80,
+      "spd": 80,
+      "spe": 70
+    }
+  },
+  "beedrill": {
+    "id": "beedrill",
+    "name": "Beedrill",
+    "num": 15,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 80,
+      "def": 40,
+      "spa": 45,
+      "spd": 80,
+      "spe": 75
+    }
+  },
+  "pidgeot": {
+    "id": "pidgeot",
+    "name": "Pidgeot",
+    "num": 18,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 83,
+      "atk": 80,
+      "def": 75,
+      "spa": 70,
+      "spd": 70,
+      "spe": 91
+    }
+  },
+  "pikachu": {
+    "id": "pikachu",
+    "name": "Pikachu",
+    "num": 25,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 30,
+      "spa": 50,
+      "spd": 40,
+      "spe": 90
+    }
+  },
+  "raichu": {
+    "id": "raichu",
+    "name": "Raichu",
+    "num": 26,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 90,
+      "def": 55,
+      "spa": 90,
+      "spd": 80,
+      "spe": 100
+    }
+  },
+  "nidoqueen": {
+    "id": "nidoqueen",
+    "name": "Nidoqueen",
+    "num": 31,
+    "types": [
+      "Poison",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 82,
+      "def": 87,
+      "spa": 75,
+      "spd": 85,
+      "spe": 76
+    }
+  },
+  "nidoking": {
+    "id": "nidoking",
+    "name": "Nidoking",
+    "num": 34,
+    "types": [
+      "Poison",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 81,
+      "atk": 92,
+      "def": 77,
+      "spa": 85,
+      "spd": 75,
+      "spe": 85
+    }
+  },
+  "clefairy": {
+    "id": "clefairy",
+    "name": "Clefairy",
+    "num": 35,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 45,
+      "def": 48,
+      "spa": 60,
+      "spd": 65,
+      "spe": 35
+    }
+  },
+  "clefable": {
+    "id": "clefable",
+    "name": "Clefable",
+    "num": 36,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 70,
+      "def": 73,
+      "spa": 85,
+      "spd": 90,
+      "spe": 60
+    }
+  },
+  "jigglypuff": {
+    "id": "jigglypuff",
+    "name": "Jigglypuff",
+    "num": 39,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 115,
+      "atk": 45,
+      "def": 20,
+      "spa": 45,
+      "spd": 25,
+      "spe": 20
+    }
+  },
+  "wigglytuff": {
+    "id": "wigglytuff",
+    "name": "Wigglytuff",
+    "num": 40,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 140,
+      "atk": 70,
+      "def": 45,
+      "spa": 75,
+      "spd": 50,
+      "spe": 45
+    }
+  },
+  "vileplume": {
+    "id": "vileplume",
+    "name": "Vileplume",
+    "num": 45,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 80,
+      "def": 85,
+      "spa": 100,
+      "spd": 90,
+      "spe": 50
+    }
+  },
+  "poliwrath": {
+    "id": "poliwrath",
+    "name": "Poliwrath",
+    "num": 62,
+    "types": [
+      "Water",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 85,
+      "def": 95,
+      "spa": 70,
+      "spd": 90,
+      "spe": 70
+    }
+  },
+  "alakazam": {
+    "id": "alakazam",
+    "name": "Alakazam",
+    "num": 65,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 50,
+      "def": 45,
+      "spa": 135,
+      "spd": 85,
+      "spe": 120
+    }
+  },
+  "victreebel": {
+    "id": "victreebel",
+    "name": "Victreebel",
+    "num": 71,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 105,
+      "def": 65,
+      "spa": 100,
+      "spd": 60,
+      "spe": 70
+    }
+  },
+  "golem": {
+    "id": "golem",
+    "name": "Golem",
+    "num": 76,
+    "types": [
+      "Rock",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 110,
+      "def": 130,
+      "spa": 55,
+      "spd": 65,
+      "spe": 45
+    }
+  },
+  "mrmime": {
+    "id": "mrmime",
+    "name": "Mr. Mime",
+    "num": 122,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 65,
+      "spa": 100,
+      "spd": 120,
+      "spe": 90
+    }
+  },
+  "articuno": {
+    "id": "articuno",
+    "name": "Articuno",
+    "num": 144,
+    "types": [
+      "Ice",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 85,
+      "def": 100,
+      "spa": 95,
+      "spd": 125,
+      "spe": 85
+    }
+  },
+  "zapdos": {
+    "id": "zapdos",
+    "name": "Zapdos",
+    "num": 145,
+    "types": [
+      "Electric",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 90,
+      "def": 85,
+      "spa": 125,
+      "spd": 90,
+      "spe": 100
+    }
+  },
+  "moltres": {
+    "id": "moltres",
+    "name": "Moltres",
+    "num": 146,
+    "types": [
+      "Fire",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 100,
+      "def": 90,
+      "spa": 125,
+      "spd": 85,
+      "spe": 90
+    }
+  },
+  "chikorita": {
+    "id": "chikorita",
+    "name": "Chikorita",
+    "num": 152,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 49,
+      "def": 65,
+      "spa": 49,
+      "spd": 65,
+      "spe": 45
+    }
+  },
+  "bayleef": {
+    "id": "bayleef",
+    "name": "Bayleef",
+    "num": 153,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 62,
+      "def": 80,
+      "spa": 63,
+      "spd": 80,
+      "spe": 60
+    }
+  },
+  "meganium": {
+    "id": "meganium",
+    "name": "Meganium",
+    "num": 154,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 82,
+      "def": 100,
+      "spa": 83,
+      "spd": 100,
+      "spe": 80
+    }
+  },
+  "cyndaquil": {
+    "id": "cyndaquil",
+    "name": "Cyndaquil",
+    "num": 155,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 39,
+      "atk": 52,
+      "def": 43,
+      "spa": 60,
+      "spd": 50,
+      "spe": 65
+    }
+  },
+  "quilava": {
+    "id": "quilava",
+    "name": "Quilava",
+    "num": 156,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 58,
+      "atk": 64,
+      "def": 58,
+      "spa": 80,
+      "spd": 65,
+      "spe": 80
+    }
+  },
+  "typhlosion": {
+    "id": "typhlosion",
+    "name": "Typhlosion",
+    "num": 157,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 78,
+      "atk": 84,
+      "def": 78,
+      "spa": 109,
+      "spd": 85,
+      "spe": 100
+    }
+  },
+  "totodile": {
+    "id": "totodile",
+    "name": "Totodile",
+    "num": 158,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 65,
+      "def": 64,
+      "spa": 44,
+      "spd": 48,
+      "spe": 43
+    }
+  },
+  "croconaw": {
+    "id": "croconaw",
+    "name": "Croconaw",
+    "num": 159,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 80,
+      "def": 80,
+      "spa": 59,
+      "spd": 63,
+      "spe": 58
+    }
+  },
+  "feraligatr": {
+    "id": "feraligatr",
+    "name": "Feraligatr",
+    "num": 160,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 85,
+      "atk": 105,
+      "def": 100,
+      "spa": 79,
+      "spd": 83,
+      "spe": 78
+    }
+  },
+  "igglybuff": {
+    "id": "igglybuff",
+    "name": "Igglybuff",
+    "num": 174,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 30,
+      "def": 15,
+      "spa": 40,
+      "spd": 20,
+      "spe": 15
+    }
+  },
+  "togepi": {
+    "id": "togepi",
+    "name": "Togepi",
+    "num": 175,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 20,
+      "def": 65,
+      "spa": 40,
+      "spd": 65,
+      "spe": 20
+    }
+  },
+  "togetic": {
+    "id": "togetic",
+    "name": "Togetic",
+    "num": 176,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 40,
+      "def": 85,
+      "spa": 80,
+      "spd": 105,
+      "spe": 40
+    }
+  },
+  "cleffa": {
+    "id": "cleffa",
+    "name": "Cleffa",
+    "num": 173,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 25,
+      "def": 28,
+      "spa": 45,
+      "spd": 55,
+      "spe": 15
+    }
+  },
+  "ampharos": {
+    "id": "ampharos",
+    "name": "Ampharos",
+    "num": 181,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 75,
+      "def": 75,
+      "spa": 115,
+      "spd": 90,
+      "spe": 55
+    }
+  },
+  "bellossom": {
+    "id": "bellossom",
+    "name": "Bellossom",
+    "num": 182,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 80,
+      "def": 85,
+      "spa": 90,
+      "spd": 100,
+      "spe": 50
+    }
+  },
+  "marill": {
+    "id": "marill",
+    "name": "Marill",
+    "num": 183,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 20,
+      "def": 50,
+      "spa": 20,
+      "spd": 50,
+      "spe": 40
+    }
+  },
+  "azumarill": {
+    "id": "azumarill",
+    "name": "Azumarill",
+    "num": 184,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 50,
+      "def": 80,
+      "spa": 50,
+      "spd": 80,
+      "spe": 50
+    }
+  },
+  "jumpluff": {
+    "id": "jumpluff",
+    "name": "Jumpluff",
+    "num": 189,
+    "types": [
+      "Grass",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 55,
+      "def": 70,
+      "spa": 55,
+      "spd": 85,
+      "spe": 110
+    }
+  },
+  "snubbull": {
+    "id": "snubbull",
+    "name": "Snubbull",
+    "num": 209,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 80,
+      "def": 50,
+      "spa": 40,
+      "spd": 40,
+      "spe": 30
+    }
+  },
+  "granbull": {
+    "id": "granbull",
+    "name": "Granbull",
+    "num": 210,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 120,
+      "def": 75,
+      "spa": 60,
+      "spd": 60,
+      "spe": 45
+    }
+  },
+  "tyrogue": {
+    "id": "tyrogue",
+    "name": "Tyrogue",
+    "num": 236,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 35,
+      "def": 35,
+      "spa": 35,
+      "spd": 35,
+      "spe": 35
+    }
+  },
+  "hitmonlee": {
+    "id": "hitmonlee",
+    "name": "Hitmonlee",
+    "num": 106,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 120,
+      "def": 53,
+      "spa": 35,
+      "spd": 110,
+      "spe": 87
+    }
+  },
+  "hitmonchan": {
+    "id": "hitmonchan",
+    "name": "Hitmonchan",
+    "num": 107,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 105,
+      "def": 79,
+      "spa": 35,
+      "spd": 110,
+      "spe": 76
+    }
+  },
+  "hitmontop": {
+    "id": "hitmontop",
+    "name": "Hitmontop",
+    "num": 237,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 95,
+      "def": 95,
+      "spa": 35,
+      "spd": 110,
+      "spe": 70
+    }
+  },
+  "treecko": {
+    "id": "treecko",
+    "name": "Treecko",
+    "num": 252,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 35,
+      "spa": 65,
+      "spd": 55,
+      "spe": 70
+    }
+  },
+  "grovyle": {
+    "id": "grovyle",
+    "name": "Grovyle",
+    "num": 253,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 65,
+      "def": 45,
+      "spa": 85,
+      "spd": 65,
+      "spe": 95
+    }
+  },
+  "sceptile": {
+    "id": "sceptile",
+    "name": "Sceptile",
+    "num": 254,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 85,
+      "def": 65,
+      "spa": 105,
+      "spd": 85,
+      "spe": 120
+    }
+  },
+  "torchic": {
+    "id": "torchic",
+    "name": "Torchic",
+    "num": 255,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 60,
+      "def": 40,
+      "spa": 70,
+      "spd": 50,
+      "spe": 45
+    }
+  },
+  "combusken": {
+    "id": "combusken",
+    "name": "Combusken",
+    "num": 256,
+    "types": [
+      "Fire",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 85,
+      "def": 60,
+      "spa": 85,
+      "spd": 60,
+      "spe": 55
+    }
+  },
+  "blaziken": {
+    "id": "blaziken",
+    "name": "Blaziken",
+    "num": 257,
+    "types": [
+      "Fire",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 120,
+      "def": 70,
+      "spa": 110,
+      "spd": 70,
+      "spe": 80
+    }
+  },
+  "mudkip": {
+    "id": "mudkip",
+    "name": "Mudkip",
+    "num": 258,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 70,
+      "def": 50,
+      "spa": 50,
+      "spd": 50,
+      "spe": 40
+    }
+  },
+  "marshtomp": {
+    "id": "marshtomp",
+    "name": "Marshtomp",
+    "num": 259,
+    "types": [
+      "Water",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 85,
+      "def": 70,
+      "spa": 60,
+      "spd": 70,
+      "spe": 50
+    }
+  },
+  "swampert": {
+    "id": "swampert",
+    "name": "Swampert",
+    "num": 260,
+    "types": [
+      "Water",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 110,
+      "def": 90,
+      "spa": 85,
+      "spd": 90,
+      "spe": 60
+    }
+  },
+  "beautifly": {
+    "id": "beautifly",
+    "name": "Beautifly",
+    "num": 267,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 70,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 65
+    }
+  },
+  "ralts": {
+    "id": "ralts",
+    "name": "Ralts",
+    "num": 280,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 28,
+      "atk": 25,
+      "def": 25,
+      "spa": 45,
+      "spd": 35,
+      "spe": 40
+    }
+  },
+  "kirlia": {
+    "id": "kirlia",
+    "name": "Kirlia",
+    "num": 281,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 38,
+      "atk": 35,
+      "def": 35,
+      "spa": 65,
+      "spd": 55,
+      "spe": 50
+    }
+  },
+  "gardevoir": {
+    "id": "gardevoir",
+    "name": "Gardevoir",
+    "num": 282,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 68,
+      "atk": 65,
+      "def": 65,
+      "spa": 125,
+      "spd": 115,
+      "spe": 80
+    }
+  },
+  "exploud": {
+    "id": "exploud",
+    "name": "Exploud",
+    "num": 295,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 104,
+      "atk": 91,
+      "def": 63,
+      "spa": 91,
+      "spd": 63,
+      "spe": 68
+    }
+  },
+  "azurill": {
+    "id": "azurill",
+    "name": "Azurill",
+    "num": 298,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 20,
+      "def": 40,
+      "spa": 20,
+      "spd": 40,
+      "spe": 20
+    }
+  },
+  "mawile": {
+    "id": "mawile",
+    "name": "Mawile",
+    "num": 303,
+    "types": [
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 85,
+      "def": 85,
+      "spa": 55,
+      "spd": 55,
+      "spe": 50
+    }
+  },
+  "plusle": {
+    "id": "plusle",
+    "name": "Plusle",
+    "num": 311,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 50,
+      "def": 40,
+      "spa": 85,
+      "spd": 75,
+      "spe": 95
+    }
+  },
+  "minun": {
+    "id": "minun",
+    "name": "Minun",
+    "num": 312,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 40,
+      "def": 50,
+      "spa": 75,
+      "spd": 85,
+      "spe": 95
+    }
+  },
+  "kecleon": {
+    "id": "kecleon",
+    "name": "Kecleon",
+    "num": 352,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 90,
+      "def": 70,
+      "spa": 60,
+      "spd": 120,
+      "spe": 40
+    }
+  },
+  "feebas": {
+    "id": "feebas",
+    "name": "Feebas",
+    "num": 349,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 20,
+      "atk": 15,
+      "def": 20,
+      "spa": 10,
+      "spd": 55,
+      "spe": 80
+    }
+  },
+  "duskull": {
+    "id": "duskull",
+    "name": "Duskull",
+    "num": 355,
+    "types": [
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 20,
+      "atk": 40,
+      "def": 90,
+      "spa": 30,
+      "spd": 90,
+      "spe": 25
+    }
+  },
+  "dusclops": {
+    "id": "dusclops",
+    "name": "Dusclops",
+    "num": 356,
+    "types": [
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 70,
+      "def": 130,
+      "spa": 60,
+      "spd": 130,
+      "spe": 25
+    }
+  },
+  "regirock": {
+    "id": "regirock",
+    "name": "Regirock",
+    "num": 377,
+    "types": [
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 100,
+      "def": 200,
+      "spa": 50,
+      "spd": 100,
+      "spe": 50
+    }
+  },
+  "regice": {
+    "id": "regice",
+    "name": "Regice",
+    "num": 378,
+    "types": [
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 50,
+      "def": 100,
+      "spa": 100,
+      "spd": 200,
+      "spe": 50
+    }
+  },
+  "registeel": {
+    "id": "registeel",
+    "name": "Registeel",
+    "num": 379,
+    "types": [
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 75,
+      "def": 150,
+      "spa": 75,
+      "spd": 150,
+      "spe": 50
+    }
+  },
+  "arbok": {
+    "id": "arbok",
+    "name": "Arbok",
+    "num": 24,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 85,
+      "def": 69,
+      "spa": 65,
+      "spd": 79,
+      "spe": 80
+    }
+  },
+  "dugtrio": {
+    "id": "dugtrio",
+    "name": "Dugtrio",
+    "num": 51,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 80,
+      "def": 50,
+      "spa": 50,
+      "spd": 70,
+      "spe": 120
+    }
+  },
+  "farfetchd": {
+    "id": "farfetchd",
+    "name": "Farfetch’d",
+    "num": 83,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 52,
+      "atk": 65,
+      "def": 55,
+      "spa": 58,
+      "spd": 62,
+      "spe": 60
+    }
+  },
+  "dodrio": {
+    "id": "dodrio",
+    "name": "Dodrio",
+    "num": 85,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 110,
+      "def": 70,
+      "spa": 60,
+      "spd": 60,
+      "spe": 100
+    }
+  },
+  "gengar": {
+    "id": "gengar",
+    "name": "Gengar",
+    "num": 94,
+    "types": [
+      "Ghost",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 65,
+      "def": 60,
+      "spa": 130,
+      "spd": 75,
+      "spe": 110
+    }
+  },
+  "electrode": {
+    "id": "electrode",
+    "name": "Electrode",
+    "num": 101,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 50,
+      "def": 70,
+      "spa": 80,
+      "spd": 80,
+      "spe": 140
+    }
+  },
+  "exeggutor": {
+    "id": "exeggutor",
+    "name": "Exeggutor",
+    "num": 103,
+    "types": [
+      "Grass",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 85,
+      "spa": 125,
+      "spd": 65,
+      "spe": 55
+    }
+  },
+  "noctowl": {
+    "id": "noctowl",
+    "name": "Noctowl",
+    "num": 164,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 50,
+      "def": 50,
+      "spa": 76,
+      "spd": 96,
+      "spe": 70
+    }
+  },
+  "ariados": {
+    "id": "ariados",
+    "name": "Ariados",
+    "num": 168,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 90,
+      "def": 70,
+      "spa": 60,
+      "spd": 60,
+      "spe": 40
+    }
+  },
+  "qwilfish": {
+    "id": "qwilfish",
+    "name": "Qwilfish",
+    "num": 211,
+    "types": [
+      "Water",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 95,
+      "def": 75,
+      "spa": 55,
+      "spd": 55,
+      "spe": 85
+    }
+  },
+  "magcargo": {
+    "id": "magcargo",
+    "name": "Magcargo",
+    "num": 219,
+    "types": [
+      "Fire",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 50,
+      "def": 120,
+      "spa": 80,
+      "spd": 80,
+      "spe": 30
+    }
+  },
+  "corsola": {
+    "id": "corsola",
+    "name": "Corsola",
+    "num": 222,
+    "types": [
+      "Water",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 55,
+      "def": 85,
+      "spa": 65,
+      "spd": 85,
+      "spe": 35
+    }
+  },
+  "mantine": {
+    "id": "mantine",
+    "name": "Mantine",
+    "num": 226,
+    "types": [
+      "Water",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 40,
+      "def": 70,
+      "spa": 80,
+      "spd": 140,
+      "spe": 70
+    }
+  },
+  "raikou": {
+    "id": "raikou",
+    "name": "Raikou",
+    "num": 243,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 85,
+      "def": 75,
+      "spa": 115,
+      "spd": 100,
+      "spe": 115
+    }
+  },
+  "entei": {
+    "id": "entei",
+    "name": "Entei",
+    "num": 244,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 115,
+      "atk": 115,
+      "def": 85,
+      "spa": 90,
+      "spd": 75,
+      "spe": 100
+    }
+  },
+  "suicune": {
+    "id": "suicune",
+    "name": "Suicune",
+    "num": 245,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 75,
+      "def": 115,
+      "spa": 90,
+      "spd": 115,
+      "spe": 85
+    }
+  },
+  "swellow": {
+    "id": "swellow",
+    "name": "Swellow",
+    "num": 277,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 85,
+      "def": 60,
+      "spa": 50,
+      "spd": 50,
+      "spe": 125
+    }
+  },
+  "wingull": {
+    "id": "wingull",
+    "name": "Wingull",
+    "num": 278,
+    "types": [
+      "Water",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 30,
+      "def": 30,
+      "spa": 55,
+      "spd": 30,
+      "spe": 85
+    }
+  },
+  "pelipper": {
+    "id": "pelipper",
+    "name": "Pelipper",
+    "num": 279,
+    "types": [
+      "Water",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 50,
+      "def": 100,
+      "spa": 85,
+      "spd": 70,
+      "spe": 65
+    }
+  },
+  "masquerain": {
+    "id": "masquerain",
+    "name": "Masquerain",
+    "num": 284,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 60,
+      "def": 62,
+      "spa": 80,
+      "spd": 82,
+      "spe": 60
+    }
+  },
+  "delcatty": {
+    "id": "delcatty",
+    "name": "Delcatty",
+    "num": 301,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 65,
+      "def": 65,
+      "spa": 55,
+      "spd": 55,
+      "spe": 70
+    }
+  },
+  "volbeat": {
+    "id": "volbeat",
+    "name": "Volbeat",
+    "num": 313,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 73,
+      "def": 55,
+      "spa": 47,
+      "spd": 75,
+      "spe": 85
+    }
+  },
+  "illumise": {
+    "id": "illumise",
+    "name": "Illumise",
+    "num": 314,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 47,
+      "def": 55,
+      "spa": 73,
+      "spd": 75,
+      "spe": 85
+    }
+  },
+  "torkoal": {
+    "id": "torkoal",
+    "name": "Torkoal",
+    "num": 324,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 85,
+      "def": 140,
+      "spa": 85,
+      "spd": 70,
+      "spe": 20
+    }
+  },
+  "lunatone": {
+    "id": "lunatone",
+    "name": "Lunatone",
+    "num": 337,
+    "types": [
+      "Rock",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 55,
+      "def": 65,
+      "spa": 95,
+      "spd": 85,
+      "spe": 70
+    }
+  },
+  "solrock": {
+    "id": "solrock",
+    "name": "Solrock",
+    "num": 338,
+    "types": [
+      "Rock",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 95,
+      "def": 85,
+      "spa": 55,
+      "spd": 65,
+      "spe": 70
+    }
+  },
+  "castform": {
+    "id": "castform",
+    "name": "Castform",
+    "num": 351,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 70,
+      "def": 70,
+      "spa": 70,
+      "spd": 70,
+      "spe": 70
+    }
+  },
+  "castformsunny": {
+    "id": "castformsunny",
+    "name": "Castform-Sunny",
+    "num": 351,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 70,
+      "def": 70,
+      "spa": 70,
+      "spd": 70,
+      "spe": 70
+    }
+  },
+  "castformrainy": {
+    "id": "castformrainy",
+    "name": "Castform-Rainy",
+    "num": 351,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 70,
+      "def": 70,
+      "spa": 70,
+      "spd": 70,
+      "spe": 70
+    }
+  },
+  "chimecho": {
+    "id": "chimecho",
+    "name": "Chimecho",
+    "num": 358,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 50,
+      "def": 70,
+      "spa": 95,
+      "spd": 80,
+      "spe": 65
+    }
+  },
+  "koffing": {
+    "id": "koffing",
+    "name": "Koffing",
+    "num": 109,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 65,
+      "def": 95,
+      "spa": 60,
+      "spd": 45,
+      "spe": 35
+    }
+  },
+  "weezing": {
+    "id": "weezing",
+    "name": "Weezing",
+    "num": 110,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 90,
+      "def": 120,
+      "spa": 85,
+      "spd": 70,
+      "spe": 60
+    }
+  },
+  "trapinch": {
+    "id": "trapinch",
+    "name": "Trapinch",
+    "num": 328,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 100,
+      "def": 45,
+      "spa": 45,
+      "spd": 45,
+      "spe": 10
+    }
+  },
+  "vibrava": {
+    "id": "vibrava",
+    "name": "Vibrava",
+    "num": 329,
+    "types": [
+      "Ground",
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 70,
+      "def": 50,
+      "spa": 50,
+      "spd": 50,
+      "spe": 70
+    }
+  },
+  "flygon": {
+    "id": "flygon",
+    "name": "Flygon",
+    "num": 330,
+    "types": [
+      "Ground",
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 100,
+      "def": 80,
+      "spa": 80,
+      "spd": 80,
+      "spe": 100
+    }
+  },
+  "shiftry": {
+    "id": "shiftry",
+    "name": "Shiftry",
+    "num": 275,
+    "types": [
+      "Grass",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 100,
+      "def": 60,
+      "spa": 90,
+      "spd": 60,
+      "spe": 80
+    }
+  },
+  "caterpie": {
+    "id": "caterpie",
+    "name": "Caterpie",
+    "num": 10,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 30,
+      "def": 35,
+      "spa": 20,
+      "spd": 20,
+      "spe": 45
+    }
+  },
+  "metapod": {
+    "id": "metapod",
+    "name": "Metapod",
+    "num": 11,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 20,
+      "def": 55,
+      "spa": 25,
+      "spd": 25,
+      "spe": 30
+    }
+  },
+  "weedle": {
+    "id": "weedle",
+    "name": "Weedle",
+    "num": 13,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 35,
+      "def": 30,
+      "spa": 20,
+      "spd": 20,
+      "spe": 50
+    }
+  },
+  "kakuna": {
+    "id": "kakuna",
+    "name": "Kakuna",
+    "num": 14,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 25,
+      "def": 50,
+      "spa": 25,
+      "spd": 25,
+      "spe": 35
+    }
+  },
+  "pidgey": {
+    "id": "pidgey",
+    "name": "Pidgey",
+    "num": 16,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 40,
+      "spa": 35,
+      "spd": 35,
+      "spe": 56
+    }
+  },
+  "pidgeotto": {
+    "id": "pidgeotto",
+    "name": "Pidgeotto",
+    "num": 17,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 63,
+      "atk": 60,
+      "def": 55,
+      "spa": 50,
+      "spd": 50,
+      "spe": 71
+    }
+  },
+  "rattata": {
+    "id": "rattata",
+    "name": "Rattata",
+    "num": 19,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 56,
+      "def": 35,
+      "spa": 25,
+      "spd": 35,
+      "spe": 72
+    }
+  },
+  "raticate": {
+    "id": "raticate",
+    "name": "Raticate",
+    "num": 20,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 81,
+      "def": 60,
+      "spa": 50,
+      "spd": 70,
+      "spe": 97
+    }
+  },
+  "spearow": {
+    "id": "spearow",
+    "name": "Spearow",
+    "num": 21,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 60,
+      "def": 30,
+      "spa": 31,
+      "spd": 31,
+      "spe": 70
+    }
+  },
+  "fearow": {
+    "id": "fearow",
+    "name": "Fearow",
+    "num": 22,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 90,
+      "def": 65,
+      "spa": 61,
+      "spd": 61,
+      "spe": 100
+    }
+  },
+  "ekans": {
+    "id": "ekans",
+    "name": "Ekans",
+    "num": 23,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 60,
+      "def": 44,
+      "spa": 40,
+      "spd": 54,
+      "spe": 55
+    }
+  },
+  "sandshrew": {
+    "id": "sandshrew",
+    "name": "Sandshrew",
+    "num": 27,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 75,
+      "def": 85,
+      "spa": 20,
+      "spd": 30,
+      "spe": 40
+    }
+  },
+  "sandslash": {
+    "id": "sandslash",
+    "name": "Sandslash",
+    "num": 28,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 100,
+      "def": 110,
+      "spa": 45,
+      "spd": 55,
+      "spe": 65
+    }
+  },
+  "nidoranf": {
+    "id": "nidoranf",
+    "name": "Nidoran-F",
+    "num": 29,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 47,
+      "def": 52,
+      "spa": 40,
+      "spd": 40,
+      "spe": 41
+    }
+  },
+  "nidorina": {
+    "id": "nidorina",
+    "name": "Nidorina",
+    "num": 30,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 62,
+      "def": 67,
+      "spa": 55,
+      "spd": 55,
+      "spe": 56
+    }
+  },
+  "nidoranm": {
+    "id": "nidoranm",
+    "name": "Nidoran-M",
+    "num": 32,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 46,
+      "atk": 57,
+      "def": 40,
+      "spa": 40,
+      "spd": 40,
+      "spe": 50
+    }
+  },
+  "nidorino": {
+    "id": "nidorino",
+    "name": "Nidorino",
+    "num": 33,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 61,
+      "atk": 72,
+      "def": 57,
+      "spa": 55,
+      "spd": 55,
+      "spe": 65
+    }
+  },
+  "vulpix": {
+    "id": "vulpix",
+    "name": "Vulpix",
+    "num": 37,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 38,
+      "atk": 41,
+      "def": 40,
+      "spa": 50,
+      "spd": 65,
+      "spe": 65
+    }
+  },
+  "ninetales": {
+    "id": "ninetales",
+    "name": "Ninetales",
+    "num": 38,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 73,
+      "atk": 76,
+      "def": 75,
+      "spa": 81,
+      "spd": 100,
+      "spe": 100
+    }
+  },
+  "zubat": {
+    "id": "zubat",
+    "name": "Zubat",
+    "num": 41,
+    "types": [
+      "Poison",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 35,
+      "spa": 30,
+      "spd": 40,
+      "spe": 55
+    }
+  },
+  "golbat": {
+    "id": "golbat",
+    "name": "Golbat",
+    "num": 42,
+    "types": [
+      "Poison",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 80,
+      "def": 70,
+      "spa": 65,
+      "spd": 75,
+      "spe": 90
+    }
+  },
+  "oddish": {
+    "id": "oddish",
+    "name": "Oddish",
+    "num": 43,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 50,
+      "def": 55,
+      "spa": 75,
+      "spd": 65,
+      "spe": 30
+    }
+  },
+  "gloom": {
+    "id": "gloom",
+    "name": "Gloom",
+    "num": 44,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 65,
+      "def": 70,
+      "spa": 85,
+      "spd": 75,
+      "spe": 40
+    }
+  },
+  "paras": {
+    "id": "paras",
+    "name": "Paras",
+    "num": 46,
+    "types": [
+      "Bug",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 70,
+      "def": 55,
+      "spa": 45,
+      "spd": 55,
+      "spe": 25
+    }
+  },
+  "parasect": {
+    "id": "parasect",
+    "name": "Parasect",
+    "num": 47,
+    "types": [
+      "Bug",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 95,
+      "def": 80,
+      "spa": 60,
+      "spd": 80,
+      "spe": 30
+    }
+  },
+  "venonat": {
+    "id": "venonat",
+    "name": "Venonat",
+    "num": 48,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 55,
+      "def": 50,
+      "spa": 40,
+      "spd": 55,
+      "spe": 45
+    }
+  },
+  "venomoth": {
+    "id": "venomoth",
+    "name": "Venomoth",
+    "num": 49,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 65,
+      "def": 60,
+      "spa": 90,
+      "spd": 75,
+      "spe": 90
+    }
+  },
+  "diglett": {
+    "id": "diglett",
+    "name": "Diglett",
+    "num": 50,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 10,
+      "atk": 55,
+      "def": 25,
+      "spa": 35,
+      "spd": 45,
+      "spe": 95
+    }
+  },
+  "meowth": {
+    "id": "meowth",
+    "name": "Meowth",
+    "num": 52,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 35,
+      "spa": 40,
+      "spd": 40,
+      "spe": 90
+    }
+  },
+  "persian": {
+    "id": "persian",
+    "name": "Persian",
+    "num": 53,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 70,
+      "def": 60,
+      "spa": 65,
+      "spd": 65,
+      "spe": 115
+    }
+  },
+  "psyduck": {
+    "id": "psyduck",
+    "name": "Psyduck",
+    "num": 54,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 52,
+      "def": 48,
+      "spa": 65,
+      "spd": 50,
+      "spe": 55
+    }
+  },
+  "golduck": {
+    "id": "golduck",
+    "name": "Golduck",
+    "num": 55,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 82,
+      "def": 78,
+      "spa": 95,
+      "spd": 80,
+      "spe": 85
+    }
+  },
+  "mankey": {
+    "id": "mankey",
+    "name": "Mankey",
+    "num": 56,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 80,
+      "def": 35,
+      "spa": 35,
+      "spd": 45,
+      "spe": 70
+    }
+  },
+  "primeape": {
+    "id": "primeape",
+    "name": "Primeape",
+    "num": 57,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 105,
+      "def": 60,
+      "spa": 60,
+      "spd": 70,
+      "spe": 95
+    }
+  },
+  "growlithe": {
+    "id": "growlithe",
+    "name": "Growlithe",
+    "num": 58,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 70,
+      "def": 45,
+      "spa": 70,
+      "spd": 50,
+      "spe": 60
+    }
+  },
+  "arcanine": {
+    "id": "arcanine",
+    "name": "Arcanine",
+    "num": 59,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 110,
+      "def": 80,
+      "spa": 100,
+      "spd": 80,
+      "spe": 95
+    }
+  },
+  "poliwag": {
+    "id": "poliwag",
+    "name": "Poliwag",
+    "num": 60,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 50,
+      "def": 40,
+      "spa": 40,
+      "spd": 40,
+      "spe": 90
+    }
+  },
+  "poliwhirl": {
+    "id": "poliwhirl",
+    "name": "Poliwhirl",
+    "num": 61,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 65,
+      "def": 65,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    }
+  },
+  "abra": {
+    "id": "abra",
+    "name": "Abra",
+    "num": 63,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 25,
+      "atk": 20,
+      "def": 15,
+      "spa": 105,
+      "spd": 55,
+      "spe": 90
+    }
+  },
+  "kadabra": {
+    "id": "kadabra",
+    "name": "Kadabra",
+    "num": 64,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 35,
+      "def": 30,
+      "spa": 120,
+      "spd": 70,
+      "spe": 105
+    }
+  },
+  "machop": {
+    "id": "machop",
+    "name": "Machop",
+    "num": 66,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 80,
+      "def": 50,
+      "spa": 35,
+      "spd": 35,
+      "spe": 35
+    }
+  },
+  "machoke": {
+    "id": "machoke",
+    "name": "Machoke",
+    "num": 67,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 100,
+      "def": 70,
+      "spa": 50,
+      "spd": 60,
+      "spe": 45
+    }
+  },
+  "machamp": {
+    "id": "machamp",
+    "name": "Machamp",
+    "num": 68,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 130,
+      "def": 80,
+      "spa": 65,
+      "spd": 85,
+      "spe": 55
+    }
+  },
+  "bellsprout": {
+    "id": "bellsprout",
+    "name": "Bellsprout",
+    "num": 69,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 75,
+      "def": 35,
+      "spa": 70,
+      "spd": 30,
+      "spe": 40
+    }
+  },
+  "weepinbell": {
+    "id": "weepinbell",
+    "name": "Weepinbell",
+    "num": 70,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 90,
+      "def": 50,
+      "spa": 85,
+      "spd": 45,
+      "spe": 55
+    }
+  },
+  "tentacool": {
+    "id": "tentacool",
+    "name": "Tentacool",
+    "num": 72,
+    "types": [
+      "Water",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 40,
+      "def": 35,
+      "spa": 50,
+      "spd": 100,
+      "spe": 70
+    }
+  },
+  "tentacruel": {
+    "id": "tentacruel",
+    "name": "Tentacruel",
+    "num": 73,
+    "types": [
+      "Water",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 70,
+      "def": 65,
+      "spa": 80,
+      "spd": 120,
+      "spe": 100
+    }
+  },
+  "geodude": {
+    "id": "geodude",
+    "name": "Geodude",
+    "num": 74,
+    "types": [
+      "Rock",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 80,
+      "def": 100,
+      "spa": 30,
+      "spd": 30,
+      "spe": 20
+    }
+  },
+  "graveler": {
+    "id": "graveler",
+    "name": "Graveler",
+    "num": 75,
+    "types": [
+      "Rock",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 95,
+      "def": 115,
+      "spa": 45,
+      "spd": 45,
+      "spe": 35
+    }
+  },
+  "ponyta": {
+    "id": "ponyta",
+    "name": "Ponyta",
+    "num": 77,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 85,
+      "def": 55,
+      "spa": 65,
+      "spd": 65,
+      "spe": 90
+    }
+  },
+  "rapidash": {
+    "id": "rapidash",
+    "name": "Rapidash",
+    "num": 78,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 100,
+      "def": 70,
+      "spa": 80,
+      "spd": 80,
+      "spe": 105
+    }
+  },
+  "slowpoke": {
+    "id": "slowpoke",
+    "name": "Slowpoke",
+    "num": 79,
+    "types": [
+      "Water",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 65,
+      "def": 65,
+      "spa": 40,
+      "spd": 40,
+      "spe": 15
+    }
+  },
+  "slowbro": {
+    "id": "slowbro",
+    "name": "Slowbro",
+    "num": 80,
+    "types": [
+      "Water",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 75,
+      "def": 110,
+      "spa": 100,
+      "spd": 80,
+      "spe": 30
+    }
+  },
+  "magnemite": {
+    "id": "magnemite",
+    "name": "Magnemite",
+    "num": 81,
+    "types": [
+      "Electric",
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 25,
+      "atk": 35,
+      "def": 70,
+      "spa": 95,
+      "spd": 55,
+      "spe": 45
+    }
+  },
+  "magneton": {
+    "id": "magneton",
+    "name": "Magneton",
+    "num": 82,
+    "types": [
+      "Electric",
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 60,
+      "def": 95,
+      "spa": 120,
+      "spd": 70,
+      "spe": 70
+    }
+  },
+  "doduo": {
+    "id": "doduo",
+    "name": "Doduo",
+    "num": 84,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 85,
+      "def": 45,
+      "spa": 35,
+      "spd": 35,
+      "spe": 75
+    }
+  },
+  "seel": {
+    "id": "seel",
+    "name": "Seel",
+    "num": 86,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 45,
+      "def": 55,
+      "spa": 45,
+      "spd": 70,
+      "spe": 45
+    }
+  },
+  "dewgong": {
+    "id": "dewgong",
+    "name": "Dewgong",
+    "num": 87,
+    "types": [
+      "Water",
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 70,
+      "def": 80,
+      "spa": 70,
+      "spd": 95,
+      "spe": 70
+    }
+  },
+  "grimer": {
+    "id": "grimer",
+    "name": "Grimer",
+    "num": 88,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 80,
+      "def": 50,
+      "spa": 40,
+      "spd": 50,
+      "spe": 25
+    }
+  },
+  "muk": {
+    "id": "muk",
+    "name": "Muk",
+    "num": 89,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 105,
+      "atk": 105,
+      "def": 75,
+      "spa": 65,
+      "spd": 100,
+      "spe": 50
+    }
+  },
+  "shellder": {
+    "id": "shellder",
+    "name": "Shellder",
+    "num": 90,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 65,
+      "def": 100,
+      "spa": 45,
+      "spd": 25,
+      "spe": 40
+    }
+  },
+  "cloyster": {
+    "id": "cloyster",
+    "name": "Cloyster",
+    "num": 91,
+    "types": [
+      "Water",
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 95,
+      "def": 180,
+      "spa": 85,
+      "spd": 45,
+      "spe": 70
+    }
+  },
+  "gastly": {
+    "id": "gastly",
+    "name": "Gastly",
+    "num": 92,
+    "types": [
+      "Ghost",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 35,
+      "def": 30,
+      "spa": 100,
+      "spd": 35,
+      "spe": 80
+    }
+  },
+  "haunter": {
+    "id": "haunter",
+    "name": "Haunter",
+    "num": 93,
+    "types": [
+      "Ghost",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 50,
+      "def": 45,
+      "spa": 115,
+      "spd": 55,
+      "spe": 95
+    }
+  },
+  "onix": {
+    "id": "onix",
+    "name": "Onix",
+    "num": 95,
+    "types": [
+      "Rock",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 45,
+      "def": 160,
+      "spa": 30,
+      "spd": 45,
+      "spe": 70
+    }
+  },
+  "drowzee": {
+    "id": "drowzee",
+    "name": "Drowzee",
+    "num": 96,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 48,
+      "def": 45,
+      "spa": 43,
+      "spd": 90,
+      "spe": 42
+    }
+  },
+  "hypno": {
+    "id": "hypno",
+    "name": "Hypno",
+    "num": 97,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 85,
+      "atk": 73,
+      "def": 70,
+      "spa": 73,
+      "spd": 115,
+      "spe": 67
+    }
+  },
+  "krabby": {
+    "id": "krabby",
+    "name": "Krabby",
+    "num": 98,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 105,
+      "def": 90,
+      "spa": 25,
+      "spd": 25,
+      "spe": 50
+    }
+  },
+  "kingler": {
+    "id": "kingler",
+    "name": "Kingler",
+    "num": 99,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 130,
+      "def": 115,
+      "spa": 50,
+      "spd": 50,
+      "spe": 75
+    }
+  },
+  "voltorb": {
+    "id": "voltorb",
+    "name": "Voltorb",
+    "num": 100,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 30,
+      "def": 50,
+      "spa": 55,
+      "spd": 55,
+      "spe": 100
+    }
+  },
+  "exeggcute": {
+    "id": "exeggcute",
+    "name": "Exeggcute",
+    "num": 102,
+    "types": [
+      "Grass",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 40,
+      "def": 80,
+      "spa": 60,
+      "spd": 45,
+      "spe": 40
+    }
+  },
+  "cubone": {
+    "id": "cubone",
+    "name": "Cubone",
+    "num": 104,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 50,
+      "def": 95,
+      "spa": 40,
+      "spd": 50,
+      "spe": 35
+    }
+  },
+  "marowak": {
+    "id": "marowak",
+    "name": "Marowak",
+    "num": 105,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 80,
+      "def": 110,
+      "spa": 50,
+      "spd": 80,
+      "spe": 45
+    }
+  },
+  "lickitung": {
+    "id": "lickitung",
+    "name": "Lickitung",
+    "num": 108,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 55,
+      "def": 75,
+      "spa": 60,
+      "spd": 75,
+      "spe": 30
+    }
+  },
+  "rhyhorn": {
+    "id": "rhyhorn",
+    "name": "Rhyhorn",
+    "num": 111,
+    "types": [
+      "Ground",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 85,
+      "def": 95,
+      "spa": 30,
+      "spd": 30,
+      "spe": 25
+    }
+  },
+  "rhydon": {
+    "id": "rhydon",
+    "name": "Rhydon",
+    "num": 112,
+    "types": [
+      "Ground",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 105,
+      "atk": 130,
+      "def": 120,
+      "spa": 45,
+      "spd": 45,
+      "spe": 40
+    }
+  },
+  "chansey": {
+    "id": "chansey",
+    "name": "Chansey",
+    "num": 113,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 250,
+      "atk": 5,
+      "def": 5,
+      "spa": 35,
+      "spd": 105,
+      "spe": 50
+    }
+  },
+  "tangela": {
+    "id": "tangela",
+    "name": "Tangela",
+    "num": 114,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 55,
+      "def": 115,
+      "spa": 100,
+      "spd": 40,
+      "spe": 60
+    }
+  },
+  "kangaskhan": {
+    "id": "kangaskhan",
+    "name": "Kangaskhan",
+    "num": 115,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 105,
+      "atk": 95,
+      "def": 80,
+      "spa": 40,
+      "spd": 80,
+      "spe": 90
+    }
+  },
+  "horsea": {
+    "id": "horsea",
+    "name": "Horsea",
+    "num": 116,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 40,
+      "def": 70,
+      "spa": 70,
+      "spd": 25,
+      "spe": 60
+    }
+  },
+  "seadra": {
+    "id": "seadra",
+    "name": "Seadra",
+    "num": 117,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 65,
+      "def": 95,
+      "spa": 95,
+      "spd": 45,
+      "spe": 85
+    }
+  },
+  "goldeen": {
+    "id": "goldeen",
+    "name": "Goldeen",
+    "num": 118,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 67,
+      "def": 60,
+      "spa": 35,
+      "spd": 50,
+      "spe": 63
+    }
+  },
+  "seaking": {
+    "id": "seaking",
+    "name": "Seaking",
+    "num": 119,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 92,
+      "def": 65,
+      "spa": 65,
+      "spd": 80,
+      "spe": 68
+    }
+  },
+  "staryu": {
+    "id": "staryu",
+    "name": "Staryu",
+    "num": 120,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 45,
+      "def": 55,
+      "spa": 70,
+      "spd": 55,
+      "spe": 85
+    }
+  },
+  "starmie": {
+    "id": "starmie",
+    "name": "Starmie",
+    "num": 121,
+    "types": [
+      "Water",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 75,
+      "def": 85,
+      "spa": 100,
+      "spd": 85,
+      "spe": 115
+    }
+  },
+  "scyther": {
+    "id": "scyther",
+    "name": "Scyther",
+    "num": 123,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 110,
+      "def": 80,
+      "spa": 55,
+      "spd": 80,
+      "spe": 105
+    }
+  },
+  "jynx": {
+    "id": "jynx",
+    "name": "Jynx",
+    "num": 124,
+    "types": [
+      "Ice",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 50,
+      "def": 35,
+      "spa": 115,
+      "spd": 95,
+      "spe": 95
+    }
+  },
+  "electabuzz": {
+    "id": "electabuzz",
+    "name": "Electabuzz",
+    "num": 125,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 83,
+      "def": 57,
+      "spa": 95,
+      "spd": 85,
+      "spe": 105
+    }
+  },
+  "magmar": {
+    "id": "magmar",
+    "name": "Magmar",
+    "num": 126,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 95,
+      "def": 57,
+      "spa": 100,
+      "spd": 85,
+      "spe": 93
+    }
+  },
+  "pinsir": {
+    "id": "pinsir",
+    "name": "Pinsir",
+    "num": 127,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 125,
+      "def": 100,
+      "spa": 55,
+      "spd": 70,
+      "spe": 85
+    }
+  },
+  "tauros": {
+    "id": "tauros",
+    "name": "Tauros",
+    "num": 128,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 100,
+      "def": 95,
+      "spa": 40,
+      "spd": 70,
+      "spe": 110
+    }
+  },
+  "magikarp": {
+    "id": "magikarp",
+    "name": "Magikarp",
+    "num": 129,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 20,
+      "atk": 10,
+      "def": 55,
+      "spa": 15,
+      "spd": 20,
+      "spe": 80
+    }
+  },
+  "gyarados": {
+    "id": "gyarados",
+    "name": "Gyarados",
+    "num": 130,
+    "types": [
+      "Water",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 125,
+      "def": 79,
+      "spa": 60,
+      "spd": 100,
+      "spe": 81
+    }
+  },
+  "lapras": {
+    "id": "lapras",
+    "name": "Lapras",
+    "num": 131,
+    "types": [
+      "Water",
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 130,
+      "atk": 85,
+      "def": 80,
+      "spa": 85,
+      "spd": 95,
+      "spe": 60
+    }
+  },
+  "ditto": {
+    "id": "ditto",
+    "name": "Ditto",
+    "num": 132,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 48,
+      "atk": 48,
+      "def": 48,
+      "spa": 48,
+      "spd": 48,
+      "spe": 48
+    }
+  },
+  "eevee": {
+    "id": "eevee",
+    "name": "Eevee",
+    "num": 133,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 55,
+      "def": 50,
+      "spa": 45,
+      "spd": 65,
+      "spe": 55
+    }
+  },
+  "vaporeon": {
+    "id": "vaporeon",
+    "name": "Vaporeon",
+    "num": 134,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 130,
+      "atk": 65,
+      "def": 60,
+      "spa": 110,
+      "spd": 95,
+      "spe": 65
+    }
+  },
+  "jolteon": {
+    "id": "jolteon",
+    "name": "Jolteon",
+    "num": 135,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 65,
+      "def": 60,
+      "spa": 110,
+      "spd": 95,
+      "spe": 130
+    }
+  },
+  "flareon": {
+    "id": "flareon",
+    "name": "Flareon",
+    "num": 136,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 130,
+      "def": 60,
+      "spa": 95,
+      "spd": 110,
+      "spe": 65
+    }
+  },
+  "porygon": {
+    "id": "porygon",
+    "name": "Porygon",
+    "num": 137,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 70,
+      "spa": 85,
+      "spd": 75,
+      "spe": 40
+    }
+  },
+  "omanyte": {
+    "id": "omanyte",
+    "name": "Omanyte",
+    "num": 138,
+    "types": [
+      "Rock",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 40,
+      "def": 100,
+      "spa": 90,
+      "spd": 55,
+      "spe": 35
+    }
+  },
+  "omastar": {
+    "id": "omastar",
+    "name": "Omastar",
+    "num": 139,
+    "types": [
+      "Rock",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 60,
+      "def": 125,
+      "spa": 115,
+      "spd": 70,
+      "spe": 55
+    }
+  },
+  "kabuto": {
+    "id": "kabuto",
+    "name": "Kabuto",
+    "num": 140,
+    "types": [
+      "Rock",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 80,
+      "def": 90,
+      "spa": 55,
+      "spd": 45,
+      "spe": 55
+    }
+  },
+  "kabutops": {
+    "id": "kabutops",
+    "name": "Kabutops",
+    "num": 141,
+    "types": [
+      "Rock",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 115,
+      "def": 105,
+      "spa": 65,
+      "spd": 70,
+      "spe": 80
+    }
+  },
+  "aerodactyl": {
+    "id": "aerodactyl",
+    "name": "Aerodactyl",
+    "num": 142,
+    "types": [
+      "Rock",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 105,
+      "def": 65,
+      "spa": 60,
+      "spd": 75,
+      "spe": 130
+    }
+  },
+  "snorlax": {
+    "id": "snorlax",
+    "name": "Snorlax",
+    "num": 143,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 160,
+      "atk": 110,
+      "def": 65,
+      "spa": 65,
+      "spd": 110,
+      "spe": 30
+    }
+  },
+  "dratini": {
+    "id": "dratini",
+    "name": "Dratini",
+    "num": 147,
+    "types": [
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 41,
+      "atk": 64,
+      "def": 45,
+      "spa": 50,
+      "spd": 50,
+      "spe": 50
+    }
+  },
+  "dragonair": {
+    "id": "dragonair",
+    "name": "Dragonair",
+    "num": 148,
+    "types": [
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 61,
+      "atk": 84,
+      "def": 65,
+      "spa": 70,
+      "spd": 70,
+      "spe": 70
+    }
+  },
+  "dragonite": {
+    "id": "dragonite",
+    "name": "Dragonite",
+    "num": 149,
+    "types": [
+      "Dragon",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 91,
+      "atk": 134,
+      "def": 95,
+      "spa": 100,
+      "spd": 100,
+      "spe": 80
+    }
+  },
+  "mewtwo": {
+    "id": "mewtwo",
+    "name": "Mewtwo",
+    "num": 150,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 106,
+      "atk": 110,
+      "def": 90,
+      "spa": 154,
+      "spd": 90,
+      "spe": 130
+    }
+  },
+  "mew": {
+    "id": "mew",
+    "name": "Mew",
+    "num": 151,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 100,
+      "def": 100,
+      "spa": 100,
+      "spd": 100,
+      "spe": 100
+    }
+  },
+  "sentret": {
+    "id": "sentret",
+    "name": "Sentret",
+    "num": 161,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 46,
+      "def": 34,
+      "spa": 35,
+      "spd": 45,
+      "spe": 20
+    }
+  },
+  "furret": {
+    "id": "furret",
+    "name": "Furret",
+    "num": 162,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 85,
+      "atk": 76,
+      "def": 64,
+      "spa": 45,
+      "spd": 55,
+      "spe": 90
+    }
+  },
+  "hoothoot": {
+    "id": "hoothoot",
+    "name": "Hoothoot",
+    "num": 163,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 30,
+      "def": 30,
+      "spa": 36,
+      "spd": 56,
+      "spe": 50
+    }
+  },
+  "ledyba": {
+    "id": "ledyba",
+    "name": "Ledyba",
+    "num": 165,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 20,
+      "def": 30,
+      "spa": 40,
+      "spd": 80,
+      "spe": 55
+    }
+  },
+  "ledian": {
+    "id": "ledian",
+    "name": "Ledian",
+    "num": 166,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 35,
+      "def": 50,
+      "spa": 55,
+      "spd": 110,
+      "spe": 85
+    }
+  },
+  "spinarak": {
+    "id": "spinarak",
+    "name": "Spinarak",
+    "num": 167,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 60,
+      "def": 40,
+      "spa": 40,
+      "spd": 40,
+      "spe": 30
+    }
+  },
+  "crobat": {
+    "id": "crobat",
+    "name": "Crobat",
+    "num": 169,
+    "types": [
+      "Poison",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 85,
+      "atk": 90,
+      "def": 80,
+      "spa": 70,
+      "spd": 80,
+      "spe": 130
+    }
+  },
+  "chinchou": {
+    "id": "chinchou",
+    "name": "Chinchou",
+    "num": 170,
+    "types": [
+      "Water",
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 38,
+      "def": 38,
+      "spa": 56,
+      "spd": 56,
+      "spe": 67
+    }
+  },
+  "lanturn": {
+    "id": "lanturn",
+    "name": "Lanturn",
+    "num": 171,
+    "types": [
+      "Water",
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 125,
+      "atk": 58,
+      "def": 58,
+      "spa": 76,
+      "spd": 76,
+      "spe": 67
+    }
+  },
+  "pichu": {
+    "id": "pichu",
+    "name": "Pichu",
+    "num": 172,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 20,
+      "atk": 40,
+      "def": 15,
+      "spa": 35,
+      "spd": 35,
+      "spe": 60
+    }
+  },
+  "natu": {
+    "id": "natu",
+    "name": "Natu",
+    "num": 177,
+    "types": [
+      "Psychic",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 50,
+      "def": 45,
+      "spa": 70,
+      "spd": 45,
+      "spe": 70
+    }
+  },
+  "xatu": {
+    "id": "xatu",
+    "name": "Xatu",
+    "num": 178,
+    "types": [
+      "Psychic",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 75,
+      "def": 70,
+      "spa": 95,
+      "spd": 70,
+      "spe": 95
+    }
+  },
+  "mareep": {
+    "id": "mareep",
+    "name": "Mareep",
+    "num": 179,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 40,
+      "def": 40,
+      "spa": 65,
+      "spd": 45,
+      "spe": 35
+    }
+  },
+  "flaaffy": {
+    "id": "flaaffy",
+    "name": "Flaaffy",
+    "num": 180,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 55,
+      "def": 55,
+      "spa": 80,
+      "spd": 60,
+      "spe": 45
+    }
+  },
+  "sudowoodo": {
+    "id": "sudowoodo",
+    "name": "Sudowoodo",
+    "num": 185,
+    "types": [
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 100,
+      "def": 115,
+      "spa": 30,
+      "spd": 65,
+      "spe": 30
+    }
+  },
+  "politoed": {
+    "id": "politoed",
+    "name": "Politoed",
+    "num": 186,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 75,
+      "def": 75,
+      "spa": 90,
+      "spd": 100,
+      "spe": 70
+    }
+  },
+  "hoppip": {
+    "id": "hoppip",
+    "name": "Hoppip",
+    "num": 187,
+    "types": [
+      "Grass",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 35,
+      "def": 40,
+      "spa": 35,
+      "spd": 55,
+      "spe": 50
+    }
+  },
+  "skiploom": {
+    "id": "skiploom",
+    "name": "Skiploom",
+    "num": 188,
+    "types": [
+      "Grass",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 45,
+      "def": 50,
+      "spa": 45,
+      "spd": 65,
+      "spe": 80
+    }
+  },
+  "aipom": {
+    "id": "aipom",
+    "name": "Aipom",
+    "num": 190,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 70,
+      "def": 55,
+      "spa": 40,
+      "spd": 55,
+      "spe": 85
+    }
+  },
+  "sunkern": {
+    "id": "sunkern",
+    "name": "Sunkern",
+    "num": 191,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 30,
+      "def": 30,
+      "spa": 30,
+      "spd": 30,
+      "spe": 30
+    }
+  },
+  "sunflora": {
+    "id": "sunflora",
+    "name": "Sunflora",
+    "num": 192,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 75,
+      "def": 55,
+      "spa": 105,
+      "spd": 85,
+      "spe": 30
+    }
+  },
+  "yanma": {
+    "id": "yanma",
+    "name": "Yanma",
+    "num": 193,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 65,
+      "def": 45,
+      "spa": 75,
+      "spd": 45,
+      "spe": 95
+    }
+  },
+  "wooper": {
+    "id": "wooper",
+    "name": "Wooper",
+    "num": 194,
+    "types": [
+      "Water",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 45,
+      "def": 45,
+      "spa": 25,
+      "spd": 25,
+      "spe": 15
+    }
+  },
+  "quagsire": {
+    "id": "quagsire",
+    "name": "Quagsire",
+    "num": 195,
+    "types": [
+      "Water",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 85,
+      "def": 85,
+      "spa": 65,
+      "spd": 65,
+      "spe": 35
+    }
+  },
+  "espeon": {
+    "id": "espeon",
+    "name": "Espeon",
+    "num": 196,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 65,
+      "def": 60,
+      "spa": 130,
+      "spd": 95,
+      "spe": 110
+    }
+  },
+  "umbreon": {
+    "id": "umbreon",
+    "name": "Umbreon",
+    "num": 197,
+    "types": [
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 65,
+      "def": 110,
+      "spa": 60,
+      "spd": 130,
+      "spe": 65
+    }
+  },
+  "murkrow": {
+    "id": "murkrow",
+    "name": "Murkrow",
+    "num": 198,
+    "types": [
+      "Dark",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 85,
+      "def": 42,
+      "spa": 85,
+      "spd": 42,
+      "spe": 91
+    }
+  },
+  "slowking": {
+    "id": "slowking",
+    "name": "Slowking",
+    "num": 199,
+    "types": [
+      "Water",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 75,
+      "def": 80,
+      "spa": 100,
+      "spd": 110,
+      "spe": 30
+    }
+  },
+  "misdreavus": {
+    "id": "misdreavus",
+    "name": "Misdreavus",
+    "num": 200,
+    "types": [
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 60,
+      "spa": 85,
+      "spd": 85,
+      "spe": 85
+    }
+  },
+  "unown": {
+    "id": "unown",
+    "name": "Unown",
+    "num": 201,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 48,
+      "atk": 72,
+      "def": 48,
+      "spa": 72,
+      "spd": 48,
+      "spe": 48
+    }
+  },
+  "wobbuffet": {
+    "id": "wobbuffet",
+    "name": "Wobbuffet",
+    "num": 202,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 190,
+      "atk": 33,
+      "def": 58,
+      "spa": 33,
+      "spd": 58,
+      "spe": 33
+    }
+  },
+  "girafarig": {
+    "id": "girafarig",
+    "name": "Girafarig",
+    "num": 203,
+    "types": [
+      "Normal",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 80,
+      "def": 65,
+      "spa": 90,
+      "spd": 65,
+      "spe": 85
+    }
+  },
+  "pineco": {
+    "id": "pineco",
+    "name": "Pineco",
+    "num": 204,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 65,
+      "def": 90,
+      "spa": 35,
+      "spd": 35,
+      "spe": 15
+    }
+  },
+  "forretress": {
+    "id": "forretress",
+    "name": "Forretress",
+    "num": 205,
+    "types": [
+      "Bug",
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 90,
+      "def": 140,
+      "spa": 60,
+      "spd": 60,
+      "spe": 40
+    }
+  },
+  "dunsparce": {
+    "id": "dunsparce",
+    "name": "Dunsparce",
+    "num": 206,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 70,
+      "def": 70,
+      "spa": 65,
+      "spd": 65,
+      "spe": 45
+    }
+  },
+  "gligar": {
+    "id": "gligar",
+    "name": "Gligar",
+    "num": 207,
+    "types": [
+      "Ground",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 75,
+      "def": 105,
+      "spa": 35,
+      "spd": 65,
+      "spe": 85
+    }
+  },
+  "steelix": {
+    "id": "steelix",
+    "name": "Steelix",
+    "num": 208,
+    "types": [
+      "Steel",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 85,
+      "def": 200,
+      "spa": 55,
+      "spd": 65,
+      "spe": 30
+    }
+  },
+  "scizor": {
+    "id": "scizor",
+    "name": "Scizor",
+    "num": 212,
+    "types": [
+      "Bug",
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 130,
+      "def": 100,
+      "spa": 55,
+      "spd": 80,
+      "spe": 65
+    }
+  },
+  "shuckle": {
+    "id": "shuckle",
+    "name": "Shuckle",
+    "num": 213,
+    "types": [
+      "Bug",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 20,
+      "atk": 10,
+      "def": 230,
+      "spa": 10,
+      "spd": 230,
+      "spe": 5
+    }
+  },
+  "heracross": {
+    "id": "heracross",
+    "name": "Heracross",
+    "num": 214,
+    "types": [
+      "Bug",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 125,
+      "def": 75,
+      "spa": 40,
+      "spd": 95,
+      "spe": 85
+    }
+  },
+  "sneasel": {
+    "id": "sneasel",
+    "name": "Sneasel",
+    "num": 215,
+    "types": [
+      "Dark",
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 95,
+      "def": 55,
+      "spa": 35,
+      "spd": 75,
+      "spe": 115
+    }
+  },
+  "teddiursa": {
+    "id": "teddiursa",
+    "name": "Teddiursa",
+    "num": 216,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 80,
+      "def": 50,
+      "spa": 50,
+      "spd": 50,
+      "spe": 40
+    }
+  },
+  "ursaring": {
+    "id": "ursaring",
+    "name": "Ursaring",
+    "num": 217,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 130,
+      "def": 75,
+      "spa": 75,
+      "spd": 75,
+      "spe": 55
+    }
+  },
+  "slugma": {
+    "id": "slugma",
+    "name": "Slugma",
+    "num": 218,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 40,
+      "def": 40,
+      "spa": 70,
+      "spd": 40,
+      "spe": 20
+    }
+  },
+  "swinub": {
+    "id": "swinub",
+    "name": "Swinub",
+    "num": 220,
+    "types": [
+      "Ice",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 50,
+      "def": 40,
+      "spa": 30,
+      "spd": 30,
+      "spe": 50
+    }
+  },
+  "piloswine": {
+    "id": "piloswine",
+    "name": "Piloswine",
+    "num": 221,
+    "types": [
+      "Ice",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 100,
+      "def": 80,
+      "spa": 60,
+      "spd": 60,
+      "spe": 50
+    }
+  },
+  "remoraid": {
+    "id": "remoraid",
+    "name": "Remoraid",
+    "num": 223,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 65,
+      "def": 35,
+      "spa": 65,
+      "spd": 35,
+      "spe": 65
+    }
+  },
+  "octillery": {
+    "id": "octillery",
+    "name": "Octillery",
+    "num": 224,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 105,
+      "def": 75,
+      "spa": 105,
+      "spd": 75,
+      "spe": 45
+    }
+  },
+  "delibird": {
+    "id": "delibird",
+    "name": "Delibird",
+    "num": 225,
+    "types": [
+      "Ice",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 55,
+      "def": 45,
+      "spa": 65,
+      "spd": 45,
+      "spe": 75
+    }
+  },
+  "skarmory": {
+    "id": "skarmory",
+    "name": "Skarmory",
+    "num": 227,
+    "types": [
+      "Steel",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 80,
+      "def": 140,
+      "spa": 40,
+      "spd": 70,
+      "spe": 70
+    }
+  },
+  "houndour": {
+    "id": "houndour",
+    "name": "Houndour",
+    "num": 228,
+    "types": [
+      "Dark",
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 60,
+      "def": 30,
+      "spa": 80,
+      "spd": 50,
+      "spe": 65
+    }
+  },
+  "houndoom": {
+    "id": "houndoom",
+    "name": "Houndoom",
+    "num": 229,
+    "types": [
+      "Dark",
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 90,
+      "def": 50,
+      "spa": 110,
+      "spd": 80,
+      "spe": 95
+    }
+  },
+  "kingdra": {
+    "id": "kingdra",
+    "name": "Kingdra",
+    "num": 230,
+    "types": [
+      "Water",
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 85
+    }
+  },
+  "phanpy": {
+    "id": "phanpy",
+    "name": "Phanpy",
+    "num": 231,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 60,
+      "def": 60,
+      "spa": 40,
+      "spd": 40,
+      "spe": 40
+    }
+  },
+  "donphan": {
+    "id": "donphan",
+    "name": "Donphan",
+    "num": 232,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 120,
+      "def": 120,
+      "spa": 60,
+      "spd": 60,
+      "spe": 50
+    }
+  },
+  "porygon2": {
+    "id": "porygon2",
+    "name": "Porygon2",
+    "num": 233,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 85,
+      "atk": 80,
+      "def": 90,
+      "spa": 105,
+      "spd": 95,
+      "spe": 60
+    }
+  },
+  "stantler": {
+    "id": "stantler",
+    "name": "Stantler",
+    "num": 234,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 73,
+      "atk": 95,
+      "def": 62,
+      "spa": 85,
+      "spd": 65,
+      "spe": 85
+    }
+  },
+  "smeargle": {
+    "id": "smeargle",
+    "name": "Smeargle",
+    "num": 235,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 20,
+      "def": 35,
+      "spa": 20,
+      "spd": 45,
+      "spe": 75
+    }
+  },
+  "smoochum": {
+    "id": "smoochum",
+    "name": "Smoochum",
+    "num": 238,
+    "types": [
+      "Ice",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 30,
+      "def": 15,
+      "spa": 85,
+      "spd": 65,
+      "spe": 65
+    }
+  },
+  "elekid": {
+    "id": "elekid",
+    "name": "Elekid",
+    "num": 239,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 63,
+      "def": 37,
+      "spa": 65,
+      "spd": 55,
+      "spe": 95
+    }
+  },
+  "magby": {
+    "id": "magby",
+    "name": "Magby",
+    "num": 240,
+    "types": [
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 75,
+      "def": 37,
+      "spa": 70,
+      "spd": 55,
+      "spe": 83
+    }
+  },
+  "miltank": {
+    "id": "miltank",
+    "name": "Miltank",
+    "num": 241,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 80,
+      "def": 105,
+      "spa": 40,
+      "spd": 70,
+      "spe": 100
+    }
+  },
+  "blissey": {
+    "id": "blissey",
+    "name": "Blissey",
+    "num": 242,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 255,
+      "atk": 10,
+      "def": 10,
+      "spa": 75,
+      "spd": 135,
+      "spe": 55
+    }
+  },
+  "larvitar": {
+    "id": "larvitar",
+    "name": "Larvitar",
+    "num": 246,
+    "types": [
+      "Rock",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 64,
+      "def": 50,
+      "spa": 45,
+      "spd": 50,
+      "spe": 41
+    }
+  },
+  "pupitar": {
+    "id": "pupitar",
+    "name": "Pupitar",
+    "num": 247,
+    "types": [
+      "Rock",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 84,
+      "def": 70,
+      "spa": 65,
+      "spd": 70,
+      "spe": 51
+    }
+  },
+  "tyranitar": {
+    "id": "tyranitar",
+    "name": "Tyranitar",
+    "num": 248,
+    "types": [
+      "Rock",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 134,
+      "def": 110,
+      "spa": 95,
+      "spd": 100,
+      "spe": 61
+    }
+  },
+  "lugia": {
+    "id": "lugia",
+    "name": "Lugia",
+    "num": 249,
+    "types": [
+      "Psychic",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 106,
+      "atk": 90,
+      "def": 130,
+      "spa": 90,
+      "spd": 154,
+      "spe": 110
+    }
+  },
+  "hooh": {
+    "id": "hooh",
+    "name": "Ho-Oh",
+    "num": 250,
+    "types": [
+      "Fire",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 106,
+      "atk": 130,
+      "def": 90,
+      "spa": 110,
+      "spd": 154,
+      "spe": 90
+    }
+  },
+  "celebi": {
+    "id": "celebi",
+    "name": "Celebi",
+    "num": 251,
+    "types": [
+      "Psychic",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 100,
+      "def": 100,
+      "spa": 100,
+      "spd": 100,
+      "spe": 100
+    }
+  },
+  "poochyena": {
+    "id": "poochyena",
+    "name": "Poochyena",
+    "num": 261,
+    "types": [
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 35,
+      "spa": 30,
+      "spd": 30,
+      "spe": 35
+    }
+  },
+  "mightyena": {
+    "id": "mightyena",
+    "name": "Mightyena",
+    "num": 262,
+    "types": [
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 90,
+      "def": 70,
+      "spa": 60,
+      "spd": 60,
+      "spe": 70
+    }
+  },
+  "zigzagoon": {
+    "id": "zigzagoon",
+    "name": "Zigzagoon",
+    "num": 263,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 38,
+      "atk": 30,
+      "def": 41,
+      "spa": 30,
+      "spd": 41,
+      "spe": 60
+    }
+  },
+  "linoone": {
+    "id": "linoone",
+    "name": "Linoone",
+    "num": 264,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 78,
+      "atk": 70,
+      "def": 61,
+      "spa": 50,
+      "spd": 61,
+      "spe": 100
+    }
+  },
+  "wurmple": {
+    "id": "wurmple",
+    "name": "Wurmple",
+    "num": 265,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 45,
+      "def": 35,
+      "spa": 20,
+      "spd": 30,
+      "spe": 20
+    }
+  },
+  "silcoon": {
+    "id": "silcoon",
+    "name": "Silcoon",
+    "num": 266,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 35,
+      "def": 55,
+      "spa": 25,
+      "spd": 25,
+      "spe": 15
+    }
+  },
+  "cascoon": {
+    "id": "cascoon",
+    "name": "Cascoon",
+    "num": 268,
+    "types": [
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 35,
+      "def": 55,
+      "spa": 25,
+      "spd": 25,
+      "spe": 15
+    }
+  },
+  "dustox": {
+    "id": "dustox",
+    "name": "Dustox",
+    "num": 269,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 50,
+      "def": 70,
+      "spa": 50,
+      "spd": 90,
+      "spe": 65
+    }
+  },
+  "lotad": {
+    "id": "lotad",
+    "name": "Lotad",
+    "num": 270,
+    "types": [
+      "Water",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 30,
+      "def": 30,
+      "spa": 40,
+      "spd": 50,
+      "spe": 30
+    }
+  },
+  "lombre": {
+    "id": "lombre",
+    "name": "Lombre",
+    "num": 271,
+    "types": [
+      "Water",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 50,
+      "def": 50,
+      "spa": 60,
+      "spd": 70,
+      "spe": 50
+    }
+  },
+  "ludicolo": {
+    "id": "ludicolo",
+    "name": "Ludicolo",
+    "num": 272,
+    "types": [
+      "Water",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 70,
+      "def": 70,
+      "spa": 90,
+      "spd": 100,
+      "spe": 70
+    }
+  },
+  "seedot": {
+    "id": "seedot",
+    "name": "Seedot",
+    "num": 273,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 40,
+      "def": 50,
+      "spa": 30,
+      "spd": 30,
+      "spe": 30
+    }
+  },
+  "nuzleaf": {
+    "id": "nuzleaf",
+    "name": "Nuzleaf",
+    "num": 274,
+    "types": [
+      "Grass",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 70,
+      "def": 40,
+      "spa": 60,
+      "spd": 40,
+      "spe": 60
+    }
+  },
+  "taillow": {
+    "id": "taillow",
+    "name": "Taillow",
+    "num": 276,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 55,
+      "def": 30,
+      "spa": 30,
+      "spd": 30,
+      "spe": 85
+    }
+  },
+  "surskit": {
+    "id": "surskit",
+    "name": "Surskit",
+    "num": 283,
+    "types": [
+      "Bug",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 30,
+      "def": 32,
+      "spa": 50,
+      "spd": 52,
+      "spe": 65
+    }
+  },
+  "shroomish": {
+    "id": "shroomish",
+    "name": "Shroomish",
+    "num": 285,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 40,
+      "def": 60,
+      "spa": 40,
+      "spd": 60,
+      "spe": 35
+    }
+  },
+  "breloom": {
+    "id": "breloom",
+    "name": "Breloom",
+    "num": 286,
+    "types": [
+      "Grass",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 130,
+      "def": 80,
+      "spa": 60,
+      "spd": 60,
+      "spe": 70
+    }
+  },
+  "slakoth": {
+    "id": "slakoth",
+    "name": "Slakoth",
+    "num": 287,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 60,
+      "spa": 35,
+      "spd": 35,
+      "spe": 30
+    }
+  },
+  "vigoroth": {
+    "id": "vigoroth",
+    "name": "Vigoroth",
+    "num": 288,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 80,
+      "def": 80,
+      "spa": 55,
+      "spd": 55,
+      "spe": 90
+    }
+  },
+  "slaking": {
+    "id": "slaking",
+    "name": "Slaking",
+    "num": 289,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 150,
+      "atk": 160,
+      "def": 100,
+      "spa": 95,
+      "spd": 65,
+      "spe": 100
+    }
+  },
+  "nincada": {
+    "id": "nincada",
+    "name": "Nincada",
+    "num": 290,
+    "types": [
+      "Bug",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 31,
+      "atk": 45,
+      "def": 90,
+      "spa": 30,
+      "spd": 30,
+      "spe": 40
+    }
+  },
+  "ninjask": {
+    "id": "ninjask",
+    "name": "Ninjask",
+    "num": 291,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 61,
+      "atk": 90,
+      "def": 45,
+      "spa": 50,
+      "spd": 50,
+      "spe": 160
+    }
+  },
+  "shedinja": {
+    "id": "shedinja",
+    "name": "Shedinja",
+    "num": 292,
+    "types": [
+      "Bug",
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 1,
+      "atk": 90,
+      "def": 45,
+      "spa": 30,
+      "spd": 30,
+      "spe": 40
+    }
+  },
+  "whismur": {
+    "id": "whismur",
+    "name": "Whismur",
+    "num": 293,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 64,
+      "atk": 51,
+      "def": 23,
+      "spa": 51,
+      "spd": 23,
+      "spe": 28
+    }
+  },
+  "loudred": {
+    "id": "loudred",
+    "name": "Loudred",
+    "num": 294,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 84,
+      "atk": 71,
+      "def": 43,
+      "spa": 71,
+      "spd": 43,
+      "spe": 48
+    }
+  },
+  "makuhita": {
+    "id": "makuhita",
+    "name": "Makuhita",
+    "num": 296,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 72,
+      "atk": 60,
+      "def": 30,
+      "spa": 20,
+      "spd": 30,
+      "spe": 25
+    }
+  },
+  "hariyama": {
+    "id": "hariyama",
+    "name": "Hariyama",
+    "num": 297,
+    "types": [
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 144,
+      "atk": 120,
+      "def": 60,
+      "spa": 40,
+      "spd": 60,
+      "spe": 50
+    }
+  },
+  "nosepass": {
+    "id": "nosepass",
+    "name": "Nosepass",
+    "num": 299,
+    "types": [
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 45,
+      "def": 135,
+      "spa": 45,
+      "spd": 90,
+      "spe": 30
+    }
+  },
+  "skitty": {
+    "id": "skitty",
+    "name": "Skitty",
+    "num": 300,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 45,
+      "def": 45,
+      "spa": 35,
+      "spd": 35,
+      "spe": 50
+    }
+  },
+  "sableye": {
+    "id": "sableye",
+    "name": "Sableye",
+    "num": 302,
+    "types": [
+      "Dark",
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 75,
+      "def": 75,
+      "spa": 65,
+      "spd": 65,
+      "spe": 50
+    }
+  },
+  "aron": {
+    "id": "aron",
+    "name": "Aron",
+    "num": 304,
+    "types": [
+      "Steel",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 70,
+      "def": 100,
+      "spa": 40,
+      "spd": 40,
+      "spe": 30
+    }
+  },
+  "lairon": {
+    "id": "lairon",
+    "name": "Lairon",
+    "num": 305,
+    "types": [
+      "Steel",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 90,
+      "def": 140,
+      "spa": 50,
+      "spd": 50,
+      "spe": 40
+    }
+  },
+  "aggron": {
+    "id": "aggron",
+    "name": "Aggron",
+    "num": 306,
+    "types": [
+      "Steel",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 110,
+      "def": 180,
+      "spa": 60,
+      "spd": 60,
+      "spe": 50
+    }
+  },
+  "meditite": {
+    "id": "meditite",
+    "name": "Meditite",
+    "num": 307,
+    "types": [
+      "Fighting",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 30,
+      "atk": 40,
+      "def": 55,
+      "spa": 40,
+      "spd": 55,
+      "spe": 60
+    }
+  },
+  "medicham": {
+    "id": "medicham",
+    "name": "Medicham",
+    "num": 308,
+    "types": [
+      "Fighting",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 75,
+      "spa": 60,
+      "spd": 75,
+      "spe": 80
+    }
+  },
+  "electrike": {
+    "id": "electrike",
+    "name": "Electrike",
+    "num": 309,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 40,
+      "spa": 65,
+      "spd": 40,
+      "spe": 65
+    }
+  },
+  "manectric": {
+    "id": "manectric",
+    "name": "Manectric",
+    "num": 310,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 75,
+      "def": 60,
+      "spa": 105,
+      "spd": 60,
+      "spe": 105
+    }
+  },
+  "roselia": {
+    "id": "roselia",
+    "name": "Roselia",
+    "num": 315,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 60,
+      "def": 45,
+      "spa": 100,
+      "spd": 80,
+      "spe": 65
+    }
+  },
+  "gulpin": {
+    "id": "gulpin",
+    "name": "Gulpin",
+    "num": 316,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 43,
+      "def": 53,
+      "spa": 43,
+      "spd": 53,
+      "spe": 40
+    }
+  },
+  "swalot": {
+    "id": "swalot",
+    "name": "Swalot",
+    "num": 317,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 73,
+      "def": 83,
+      "spa": 73,
+      "spd": 83,
+      "spe": 55
+    }
+  },
+  "carvanha": {
+    "id": "carvanha",
+    "name": "Carvanha",
+    "num": 318,
+    "types": [
+      "Water",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 90,
+      "def": 20,
+      "spa": 65,
+      "spd": 20,
+      "spe": 65
+    }
+  },
+  "sharpedo": {
+    "id": "sharpedo",
+    "name": "Sharpedo",
+    "num": 319,
+    "types": [
+      "Water",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 120,
+      "def": 40,
+      "spa": 95,
+      "spd": 40,
+      "spe": 95
+    }
+  },
+  "wailmer": {
+    "id": "wailmer",
+    "name": "Wailmer",
+    "num": 320,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 130,
+      "atk": 70,
+      "def": 35,
+      "spa": 70,
+      "spd": 35,
+      "spe": 60
+    }
+  },
+  "wailord": {
+    "id": "wailord",
+    "name": "Wailord",
+    "num": 321,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 170,
+      "atk": 90,
+      "def": 45,
+      "spa": 90,
+      "spd": 45,
+      "spe": 60
+    }
+  },
+  "numel": {
+    "id": "numel",
+    "name": "Numel",
+    "num": 322,
+    "types": [
+      "Fire",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 40,
+      "spa": 65,
+      "spd": 45,
+      "spe": 35
+    }
+  },
+  "camerupt": {
+    "id": "camerupt",
+    "name": "Camerupt",
+    "num": 323,
+    "types": [
+      "Fire",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 100,
+      "def": 70,
+      "spa": 105,
+      "spd": 75,
+      "spe": 40
+    }
+  },
+  "spoink": {
+    "id": "spoink",
+    "name": "Spoink",
+    "num": 325,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 25,
+      "def": 35,
+      "spa": 70,
+      "spd": 80,
+      "spe": 60
+    }
+  },
+  "grumpig": {
+    "id": "grumpig",
+    "name": "Grumpig",
+    "num": 326,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 45,
+      "def": 65,
+      "spa": 90,
+      "spd": 110,
+      "spe": 80
+    }
+  },
+  "spinda": {
+    "id": "spinda",
+    "name": "Spinda",
+    "num": 327,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 60,
+      "spa": 60,
+      "spd": 60,
+      "spe": 60
+    }
+  },
+  "cacnea": {
+    "id": "cacnea",
+    "name": "Cacnea",
+    "num": 331,
+    "types": [
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 85,
+      "def": 40,
+      "spa": 85,
+      "spd": 40,
+      "spe": 35
+    }
+  },
+  "cacturne": {
+    "id": "cacturne",
+    "name": "Cacturne",
+    "num": 332,
+    "types": [
+      "Grass",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 115,
+      "def": 60,
+      "spa": 115,
+      "spd": 60,
+      "spe": 55
+    }
+  },
+  "swablu": {
+    "id": "swablu",
+    "name": "Swablu",
+    "num": 333,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 40,
+      "def": 60,
+      "spa": 40,
+      "spd": 75,
+      "spe": 50
+    }
+  },
+  "altaria": {
+    "id": "altaria",
+    "name": "Altaria",
+    "num": 334,
+    "types": [
+      "Dragon",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 70,
+      "def": 90,
+      "spa": 70,
+      "spd": 105,
+      "spe": 80
+    }
+  },
+  "zangoose": {
+    "id": "zangoose",
+    "name": "Zangoose",
+    "num": 335,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 73,
+      "atk": 115,
+      "def": 60,
+      "spa": 60,
+      "spd": 60,
+      "spe": 90
+    }
+  },
+  "seviper": {
+    "id": "seviper",
+    "name": "Seviper",
+    "num": 336,
+    "types": [
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 73,
+      "atk": 100,
+      "def": 60,
+      "spa": 100,
+      "spd": 60,
+      "spe": 65
+    }
+  },
+  "barboach": {
+    "id": "barboach",
+    "name": "Barboach",
+    "num": 339,
+    "types": [
+      "Water",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 48,
+      "def": 43,
+      "spa": 46,
+      "spd": 41,
+      "spe": 60
+    }
+  },
+  "whiscash": {
+    "id": "whiscash",
+    "name": "Whiscash",
+    "num": 340,
+    "types": [
+      "Water",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 110,
+      "atk": 78,
+      "def": 73,
+      "spa": 76,
+      "spd": 71,
+      "spe": 60
+    }
+  },
+  "corphish": {
+    "id": "corphish",
+    "name": "Corphish",
+    "num": 341,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 43,
+      "atk": 80,
+      "def": 65,
+      "spa": 50,
+      "spd": 35,
+      "spe": 35
+    }
+  },
+  "crawdaunt": {
+    "id": "crawdaunt",
+    "name": "Crawdaunt",
+    "num": 342,
+    "types": [
+      "Water",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 63,
+      "atk": 120,
+      "def": 85,
+      "spa": 90,
+      "spd": 55,
+      "spe": 55
+    }
+  },
+  "baltoy": {
+    "id": "baltoy",
+    "name": "Baltoy",
+    "num": 343,
+    "types": [
+      "Ground",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 40,
+      "def": 55,
+      "spa": 40,
+      "spd": 70,
+      "spe": 55
+    }
+  },
+  "claydol": {
+    "id": "claydol",
+    "name": "Claydol",
+    "num": 344,
+    "types": [
+      "Ground",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 70,
+      "def": 105,
+      "spa": 70,
+      "spd": 120,
+      "spe": 75
+    }
+  },
+  "lileep": {
+    "id": "lileep",
+    "name": "Lileep",
+    "num": 345,
+    "types": [
+      "Rock",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 66,
+      "atk": 41,
+      "def": 77,
+      "spa": 61,
+      "spd": 87,
+      "spe": 23
+    }
+  },
+  "cradily": {
+    "id": "cradily",
+    "name": "Cradily",
+    "num": 346,
+    "types": [
+      "Rock",
+      "Grass"
+    ],
+    "baseStats": {
+      "hp": 86,
+      "atk": 81,
+      "def": 97,
+      "spa": 81,
+      "spd": 107,
+      "spe": 43
+    }
+  },
+  "anorith": {
+    "id": "anorith",
+    "name": "Anorith",
+    "num": 347,
+    "types": [
+      "Rock",
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 95,
+      "def": 50,
+      "spa": 40,
+      "spd": 50,
+      "spe": 75
+    }
+  },
+  "armaldo": {
+    "id": "armaldo",
+    "name": "Armaldo",
+    "num": 348,
+    "types": [
+      "Rock",
+      "Bug"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 125,
+      "def": 100,
+      "spa": 70,
+      "spd": 80,
+      "spe": 45
+    }
+  },
+  "castformsnowy": {
+    "id": "castformsnowy",
+    "name": "Castform-Snowy",
+    "num": 351,
+    "types": [
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 70,
+      "def": 70,
+      "spa": 70,
+      "spd": 70,
+      "spe": 70
+    }
+  },
+  "shuppet": {
+    "id": "shuppet",
+    "name": "Shuppet",
+    "num": 353,
+    "types": [
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 44,
+      "atk": 75,
+      "def": 35,
+      "spa": 63,
+      "spd": 33,
+      "spe": 45
+    }
+  },
+  "banette": {
+    "id": "banette",
+    "name": "Banette",
+    "num": 354,
+    "types": [
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 64,
+      "atk": 115,
+      "def": 65,
+      "spa": 83,
+      "spd": 63,
+      "spe": 65
+    }
+  },
+  "tropius": {
+    "id": "tropius",
+    "name": "Tropius",
+    "num": 357,
+    "types": [
+      "Grass",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 99,
+      "atk": 68,
+      "def": 83,
+      "spa": 72,
+      "spd": 87,
+      "spe": 51
+    }
+  },
+  "absol": {
+    "id": "absol",
+    "name": "Absol",
+    "num": 359,
+    "types": [
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 130,
+      "def": 60,
+      "spa": 75,
+      "spd": 60,
+      "spe": 75
+    }
+  },
+  "wynaut": {
+    "id": "wynaut",
+    "name": "Wynaut",
+    "num": 360,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 23,
+      "def": 48,
+      "spa": 23,
+      "spd": 48,
+      "spe": 23
+    }
+  },
+  "snorunt": {
+    "id": "snorunt",
+    "name": "Snorunt",
+    "num": 361,
+    "types": [
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 50,
+      "def": 50,
+      "spa": 50,
+      "spd": 50,
+      "spe": 50
+    }
+  },
+  "glalie": {
+    "id": "glalie",
+    "name": "Glalie",
+    "num": 362,
+    "types": [
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 80,
+      "def": 80,
+      "spa": 80,
+      "spd": 80,
+      "spe": 80
+    }
+  },
+  "spheal": {
+    "id": "spheal",
+    "name": "Spheal",
+    "num": 363,
+    "types": [
+      "Ice",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 40,
+      "def": 50,
+      "spa": 55,
+      "spd": 50,
+      "spe": 25
+    }
+  },
+  "sealeo": {
+    "id": "sealeo",
+    "name": "Sealeo",
+    "num": 364,
+    "types": [
+      "Ice",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 60,
+      "def": 70,
+      "spa": 75,
+      "spd": 70,
+      "spe": 45
+    }
+  },
+  "walrein": {
+    "id": "walrein",
+    "name": "Walrein",
+    "num": 365,
+    "types": [
+      "Ice",
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 110,
+      "atk": 80,
+      "def": 90,
+      "spa": 95,
+      "spd": 90,
+      "spe": 65
+    }
+  },
+  "clamperl": {
+    "id": "clamperl",
+    "name": "Clamperl",
+    "num": 366,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 64,
+      "def": 85,
+      "spa": 74,
+      "spd": 55,
+      "spe": 32
+    }
+  },
+  "huntail": {
+    "id": "huntail",
+    "name": "Huntail",
+    "num": 367,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 104,
+      "def": 105,
+      "spa": 94,
+      "spd": 75,
+      "spe": 52
+    }
+  },
+  "gorebyss": {
+    "id": "gorebyss",
+    "name": "Gorebyss",
+    "num": 368,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 84,
+      "def": 105,
+      "spa": 114,
+      "spd": 75,
+      "spe": 52
+    }
+  },
+  "relicanth": {
+    "id": "relicanth",
+    "name": "Relicanth",
+    "num": 369,
+    "types": [
+      "Water",
+      "Rock"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 90,
+      "def": 130,
+      "spa": 45,
+      "spd": 65,
+      "spe": 55
+    }
+  },
+  "luvdisc": {
+    "id": "luvdisc",
+    "name": "Luvdisc",
+    "num": 370,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 43,
+      "atk": 30,
+      "def": 55,
+      "spa": 40,
+      "spd": 65,
+      "spe": 97
+    }
+  },
+  "bagon": {
+    "id": "bagon",
+    "name": "Bagon",
+    "num": 371,
+    "types": [
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 75,
+      "def": 60,
+      "spa": 40,
+      "spd": 30,
+      "spe": 50
+    }
+  },
+  "shelgon": {
+    "id": "shelgon",
+    "name": "Shelgon",
+    "num": 372,
+    "types": [
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 95,
+      "def": 100,
+      "spa": 60,
+      "spd": 50,
+      "spe": 50
+    }
+  },
+  "salamence": {
+    "id": "salamence",
+    "name": "Salamence",
+    "num": 373,
+    "types": [
+      "Dragon",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 135,
+      "def": 80,
+      "spa": 110,
+      "spd": 80,
+      "spe": 100
+    }
+  },
+  "beldum": {
+    "id": "beldum",
+    "name": "Beldum",
+    "num": 374,
+    "types": [
+      "Steel",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 55,
+      "def": 80,
+      "spa": 35,
+      "spd": 60,
+      "spe": 30
+    }
+  },
+  "metang": {
+    "id": "metang",
+    "name": "Metang",
+    "num": 375,
+    "types": [
+      "Steel",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 75,
+      "def": 100,
+      "spa": 55,
+      "spd": 80,
+      "spe": 50
+    }
+  },
+  "metagross": {
+    "id": "metagross",
+    "name": "Metagross",
+    "num": 376,
+    "types": [
+      "Steel",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 135,
+      "def": 130,
+      "spa": 95,
+      "spd": 90,
+      "spe": 70
+    }
+  },
+  "latias": {
+    "id": "latias",
+    "name": "Latias",
+    "num": 380,
+    "types": [
+      "Dragon",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 80,
+      "def": 90,
+      "spa": 110,
+      "spd": 130,
+      "spe": 110
+    }
+  },
+  "latios": {
+    "id": "latios",
+    "name": "Latios",
+    "num": 381,
+    "types": [
+      "Dragon",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 90,
+      "def": 80,
+      "spa": 130,
+      "spd": 110,
+      "spe": 110
+    }
+  },
+  "kyogre": {
+    "id": "kyogre",
+    "name": "Kyogre",
+    "num": 382,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 100,
+      "def": 90,
+      "spa": 150,
+      "spd": 140,
+      "spe": 90
+    }
+  },
+  "groudon": {
+    "id": "groudon",
+    "name": "Groudon",
+    "num": 383,
+    "types": [
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 150,
+      "def": 140,
+      "spa": 100,
+      "spd": 90,
+      "spe": 90
+    }
+  },
+  "rayquaza": {
+    "id": "rayquaza",
+    "name": "Rayquaza",
+    "num": 384,
+    "types": [
+      "Dragon",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 105,
+      "atk": 150,
+      "def": 90,
+      "spa": 150,
+      "spd": 90,
+      "spe": 95
+    }
+  },
+  "jirachi": {
+    "id": "jirachi",
+    "name": "Jirachi",
+    "num": 385,
+    "types": [
+      "Steel",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 100,
+      "def": 100,
+      "spa": 100,
+      "spd": 100,
+      "spe": 100
+    }
+  },
+  "deoxys": {
+    "id": "deoxys",
+    "name": "Deoxys",
+    "num": 386,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 150,
+      "def": 50,
+      "spa": 150,
+      "spd": 50,
+      "spe": 150
+    }
+  },
+  "deoxysattack": {
+    "id": "deoxysattack",
+    "name": "Deoxys-Attack",
+    "num": 386,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 180,
+      "def": 20,
+      "spa": 180,
+      "spd": 20,
+      "spe": 150
+    }
+  },
+  "deoxysdefense": {
+    "id": "deoxysdefense",
+    "name": "Deoxys-Defense",
+    "num": 386,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 70,
+      "def": 160,
+      "spa": 70,
+      "spd": 160,
+      "spe": 90
+    }
+  },
+  "deoxysspeed": {
+    "id": "deoxysspeed",
+    "name": "Deoxys-Speed",
+    "num": 386,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 95,
+      "def": 90,
+      "spa": 95,
+      "spd": 90,
+      "spe": 180
+    }
+  }
+}

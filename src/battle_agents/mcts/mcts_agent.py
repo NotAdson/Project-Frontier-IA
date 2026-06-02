@@ -33,7 +33,7 @@ class MCTSAgent(Agent):
         self.iterations = iterations
         self.max_rollout_depth = max_rollout_depth
 
-    def get_action(self, state, player="p1") -> str:
+    def get_action(self, state, player="p1", return_probs=False) -> str:
         opponent = "p2" if player == "p1" else "p1"
         root = MCTSNode(state=state)
         root.untried_actions = self.problem.actions(root.state, player)
@@ -95,12 +95,21 @@ class MCTSAgent(Agent):
                 
         if not root.children:
             actions = self.problem.actions(state, player)
-            return random.choice(actions) if actions else "pass"
+            best_action = random.choice(actions) if actions else "pass"
+            if return_probs:
+                return best_action, {best_action: 1.0}
+            return best_action
             
         # Pick the most robustly visited child
         best_node = max(root.children, key=lambda c: c.visits)
         
-        print(f"  [MCTS {player}] Evaluated {self.iterations} rollouts. Selected '{best_node.action}' "
-              f"(Visits: {best_node.visits}/{root.visits}, Value: {best_node.value/best_node.visits:.2f})")
-        
+        if return_probs:
+            total_visits = sum(c.visits for c in root.children)
+            if total_visits == 0:
+                prob = 1.0 / len(root.children)
+                action_probs = {c.action: prob for c in root.children}
+            else:
+                action_probs = {c.action: c.visits / total_visits for c in root.children}
+            return best_node.action, action_probs
+            
         return best_node.action
