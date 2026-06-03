@@ -50,7 +50,7 @@ def _parse_steps(game_data):
 
 def load_data(data_dir: str = "data/games"):
     X, y_value, y_policy = [], [], []
-    for f in Path(data_dir).glob("*.json"):
+    for f in Path(data_dir).glob("game_*.json"):
         gx, gv, gp = _parse_steps(json.loads(f.read_text()))
         X += gx; y_value += gv; y_policy += gp
     return np.array(X, dtype=np.float32), np.array(y_value, dtype=np.float32), np.array(y_policy, dtype=np.float32)
@@ -206,7 +206,7 @@ def export_to_onnx(model, onnx_path):
 def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500, epochs: int = 15):
     print(f"[Keras backend: {keras.backend.backend()}]")
     print(f"Locating game files in {data_dir}/gen*...")
-    all_files = list(Path(data_dir).glob("gen*/*.json"))
+    all_files = list(Path(data_dir).glob("gen*/game_*.json"))
     if len(all_files) == 0:
         print("No data found. Please run generate_data.py first.")
         return

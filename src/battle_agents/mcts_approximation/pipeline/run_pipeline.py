@@ -23,7 +23,8 @@ from benchmarks.round_robin import RoundRobinBenchmark
 def check_generation_won(gen_dir, gen_idx):
     """
     Parses the tournament report inside gen_dir to check if Model Gen gen_idx 
-    outperformed or tied both static baselines (Blind MCTS and Random Agent).
+    outperformed or tied both the static baselines (Blind MCTS and Random Agent)
+    and the previous generation model (Model Gen {gen_idx-1}).
     Returns True if the model won/tied them, False otherwise.
     """
     report_path = os.path.join(gen_dir, "benchmark_report.json")
@@ -55,19 +56,25 @@ def check_generation_won(gen_dir, gen_idx):
             
         current_rate = rates[current_model_name]
         
-        # Check if current model's win rate is >= the rates of the static baselines
+        # 1. Check if current model's win rate is >= the rates of the static baselines
         for agent, rate in rates.items():
             if agent != current_model_name:
-                # We check against Blind MCTS and Random Agent baselines
                 if ("Blind MCTS" in agent or "Random Agent" in agent) and current_rate < rate:
                     return False
+                    
+        # 2. Check if current model's win rate is >= the rate of the previous generation model
+        prev_model_name = f"Model Gen {gen_idx-1}"
+        if prev_model_name in rates:
+            if current_rate < rates[prev_model_name]:
+                return False
+                
         return True
     except Exception as e:
         print(f"[Warning] Error parsing benchmark report for Gen {gen_idx}: {e}")
         return False
 
 
-def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, wipe=False, games_per_matchup=2, max_rollout_depth=20, processes=None):
+def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, wipe=False, games_per_matchup=5, max_rollout_depth=20, processes=None):
     """
     Runs the AlphaZero-style training pipeline end-to-end.
     
@@ -274,7 +281,8 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 print("\n========================================================")
                 print(" [Early Stopping] Pipeline Halted Early!")
                 print(" Reason: The model failed to outperform/tie static baselines")
-                print(" (Blind MCTS & Random Agent) in all of the last 3 generations.")
+                print(" (Blind MCTS & Random Agent) or show improvement over previous")
+                print(" model generations in all of the last 3 generations.")
                 print("========================================================\n")
                 break
                 
@@ -284,12 +292,12 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
 if __name__ == "__main__":
     # Test settings: 4 self-play games per gen, 3 generations, 15 MCTS iterations, 2 training epochs, wipe=False
     run_pipeline(
-        num_games=4, 
-        num_generations=3, 
-        mcts_iterations=15, 
-        epochs=2, 
-        wipe=False,
-        games_per_matchup=2,
-        max_rollout_depth=20,
+        num_games=150, 
+        num_generations=30, 
+        mcts_iterations=100, 
+        epochs=15, 
+        wipe=True,
+        games_per_matchup=10,
+        max_rollout_depth=30,
         processes=None
     )
