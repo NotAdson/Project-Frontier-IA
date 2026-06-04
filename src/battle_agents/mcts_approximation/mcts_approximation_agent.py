@@ -2,57 +2,70 @@ import math
 import random
 import os
 import numpy as np
-import numba
 
 from core.agent import Agent
-from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent, MCTSNode
+from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 from battle_agents.mcts_approximation.state_encoder import ACTION_SPACE
 
-@numba.njit(fastmath=True, cache=True)
-def _numba_best_child_idx(visits_arr, values_arr, priors_arr, parent_visits, c_param):
+
+def select_p1_action(node, c_param=1.414):
     best_score = -1e9
-    best_idx = 0
-    parent_visits_sqrt = math.sqrt(parent_visits)
-    for i in range(len(visits_arr)):
-        v = visits_arr[i]
-        q = values_arr[i] / v if v > 0.0 else 0.0
-        u = c_param * priors_arr[i] * parent_visits_sqrt / (1.0 + v)
+    best_action = None
+    parent_visits_sqrt = math.sqrt(node.visits) if node.visits > 0 else 1.0
+    for a in node.p1_actions:
+        v = node.p1_visits[a]
+        q = node.p1_values[a] / v if v > 0.0 else 0.5
+        u = c_param * node.p1_priors.get(a, 0.0) * parent_visits_sqrt / (1.0 + v)
         score = q + u
         if score > best_score:
             best_score = score
-            best_idx = i
-    return best_idx
+            best_action = a
+    return best_action if best_action is not None else random.choice(node.p1_actions)
+
+
+def select_p2_action(node, c_param=1.414):
+    best_score = -1e9
+    best_action = None
+    parent_visits_sqrt = math.sqrt(node.visits) if node.visits > 0 else 1.0
+    for a in node.p2_actions:
+        v = node.p2_visits[a]
+        # Opponent maximizes (1.0 - reward)
+        q = node.p2_values[a] / v if v > 0.0 else 0.5
+        u = c_param * node.p2_priors.get(a, 0.0) * parent_visits_sqrt / (1.0 + v)
+        score = q + u
+        if score > best_score:
+            best_score = score
+            best_action = a
+    return best_action if best_action is not None else random.choice(node.p2_actions)
 
 
 class MCTSApproximationNode:
-    def __init__(self, state, parent=None, action=None, prior_prob=0.0):
+    def __init__(self, state, parent=None, joint_action=None):
         self.state = state
         self.parent = parent
-        self.action = action
-        self.prior_prob = prior_prob
-        self.children = []
+        self.joint_action = joint_action  # (a1, a2) that led to this node
+        self.children = {}  # dict mapping (a1, a2) -> MCTSApproximationNode
         self.visits = 0
-        self.value = 0.0
+        self.value = 0.0  # from P1's perspective
         self.is_expanded = False
         
-        # Zero-allocation numpy arrays for JIT child selection
-        self.child_index = 0
-        self._visits_arr = None
-        self._values_arr = None
-        self._priors_arr = None
-
-    def best_child(self, c_param=1.414):
-        if not self.children:
-            return None
-        best_idx = _numba_best_child_idx(self._visits_arr, self._values_arr, self._priors_arr, float(self.visits), c_param)
-        return self.children[best_idx]
+        # Player 1 action statistics
+        self.p1_actions = []
+        self.p1_visits = {}
+        self.p1_values = {}
+        self.p1_priors = {}
+        
+        # Player 2 action statistics
+        self.p2_actions = []
+        self.p2_visits = {}
+        self.p2_values = {}
+        self.p2_priors = {}
 
 
 class MCTSApproximationAgent(BlindMCTSAgent):
     """
-    MCTS Approximation Agent.
+    MCTS Approximation Agent using Decoupled UCT (DUCT) to support simultaneous decision-making.
     Replaces random rollouts with a Neural Network evaluation of the state.
-    Evaluations are delegated to a pluggable StateEvaluator.
     """
     def __init__(self, problem, iterations=50, evaluator=None, model_path="data/mcts_model.keras", **kwargs):
         super().__init__(problem, iterations=iterations, max_rollout_depth=0)
@@ -77,103 +90,105 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         root = MCTSApproximationNode(state=state)
         
         # Initial expansion
-        self._expand(root, player, ACTION_SPACE)
+        self._expand(root)
 
         for _ in range(self.iterations):
             node = root
             
             # 1. Selection
             while node.is_expanded and not self.problem.is_terminal(node.state):
-                node = node.best_child()
-                # Lazy state generation to avoid expensive engine calls for all leaves
-                if node.state is None:
-                    opp_player = "p2" if player == "p1" else "p1"
-                    
-                    # Censor opponent state to prevent cheating (no access to unrevealed info)
-                    censored_parent_state = self._censor_opponent_state(node.parent.state, player)
-                    opp_actions = self.problem.actions(censored_parent_state, opp_player)
-                    
-                    opp_action = None
-                    if opp_actions:
-                        # Policy-guided opponent action selection using censored state
-                        _, opp_action_probs = self.evaluator.evaluate(censored_parent_state, opp_player, opp_actions)
-                        opp_probs = [opp_action_probs.get(a, 0.0) for a in opp_actions]
-                        sum_probs = sum(opp_probs)
-                        if sum_probs > 0:
-                            opp_probs = [p / sum_probs for p in opp_probs]
-                            opp_action = np.random.choice(opp_actions, p=opp_probs)
-                        else:
-                            opp_action = random.choice(opp_actions)
-                            
-                    if player == "p1":
-                        node.state = self.problem.result(node.parent.state, p1_action=node.action, p2_action=opp_action)
-                    else:
-                        node.state = self.problem.result(node.parent.state, p1_action=opp_action, p2_action=node.action)
+                a1 = select_p1_action(node)
+                a2 = select_p2_action(node)
+                joint_action = (a1, a2)
+                
+                if joint_action in node.children:
+                    node = node.children[joint_action]
+                else:
+                    # Transition to a new child state using both P1 and P2 actions
+                    child_state = self.problem.result(node.state, p1_action=a1, p2_action=a2)
+                    child_node = MCTSApproximationNode(state=child_state, parent=node, joint_action=joint_action)
+                    node.children[joint_action] = child_node
+                    node = child_node
+                    break
 
             # 2. Expansion & Evaluation
             if self.problem.is_terminal(node.state):
                 p1_won = self.problem.is_goal(node.state)
-                reward = 1.0 if (p1_won and player == "p1") or (not p1_won and player == "p2") else 0.0
+                reward = 1.0 if p1_won else 0.0
             else:
-                reward = self._expand(node, player, ACTION_SPACE)
+                reward = self._expand(node)
 
-            # 3. Backpropagation
+            # 3. Backpropagation (Zero-sum: P1 gets reward, P2 gets 1.0 - reward)
             curr = node
             while curr is not None:
                 curr.visits += 1
                 curr.value += reward
-                if curr.parent is not None:
-                    curr.parent._visits_arr[curr.child_index] = curr.visits
-                    curr.parent._values_arr[curr.child_index] = curr.value
-                curr = curr.parent
+                parent = curr.parent
+                if parent is not None:
+                    a1, a2 = curr.joint_action
+                    parent.p1_visits[a1] += 1
+                    parent.p1_values[a1] += reward
+                    parent.p2_visits[a2] += 1
+                    parent.p2_values[a2] += (1.0 - reward)
+                curr = parent
 
-        if not root.children:
-            actions = self.problem.actions(state, player)
-            best_action = random.choice(actions) if actions else "pass"
-            return (best_action, {best_action: 1.0}) if return_probs else best_action
+        # Determine controlled player action statistics at root
+        if player == "p1":
+            actions_list = root.p1_actions
+            visits_dict = root.p1_visits
+        else:
+            actions_list = root.p2_actions
+            visits_dict = root.p2_visits
 
-        total_visits = sum(c.visits for c in root.children)
+        total_visits = sum(visits_dict[a] for a in actions_list)
         
         # 1. Calculate raw visit probabilities (Training labels)
         if total_visits == 0:
-            prob = 1.0 / len(root.children)
-            action_probs = {c.action: prob for c in root.children}
+            prob = 1.0 / len(actions_list)
+            action_probs = {a: prob for a in actions_list}
         else:
-            action_probs = {c.action: c.visits / total_visits for c in root.children}
+            action_probs = {a: visits_dict[a] / total_visits for a in actions_list}
 
         # 2. Select final action applying temperature
         if temperature > 0.0 and total_visits > 0:
-            weights = [math.pow(c.visits, 1.0 / temperature) for c in root.children]
+            weights = [math.pow(visits_dict[a], 1.0 / temperature) for a in actions_list]
             total_weight = sum(weights)
             probs = [w / total_weight for w in weights]
-            chosen_action = np.random.choice([c.action for c in root.children], p=probs)
+            chosen_action = np.random.choice(actions_list, p=probs)
         else:
-            chosen_action = max(root.children, key=lambda c: c.visits).action
+            chosen_action = max(actions_list, key=lambda a: visits_dict[a])
         
         return (chosen_action, action_probs) if return_probs else chosen_action
 
-    def _expand(self, node, player, action_space):
-        """Evaluates node with evaluator and creates lazily-evaluated children."""
-        valid_actions = self.problem.actions(node.state, player)
-        if not valid_actions:
-            node.is_expanded = True
-            return 0.5
+    def _expand(self, node):
+        """Evaluates node state and initializes choice lists and priors for both players."""
+        node.p1_actions = self.problem.actions(node.state, "p1")
+        if not node.p1_actions:
+            node.p1_actions = ["pass"]
             
-        reward, action_probs = self.evaluator.evaluate(node.state, player, valid_actions)
-                
-        for idx, a in enumerate(valid_actions):
-            child = MCTSApproximationNode(state=None, parent=node, action=a, prior_prob=action_probs.get(a, 0.0))
-            child.child_index = idx
-            node.children.append(child)
-            
-        # Pre-allocate numpy arrays for JIT child selection
-        n_children = len(node.children)
-        node._visits_arr = np.zeros(n_children, dtype=np.float64)
-        node._values_arr = np.zeros(n_children, dtype=np.float64)
-        node._priors_arr = np.array([c.prior_prob for c in node.children], dtype=np.float64)
+        node.p2_actions = self.problem.actions(node.state, "p2")
+        if not node.p2_actions:
+            node.p2_actions = ["pass"]
+
+        # Evaluate P1 priors and state value from P1 perspective
+        p1_val, p1_probs = self.evaluator.evaluate(node.state, "p1", node.p1_actions)
+        node.p1_priors = p1_probs
+        
+        # Evaluate P2 priors using censored state to avoid opponent cheating
+        censored_state = self._censor_opponent_state(node.state, "p2")
+        _, p2_probs = self.evaluator.evaluate(censored_state, "p2", node.p2_actions)
+        node.p2_priors = p2_probs
+        
+        # Initialize visits and values to 0 for all valid actions
+        for a in node.p1_actions:
+            node.p1_visits[a] = 0.0
+            node.p1_values[a] = 0.0
+        for a in node.p2_actions:
+            node.p2_visits[a] = 0.0
+            node.p2_values[a] = 0.0
             
         node.is_expanded = True
-        return reward
+        return p1_val
 
     def _censor_opponent_state(self, state, player):
         """

@@ -1,5 +1,5 @@
 """
-Trains the Neural Network for MCTSApproximationAgent.
+Trains the Neural Network for MCTSApproximationAgent with Action-Masked Softmax and Auxiliary next-state heads.
 
 Backend selection:
   Set KERAS_BACKEND env-var before running:
@@ -36,50 +36,178 @@ def _split_features(X: np.ndarray):
 
 
 def _parse_steps(game_data):
-    X, y_value, y_policy = [], [], []
-    for step in game_data:
+    X, y_value, y_policy, X_next, action_masks = [], [], [], [], []
+    total_len = len(game_data)
+    if total_len == 0:
+        return X, y_value, y_policy, X_next, action_masks
+        
+    N = total_len // 2  # Each side has N turns
+    
+    # Process P1
+    for i in range(N):
+        step = game_data[i]
         X.append(step["features"])
         y_value.append(step["value"])
+        
         policy_dict = step.get("policy", {})
         policy_array = [policy_dict.get(a, 0.0) for a in ACTION_SPACE]
         s = sum(policy_array)
         policy_array = [p / s for p in policy_array] if s > 0 else [1.0 / len(ACTION_SPACE)] * len(ACTION_SPACE)
         y_policy.append(policy_array)
-    return X, y_value, y_policy
+        
+        mask = [1.0 if a in policy_dict else 0.0 for a in ACTION_SPACE]
+        action_masks.append(mask)
+        
+        if i < N - 1:
+            X_next.append(game_data[i + 1]["features"])
+        else:
+            X_next.append([0.0] * TOTAL_FEATURES)
+            
+    # Process P2
+    for i in range(N, 2 * N):
+        step = game_data[i]
+        X.append(step["features"])
+        y_value.append(step["value"])
+        
+        policy_dict = step.get("policy", {})
+        policy_array = [policy_dict.get(a, 0.0) for a in ACTION_SPACE]
+        s = sum(policy_array)
+        policy_array = [p / s for p in policy_array] if s > 0 else [1.0 / len(ACTION_SPACE)] * len(ACTION_SPACE)
+        y_policy.append(policy_array)
+        
+        mask = [1.0 if a in policy_dict else 0.0 for a in ACTION_SPACE]
+        action_masks.append(mask)
+        
+        if i < 2 * N - 1:
+            X_next.append(game_data[i + 1]["features"])
+        else:
+            X_next.append([0.0] * TOTAL_FEATURES)
+            
+    return X, y_value, y_policy, X_next, action_masks
 
 
 def load_data(data_dir: str = "data/games"):
-    X, y_value, y_policy = [], [], []
+    X, y_value, y_policy, X_next, action_masks = [], [], [], [], []
     for f in Path(data_dir).glob("game_*.json"):
-        gx, gv, gp = _parse_steps(json.loads(f.read_text()))
-        X += gx; y_value += gv; y_policy += gp
-    return np.array(X, dtype=np.float32), np.array(y_value, dtype=np.float32), np.array(y_policy, dtype=np.float32)
+        gx, gv, gp, gn, gm = _parse_steps(json.loads(f.read_text()))
+        X += gx; y_value += gv; y_policy += gp; X_next += gn; action_masks += gm
+    return (np.array(X, dtype=np.float32), np.array(y_value, dtype=np.float32), 
+            np.array(y_policy, dtype=np.float32), np.array(X_next, dtype=np.float32),
+            np.array(action_masks, dtype=np.float32))
 
 
 def load_data_from_files(files):
-    X, y_value, y_policy = [], [], []
+    X, y_value, y_policy, X_next, action_masks = [], [], [], [], []
     for f in files:
-        gx, gv, gp = _parse_steps(json.loads(f.read_text()))
-        X += gx; y_value += gv; y_policy += gp
+        try:
+            gx, gv, gp, gn, gm = _parse_steps(json.loads(f.read_text()))
+            X += gx; y_value += gv; y_policy += gp; X_next += gn; action_masks += gm
+        except Exception as e:
+            print(f"Error loading file {f}: {e}")
+            
     if len(X) == 0:
         return (np.empty((0, TOTAL_FEATURES), dtype=np.float32),
                 np.empty((0,), dtype=np.float32),
+                np.empty((0, len(ACTION_SPACE)), dtype=np.float32),
+                np.empty((0, TOTAL_FEATURES), dtype=np.float32),
                 np.empty((0, len(ACTION_SPACE)), dtype=np.float32))
-    return np.array(X, dtype=np.float32), np.array(y_value, dtype=np.float32), np.array(y_policy, dtype=np.float32)
+                
+    return (np.array(X, dtype=np.float32),
+            np.array(y_value, dtype=np.float32),
+            np.array(y_policy, dtype=np.float32),
+            np.array(X_next, dtype=np.float32),
+            np.array(action_masks, dtype=np.float32))
+
+
+def extract_aux_targets_batch(X_next, num_species):
+    batch_size = X_next.shape[0]
+    
+    # 1. Field conditions (Field indices 636 to 654)
+    field = X_next[:, 636:654]
+    
+    # 2. Boosts
+    own_boosts = X_next[:, 312:318]
+    opp_boosts = X_next[:, 630:636]
+    
+    # Initialize active targets
+    own_hp = np.zeros((batch_size, 1), dtype=np.float32)
+    opp_hp = np.zeros((batch_size, 1), dtype=np.float32)
+    
+    own_statuses = np.zeros((batch_size, 5), dtype=np.float32)
+    opp_statuses = np.zeros((batch_size, 5), dtype=np.float32)
+    
+    own_stats = np.zeros((batch_size, 5), dtype=np.float32)
+    opp_stats = np.zeros((batch_size, 5), dtype=np.float32)
+    
+    own_types = np.zeros((batch_size, 18), dtype=np.float32)
+    opp_types = np.zeros((batch_size, 18), dtype=np.float32)
+    
+    own_species = np.zeros((batch_size,), dtype=np.int32)
+    opp_species = np.zeros((batch_size,), dtype=np.int32)
+    
+    for b in range(batch_size):
+        # Find active own Pokémon index
+        own_act = -1
+        for i in range(6):
+            if X_next[b, i * 52 + 7] == 1.0:
+                own_act = i
+                break
+                
+        # Find active opponent Pokémon index
+        opp_act = -1
+        for j in range(6):
+            if X_next[b, 318 + j * 52 + 7] == 1.0:
+                opp_act = j
+                break
+                
+        if own_act != -1:
+            own_hp[b, 0] = X_next[b, own_act * 52]
+            own_statuses[b, :] = X_next[b, own_act * 52 + 2 : own_act * 52 + 7]
+            own_stats[b, :] = X_next[b, own_act * 52 + 9 : own_act * 52 + 14]
+            own_types[b, :] = X_next[b, own_act * 52 + 14 : own_act * 52 + 32]
+            own_species[b] = np.clip(int(round(X_next[b, 654 + own_act])), 0, num_species - 1)
+            
+        if opp_act != -1:
+            opp_hp[b, 0] = X_next[b, 318 + opp_act * 52]
+            opp_statuses[b, :] = X_next[b, 318 + opp_act * 52 + 2 : 318 + opp_act * 52 + 7]
+            opp_stats[b, :] = X_next[b, 318 + opp_act * 52 + 9 : 318 + opp_act * 52 + 14]
+            opp_types[b, :] = X_next[b, 318 + opp_act * 52 + 14 : 318 + opp_act * 52 + 32]
+            opp_species[b] = np.clip(int(round(X_next[b, 654 + 6 + opp_act])), 0, num_species - 1)
+            
+    # Convert species indices to one-hot format
+    own_species_onehot = keras.utils.to_categorical(own_species, num_classes=num_species)
+    opp_species_onehot = keras.utils.to_categorical(opp_species, num_classes=num_species)
+    
+    return {
+        "aux_field": field,
+        "aux_own_hp": own_hp,
+        "aux_opp_hp": opp_hp,
+        "aux_own_statuses": own_statuses,
+        "aux_opp_statuses": opp_statuses,
+        "aux_own_boosts": own_boosts,
+        "aux_opp_boosts": opp_boosts,
+        "aux_own_stats": own_stats,
+        "aux_opp_stats": opp_stats,
+        "aux_own_types": own_types,
+        "aux_opp_types": opp_types,
+        "aux_own_species": own_species_onehot,
+        "aux_opp_species": opp_species_onehot,
+    }
 
 
 def build_model(num_dense: int, num_moves: int, num_species: int,
                 num_items: int, num_abilities: int) -> keras.Model:
-    """Builds the multi-input value+policy network (5 inputs, 2 outputs)."""
+    """Builds the multi-input value+policy network with auxiliary heads and action masking."""
 
-    # Grouped Category Inputs
+    # Category Inputs
     inp_dense     = keras.layers.Input(shape=(num_dense,), name="dense_features")
     inp_species   = keras.layers.Input(shape=(12,), name="species_indices", dtype="int32")
     inp_moves     = keras.layers.Input(shape=(48,), name="move_indices",    dtype="int32")
     inp_items     = keras.layers.Input(shape=(12,), name="item_indices",    dtype="int32")
     inp_abilities = keras.layers.Input(shape=(12,), name="ability_indices", dtype="int32")
+    inp_mask      = keras.layers.Input(shape=(len(ACTION_SPACE),), name="action_mask")
 
-    # Embedding branches (shared vocabulary sizes per category)
+    # Shared Embeddings
     emb_species   = keras.layers.Flatten()(keras.layers.Embedding(num_species,   32, name="emb_species")(inp_species))
     emb_moves     = keras.layers.Flatten()(keras.layers.Embedding(num_moves,     32, name="emb_moves")(inp_moves))
     emb_items     = keras.layers.Flatten()(keras.layers.Embedding(num_items,     16, name="emb_items")(inp_items))
@@ -89,7 +217,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         [inp_dense, emb_species, emb_moves, emb_items, emb_abilities]
     )
 
-    # Feed-forward trunk
+    # Trunk
     x = keras.layers.Dense(512)(concat)
     x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation("relu")(x)
@@ -105,19 +233,43 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     x = keras.layers.Activation("relu")(x)
     x = keras.layers.Dropout(0.1)(x)
 
-    # Heads
+    # Core outputs
     out_value  = keras.layers.Dense(1, activation="sigmoid", name="value")(x)
-    out_policy = keras.layers.Dense(len(ACTION_SPACE), activation="softmax", name="policy")(x)
+    
+    # Policy head with Action-Masked Softmax
+    logits = keras.layers.Dense(len(ACTION_SPACE), name="policy_logits")(x)
+    masked_logits = keras.layers.Lambda(
+        lambda inputs: inputs[0] + (1.0 - inputs[1]) * -1e9,
+        name="masked_logits"
+    )([logits, inp_mask])
+    out_policy = keras.layers.Activation("softmax", name="policy")(masked_logits)
+
+    # Auxiliary transition/dynamics outputs
+    out_field   = keras.layers.Dense(18, activation="sigmoid", name="aux_field")(x)
+    out_own_hp  = keras.layers.Dense(1, activation="sigmoid", name="aux_own_hp")(x)
+    out_opp_hp  = keras.layers.Dense(1, activation="sigmoid", name="aux_opp_hp")(x)
+    out_own_statuses = keras.layers.Dense(5, activation="sigmoid", name="aux_own_statuses")(x)
+    out_opp_statuses = keras.layers.Dense(5, activation="sigmoid", name="aux_opp_statuses")(x)
+    out_own_boosts = keras.layers.Dense(6, activation="tanh", name="aux_own_boosts")(x)
+    out_opp_boosts = keras.layers.Dense(6, activation="tanh", name="aux_opp_boosts")(x)
+    out_own_stats = keras.layers.Dense(5, activation="sigmoid", name="aux_own_stats")(x)
+    out_opp_stats = keras.layers.Dense(5, activation="sigmoid", name="aux_opp_stats")(x)
+    out_own_types = keras.layers.Dense(18, activation="sigmoid", name="aux_own_types")(x)
+    out_opp_types = keras.layers.Dense(18, activation="sigmoid", name="aux_opp_types")(x)
+    out_own_species = keras.layers.Dense(num_species, activation="softmax", name="aux_own_species")(x)
+    out_opp_species = keras.layers.Dense(num_species, activation="softmax", name="aux_opp_species")(x)
 
     model = keras.Model(
-        inputs=[inp_dense, inp_species, inp_moves, inp_items, inp_abilities],
-        outputs=[out_value, out_policy],
-    )
-    model.compile(
-        optimizer="adam",
-        loss={"value": "mse", "policy": "categorical_crossentropy"},
-        loss_weights={"value": 1.0, "policy": 5.0},
-        metrics={"value": "mae", "policy": "accuracy"},
+        inputs=[inp_dense, inp_species, inp_moves, inp_items, inp_abilities, inp_mask],
+        outputs=[
+            out_value, out_policy,
+            out_field, out_own_hp, out_opp_hp,
+            out_own_statuses, out_opp_statuses,
+            out_own_boosts, out_opp_boosts,
+            out_own_stats, out_opp_stats,
+            out_own_types, out_opp_types,
+            out_own_species, out_opp_species
+        ],
     )
     return model
 
@@ -146,6 +298,7 @@ def export_to_onnx(model, onnx_path):
                 torch.zeros((1, 48), dtype=torch.int32),    # move_indices
                 torch.zeros((1, 12), dtype=torch.int32),    # item_indices
                 torch.zeros((1, 12), dtype=torch.int32),    # ability_indices
+                torch.zeros((1, len(ACTION_SPACE)), dtype=torch.float32),  # action_mask
             )
             
             torch.onnx.export(
@@ -153,15 +306,20 @@ def export_to_onnx(model, onnx_path):
                 dummy_inputs,
                 str(onnx_path),
                 input_names=[
-                    "dense_features", "species_indices", "move_indices", "item_indices", "ability_indices"
+                    "dense_features", "species_indices", "move_indices", "item_indices", "ability_indices", "action_mask"
                 ],
-                output_names=["value", "policy"],
+                output_names=[
+                    "value", "policy", "aux_field", "aux_own_hp", "aux_opp_hp", "aux_own_statuses", "aux_opp_statuses",
+                    "aux_own_boosts", "aux_opp_boosts", "aux_own_stats", "aux_opp_stats", "aux_own_types", "aux_opp_types",
+                    "aux_own_species", "aux_opp_species"
+                ],
                 dynamic_axes={
                     "dense_features": {0: "batch_size"},
                     "species_indices": {0: "batch_size"},
                     "move_indices": {0: "batch_size"},
                     "item_indices": {0: "batch_size"},
                     "ability_indices": {0: "batch_size"},
+                    "action_mask": {0: "batch_size"},
                     "value": {0: "batch_size"},
                     "policy": {0: "batch_size"},
                 },
@@ -186,6 +344,7 @@ def export_to_onnx(model, onnx_path):
                 tf.TensorSpec((None, 48), tf.int32, name="move_indices"),
                 tf.TensorSpec((None, 12), tf.int32, name="item_indices"),
                 tf.TensorSpec((None, 12), tf.int32, name="ability_indices"),
+                tf.TensorSpec((None, len(ACTION_SPACE)), tf.float32, name="action_mask"),
             )
             
             tf2onnx.convert.from_keras(
@@ -234,9 +393,9 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     print(f"Split {len(all_files)} game files → {len(train_files)} train / {len(val_files)} val.")
 
     print("Loading training data...")
-    X_train, y_value_train, y_policy_train = load_data_from_files(train_files)
+    X_train, y_value_train, y_policy_train, X_next_train, action_masks_train = load_data_from_files(train_files)
     print("Loading validation data...")
-    X_val, y_value_val, y_policy_val       = load_data_from_files(val_files)
+    X_val, y_value_val, y_policy_val, X_next_val, action_masks_val = load_data_from_files(val_files)
 
     print(f"Loaded {len(X_train)} training turns and {len(X_val)} validation turns.")
 
@@ -253,61 +412,139 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         return
 
     # Shuffle turns
-    def _shuffle(X, yv, yp):
+    def _shuffle(X, yv, yp, xn, am):
         idx = np.random.permutation(len(X))
-        return X[idx], yv[idx], yp[idx]
+        return X[idx], yv[idx], yp[idx], xn[idx], am[idx]
 
-    X_train, y_value_train, y_policy_train = _shuffle(X_train, y_value_train, y_policy_train)
+    X_train, y_value_train, y_policy_train, X_next_train, action_masks_train = _shuffle(
+        X_train, y_value_train, y_policy_train, X_next_train, action_masks_train
+    )
     if len(X_val) > 0:
-        X_val, y_value_val, y_policy_val = _shuffle(X_val, y_value_val, y_policy_val)
+        X_val, y_value_val, y_policy_val, X_next_val, action_masks_val = _shuffle(
+            X_val, y_value_val, y_policy_val, X_next_val, action_masks_val
+        )
 
     # Split into 5 named inputs
     splits_train = _split_features(X_train)
     X_dense_train, X_species_train, X_moves_train, X_items_train, X_abilities_train = splits_train
-
-    val_data = None
-    if len(X_val) > 0:
-        X_dense_val, X_species_val, X_moves_val, X_items_val, X_abilities_val = _split_features(X_val)
-        val_data = (
-            {
-                "dense_features":   X_dense_val,
-                "species_indices":  X_species_val,
-                "move_indices":     X_moves_val,
-                "item_indices":     X_items_val,
-                "ability_indices":  X_abilities_val,
-            },
-            {"value": y_value_val, "policy": y_policy_val},
-        )
 
     num_moves     = get_num_moves()
     num_species   = get_num_species()
     num_items     = get_num_items()
     num_abilities = get_num_abilities()
 
+    # Extract auxiliary targets
+    aux_targets_train = extract_aux_targets_batch(X_next_train, num_species)
+    train_inputs = {
+        "dense_features":   X_dense_train,
+        "species_indices":  X_species_train,
+        "move_indices":     X_moves_train,
+        "item_indices":     X_items_train,
+        "ability_indices":  X_abilities_train,
+        "action_mask":      action_masks_train,
+    }
+    train_outputs = {
+        "value": y_value_train,
+        "policy": y_policy_train,
+    }
+    train_outputs.update(aux_targets_train)
+
+    val_data = None
+    if len(X_val) > 0:
+        splits_val = _split_features(X_val)
+        X_dense_val, X_species_val, X_moves_val, X_items_val, X_abilities_val = splits_val
+        aux_targets_val = extract_aux_targets_batch(X_next_val, num_species)
+        val_inputs = {
+            "dense_features":   X_dense_val,
+            "species_indices":  X_species_val,
+            "move_indices":     X_moves_val,
+            "item_indices":     X_items_val,
+            "ability_indices":  X_abilities_val,
+            "action_mask":      action_masks_val,
+        }
+        val_outputs = {
+            "value": y_value_val,
+            "policy": y_policy_val,
+        }
+        val_outputs.update(aux_targets_val)
+        val_data = (val_inputs, val_outputs)
+
     print(
         f"  Dense: {X_dense_train.shape[1]}  |  Species: {num_species}  |  "
         f"Items: {num_items}  |  Abilities: {num_abilities}  |  Moves: {num_moves}"
     )
 
+    losses = {
+        "value": "mse",
+        "policy": "categorical_crossentropy",
+        "aux_field": "binary_crossentropy",
+        "aux_own_hp": "mse",
+        "aux_opp_hp": "mse",
+        "aux_own_statuses": "binary_crossentropy",
+        "aux_opp_statuses": "binary_crossentropy",
+        "aux_own_boosts": "mse",
+        "aux_opp_boosts": "mse",
+        "aux_own_stats": "mse",
+        "aux_opp_stats": "mse",
+        "aux_own_types": "binary_crossentropy",
+        "aux_opp_types": "binary_crossentropy",
+        "aux_own_species": "categorical_crossentropy",
+        "aux_opp_species": "categorical_crossentropy"
+    }
+
+    loss_weights = {
+        "value": 1.0,
+        "policy": 5.0,
+        "aux_field": 0.2,
+        "aux_own_hp": 0.5,
+        "aux_opp_hp": 0.5,
+        "aux_own_statuses": 0.3,
+        "aux_opp_statuses": 0.3,
+        "aux_own_boosts": 0.2,
+        "aux_opp_boosts": 0.2,
+        "aux_own_stats": 0.2,
+        "aux_opp_stats": 0.2,
+        "aux_own_types": 0.2,
+        "aux_opp_types": 0.2,
+        "aux_own_species": 0.5,
+        "aux_opp_species": 0.5
+    }
+
     if os.path.exists(model_save_path):
-        print(f"Loading existing model from {model_save_path} for fine-tuning...")
+        print(f"Loading existing model from {model_save_path}...")
         try:
+            # Try to load directly (if model was already built/saved with action_mask and aux heads and deserialization succeeds)
             model = keras.models.load_model(model_save_path, compile=False)
+            if len(model.outputs) != 15:
+                raise ValueError(f"Architecture mismatch: expected 15 outputs, got {len(model.outputs)}")
+            print("Successfully loaded existing model with matching architecture. Recompiling for fine-tuning...")
+            model.compile(
+                optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+                loss=losses,
+                loss_weights=loss_weights,
+                metrics={"value": "mae", "policy": "accuracy"}
+            )
         except Exception as e:
-            print(f"Direct keras.models.load_model failed: {e}. Bypassing config loading and loading weights directly...")
+            print(f"Direct model load failed or mismatched architecture: {e}. Building new model with mask and aux heads, loading weights directly...")
             model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
-            model.load_weights(model_save_path)
-            
-        print("Recompiling with lower learning rate for fine-tuning (1e-4)...")
-        model.compile(
-            optimizer=keras.optimizers.Adam(learning_rate=1e-4),
-            loss={"value": "mse", "policy": "categorical_crossentropy"},
-            loss_weights={"value": 1.0, "policy": 5.0},
-            metrics={"value": "mae", "policy": "accuracy"},
-        )
+            model.load_weights(model_save_path, skip_mismatch=True)
+            print("Successfully loaded weights (using skip_mismatch=True). Compiling for fine-tuning...")
+            model.compile(
+                optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+                loss=losses,
+                loss_weights=loss_weights,
+                metrics={"value": "mae", "policy": "accuracy"}
+            )
     else:
         print("Building new model from scratch...")
         model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
+        print("Compiling model...")
+        model.compile(
+            optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+            loss=losses,
+            loss_weights=loss_weights,
+            metrics={"value": "mae", "policy": "accuracy"}
+        )
 
     model.summary()
 
@@ -322,14 +559,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         ))
 
     model.fit(
-        {
-            "dense_features":   X_dense_train,
-            "species_indices":  X_species_train,
-            "move_indices":     X_moves_train,
-            "item_indices":     X_items_train,
-            "ability_indices":  X_abilities_train,
-        },
-        {"value": y_value_train, "policy": y_policy_train},
+        train_inputs,
+        train_outputs,
         epochs=epochs,
         batch_size=512,
         validation_data=val_data,

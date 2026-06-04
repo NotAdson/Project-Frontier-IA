@@ -140,9 +140,16 @@ class NeuralStateEvaluator(BaseStateEvaluator):
     def evaluate(self, state, player: str, valid_actions: list) -> tuple[float, dict[str, float]]:
         action_probs = {}
         
+        # Build binary action mask
+        mask_array = np.zeros((1, len(ACTION_SPACE)), dtype=np.float32)
+        for a in valid_actions:
+            if a in ACTION_SPACE:
+                mask_array[0, ACTION_SPACE.index(a)] = 1.0
+        
         if self.onnx_session is not None:
             features = encode_state(state, player)
             inputs = self._build_inputs(features)
+            inputs["action_mask"] = mask_array
             
             # Map Python dictionary inputs to exact ONNX session input names
             ort_inputs = {}
@@ -209,6 +216,9 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         elif self.model is not None:
             features = encode_state(state, player)
             inputs = self._build_inputs(features)
+            if hasattr(self.model, "input_names") and "action_mask" in self.model.input_names:
+                inputs["action_mask"] = mask_array
+            
             # Direct model call with training=False
             pred = self.model(inputs, training=False)
 
