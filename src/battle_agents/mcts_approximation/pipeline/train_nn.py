@@ -116,7 +116,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     model.compile(
         optimizer="adam",
         loss={"value": "mse", "policy": "categorical_crossentropy"},
-        loss_weights={"value": 1.0, "policy": 1.0},
+        loss_weights={"value": 1.0, "policy": 5.0},
         metrics={"value": "mae", "policy": "accuracy"},
     )
     return model
@@ -296,7 +296,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=1e-4),
             loss={"value": "mse", "policy": "categorical_crossentropy"},
-            loss_weights={"value": 1.0, "policy": 1.0},
+            loss_weights={"value": 1.0, "policy": 5.0},
             metrics={"value": "mae", "policy": "accuracy"},
         )
     else:
@@ -308,7 +308,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     callbacks = []
     if val_data is not None:
         callbacks.append(keras.callbacks.EarlyStopping(
-            monitor="val_policy_loss",
+            monitor="val_loss",
             patience=5,
             restore_best_weights=True,
             verbose=1,
