@@ -43,6 +43,26 @@ function getValidActions(battle, player) {
     return actions;
 }
 
+// Cache settings to avoid memory leaks
+const MAX_CACHE_SIZE = 20000;
+const stateCache = new Map();
+const stateIdQueue = [];
+let nextStateId = 1;
+
+function cacheState(battle, serializedState) {
+    const id = nextStateId++;
+    // Store as string to prevent shared reference mutations across branching search paths
+    const serializedStateStr = JSON.stringify(serializedState);
+    stateCache.set(id, { battle, serializedStateStr });
+    stateIdQueue.push(id);
+    
+    if (stateCache.size > MAX_CACHE_SIZE) {
+        const oldestId = stateIdQueue.shift();
+        stateCache.delete(oldestId);
+    }
+    return id;
+}
+
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -69,9 +89,13 @@ rl.on('line', (line) => {
             battle.setPlayer('p1', { name: 'Player 1', team: p1_team });
             battle.setPlayer('p2', { name: 'Player 2', team: p2_team });
             
+            const serializedState = battle.toJSON();
+            const stateId = cacheState(battle, serializedState);
+            
             const response = {
                 type: "success", 
-                state: battle.toJSON(),
+                state_id: stateId,
+                state: serializedState,
                 request: battle.p1.activeRequest,
                 p2_request: battle.p2.activeRequest,
                 winner: battle.winner,
@@ -80,7 +104,15 @@ rl.on('line', (line) => {
             console.log(JSON.stringify(response));
             
         } else if (request.type === 'result') {
-            const battle = Battle.fromJSON(request.state);
+            let battle;
+            if (request.state_id !== undefined && stateCache.has(request.state_id)) {
+                const cached = stateCache.get(request.state_id);
+                // Parse the stringified cached state to ensure a clean copy
+                battle = Battle.fromJSON(JSON.parse(cached.serializedStateStr));
+            } else {
+                // Fallback to slower pipe deserialization
+                battle = Battle.fromJSON(request.state);
+            }
             battle.send = () => {};
             
             // Choose actions
@@ -91,9 +123,13 @@ rl.on('line', (line) => {
                 battle.choose('p2', 'default'); // Default random action for opponent
             }
             
+            const serializedState = battle.toJSON();
+            const stateId = cacheState(battle, serializedState);
+            
             const response = {
                 type: "success", 
-                state: battle.toJSON(),
+                state_id: stateId,
+                state: serializedState,
                 request: battle.p1.activeRequest,
                 p2_request: battle.p2.activeRequest,
                 winner: battle.winner,
@@ -101,7 +137,12 @@ rl.on('line', (line) => {
             };
             console.log(JSON.stringify(response));
         } else if (request.type === 'rollout') {
-            const battle = Battle.fromJSON(request.state);
+            let battle;
+            if (request.state_id !== undefined && stateCache.has(request.state_id)) {
+                battle = Battle.fromJSON(JSON.parse(stateCache.get(request.state_id).serializedStateStr));
+            } else {
+                battle = Battle.fromJSON(request.state);
+            }
             battle.send = () => {};
             const player = request.player;
             const maxDepth = request.max_depth || 150;

@@ -434,9 +434,50 @@ def encode_state(state, player: str = "p1") -> np.ndarray:
     # 5. Field conditions (weather, hazards, screens, active volatiles)
     field_feats = _encode_field_conditions(state_dict, player)
 
-    # Assemble: all dense first, then all embedding indices grouped by category
-    dense_features = (team_dense + active_boosts +
-                      opp_dense + opp_boosts + field_feats)
+    # Assemble original features (654 elements)
+    dense_orig = (team_dense + active_boosts +
+                  opp_dense + opp_boosts + field_feats)
+    
+    # 6. Extract PP features for both teams to append at the end (keeping old offsets intact)
+    # Own team PP features (24): 6 Pokémon * 4 moves
+    own_pps = []
+    own_side_idx = 0 if player == "p1" else 1
+    own_side_data = sides[own_side_idx] if len(sides) > own_side_idx else {}
+    own_pokemon = own_side_data.get("pokemon", [])
+    for p in own_pokemon:
+        move_slots = p.get("moveSlots", [])
+        for j in range(NUM_MOVES):
+            if j < len(move_slots):
+                m = move_slots[j]
+                pp = m.get("pp", 0)
+                maxpp = m.get("maxpp", 1)
+                own_pps.append(pp / maxpp if maxpp > 0 else 0.0)
+            else:
+                own_pps.append(0.0)
+    if len(own_pps) < 24:
+        own_pps.extend([0.0] * (24 - len(own_pps)))
+        
+    # Opponent team PP features (24): 6 Pokémon * 4 moves
+    opp_pps = []
+    opp_side_idx = 1 if player == "p1" else 0
+    opp_side_data = sides[opp_side_idx] if len(sides) > opp_side_idx else {}
+    opp_pokemon = opp_side_data.get("pokemon", [])
+    for p in opp_pokemon:
+        # We only know opponent's move PP if it has been used/revealed in the battle
+        move_slots = p.get("moveSlots", [])
+        for j in range(NUM_MOVES):
+            if j < len(move_slots) and move_slots[j].get("used", False):
+                m = move_slots[j]
+                pp = m.get("pp", 0)
+                maxpp = m.get("maxpp", 1)
+                opp_pps.append(pp / maxpp if maxpp > 0 else 0.0)
+            else:
+                opp_pps.append(0.0)
+    if len(opp_pps) < 24:
+        opp_pps.extend([0.0] * (24 - len(opp_pps)))
+
+    # Concatenate the new 48 PP features to the dense list
+    dense_features = dense_orig + own_pps + opp_pps
     
     # Category Groupings
     species_category = species_idxs + opp_species_idxs  # 12 indices
@@ -454,9 +495,10 @@ def encode_state(state, player: str = "p1") -> np.ndarray:
 
 # Dense features:
 #   6×52 own team (312) + 6 active boosts (6)
-#   + 6×52 opp revealed team (312) + 6 opp active boosts (6) + 18 field conditions
+#   + 6×52 opp revealed team (312) + 6 opp active boosts (6) + 18 field conditions (654 original)
+#   + 48 PP features (24 own PP, 24 opponent PP) = 702 dense
 NUM_FIELD_FEATURES   = len(WEATHERS) + len(SIDE_CONDS) * 2 + len(ACTIVE_VOLS)  # = 4+10+4 = 18
-NUM_DENSE_FEATURES   = 6 * 52 + 6 + 6 * 52 + 6 + NUM_FIELD_FEATURES   # = 636+18 = 654
+NUM_DENSE_FEATURES   = 6 * 52 + 6 + 6 * 52 + 6 + NUM_FIELD_FEATURES + 48   # = 654 + 48 = 702
 
 # Grouped category counts
 NUM_SPECIES_INDICES      = 12  # 6 own + 6 opp
@@ -468,13 +510,13 @@ NUM_EMBEDDING_INDICES = (
     NUM_SPECIES_INDICES + NUM_MOVE_INDICES + NUM_ITEM_INDICES + NUM_ABILITY_INDICES
 )  # = 12 + 48 + 12 + 12 = 84
 
-TOTAL_FEATURES = NUM_DENSE_FEATURES + NUM_EMBEDDING_INDICES  # = 654 + 84 = 738
+TOTAL_FEATURES = NUM_DENSE_FEATURES + NUM_EMBEDDING_INDICES  # = 702 + 84 = 786
 
-# Slice offsets within the embedding block (relative to NUM_DENSE_FEATURES = 654)
-OFF_SPECIES      = 0                                                # [654:666]
-OFF_MOVES        = OFF_SPECIES      + NUM_SPECIES_INDICES           # [666:714]
-OFF_ITEMS        = OFF_MOVES        + NUM_MOVE_INDICES              # [714:726]
-OFF_ABILITIES    = OFF_ITEMS        + NUM_ITEM_INDICES              # [726:738]
+# Slice offsets within the embedding block (relative to NUM_DENSE_FEATURES = 702)
+OFF_SPECIES      = 0                                                # [702:714]
+OFF_MOVES        = OFF_SPECIES      + NUM_SPECIES_INDICES           # [714:762]
+OFF_ITEMS        = OFF_MOVES        + NUM_MOVE_INDICES              # [762:774]
+OFF_ABILITIES    = OFF_ITEMS        + NUM_ITEM_INDICES              # [774:786]
 
 # Define fixed action space for Policy Network mapping
 ACTION_SPACE = [

@@ -49,12 +49,16 @@ class ShowdownClient:
             raise Exception(f"Error initializing battle: {resp.get('error')}")
         return resp
 
-    def get_result(self, state, p1_action, p2_action=None):
+    def get_result(self, state, p1_action, p2_action=None, state_id=None):
         req = {
             "type": "result",
-            "state": state,
             "p1_action": p1_action
         }
+        if state_id is not None:
+            req["state_id"] = state_id
+        else:
+            req["state"] = state
+            
         if p2_action: req["p2_action"] = p2_action
         
         self._send_request(req)
@@ -63,13 +67,16 @@ class ShowdownClient:
             raise Exception(f"Error executing action: {resp.get('error')}\nStack: {resp.get('stack')}")
         return resp
 
-    def rollout(self, state, player, max_depth):
+    def rollout(self, state, player, max_depth, state_id=None):
         req = {
             "type": "rollout",
-            "state": state,
             "player": player,
             "max_depth": max_depth
         }
+        if state_id is not None:
+            req["state_id"] = state_id
+        else:
+            req["state"] = state
         
         self._send_request(req)
         resp = self._read_response()

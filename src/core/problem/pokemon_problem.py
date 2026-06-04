@@ -4,25 +4,36 @@ from core.problem.aima_problem import Problem
 from core.client.showdown_client import ShowdownClient
 
 class PokemonState:
-    def __init__(self, state_dict, request_dict=None, p2_request_dict=None, log=None, winner=None):
+    def __init__(self, state_dict, request_dict=None, p2_request_dict=None, log=None, winner=None, state_id=None):
         self.state_dict = state_dict
         self.request_dict = request_dict
         self.p2_request_dict = p2_request_dict
         self.log = log or []
         self.winner = winner
+        self.state_id = state_id
         
     def __eq__(self, other):
-        # Using string comparison for simplicity, though feature extraction is better for large scale search.
+        if self.state_id is not None and other.state_id is not None:
+            return self.state_id == other.state_id
         return json.dumps(self.state_dict, sort_keys=True) == json.dumps(other.state_dict, sort_keys=True)
         
     def __hash__(self):
+        if self.state_id is not None:
+            return hash(self.state_id)
         return hash(json.dumps(self.state_dict, sort_keys=True))
 
 class PokemonProblem(Problem):
     def __init__(self, client: ShowdownClient, formatid='gen3randombattle'):
         self.client = client
         resp = self.client.init_battle(formatid=formatid)
-        initial_state = PokemonState(resp['state'], resp.get('request'), resp.get('p2_request'), resp.get('log'), resp.get('winner'))
+        initial_state = PokemonState(
+            resp['state'], 
+            resp.get('request'), 
+            resp.get('p2_request'), 
+            resp.get('log'), 
+            resp.get('winner'),
+            state_id=resp.get('state_id')
+        )
         super().__init__(initial_state)
 
     def actions(self, state: PokemonState, player="p1"):
@@ -62,11 +73,18 @@ class PokemonProblem(Problem):
 
     def result(self, state: PokemonState, p1_action: str, p2_action: str = None):
         """ Returns the next state after executing the actions. """
-        resp = self.client.get_result(state.state_dict, p1_action=p1_action, p2_action=p2_action)
-        return PokemonState(resp['state'], resp.get('request'), resp.get('p2_request'), resp.get('log'), resp.get('winner'))
+        resp = self.client.get_result(state.state_dict, p1_action=p1_action, p2_action=p2_action, state_id=state.state_id)
+        return PokemonState(
+            resp['state'], 
+            resp.get('request'), 
+            resp.get('p2_request'), 
+            resp.get('log'), 
+            resp.get('winner'),
+            state_id=resp.get('state_id')
+        )
 
     def rollout(self, state: PokemonState, player: str, max_depth: int):
-        return self.client.rollout(state.state_dict, player, max_depth)
+        return self.client.rollout(state.state_dict, player, max_depth, state_id=state.state_id)
 
     def is_terminal(self, state: PokemonState):
         """ Returns True if the match has ended. """

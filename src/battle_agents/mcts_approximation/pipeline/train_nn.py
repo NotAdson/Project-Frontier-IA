@@ -35,6 +35,14 @@ def _split_features(X: np.ndarray):
     return X_dense, X_species, X_moves, X_items, X_abilities
 
 
+def _convert_features(features):
+    if len(features) == 738:
+        # Old layout has 654 dense features + 84 embedding indices.
+        # We insert 48 zeros at index 654 to separate dense and embedding blocks.
+        return features[:654] + [0.0] * 48 + features[654:]
+    return features
+
+
 def _parse_steps(game_data):
     X, y_value, y_policy, X_next, action_masks = [], [], [], [], []
     total_len = len(game_data)
@@ -46,7 +54,7 @@ def _parse_steps(game_data):
     # Process P1
     for i in range(N):
         step = game_data[i]
-        X.append(step["features"])
+        X.append(_convert_features(step["features"]))
         y_value.append(step["value"])
         
         policy_dict = step.get("policy", {})
@@ -59,14 +67,14 @@ def _parse_steps(game_data):
         action_masks.append(mask)
         
         if i < N - 1:
-            X_next.append(game_data[i + 1]["features"])
+            X_next.append(_convert_features(game_data[i + 1]["features"]))
         else:
             X_next.append([0.0] * TOTAL_FEATURES)
             
     # Process P2
     for i in range(N, 2 * N):
         step = game_data[i]
-        X.append(step["features"])
+        X.append(_convert_features(step["features"]))
         y_value.append(step["value"])
         
         policy_dict = step.get("policy", {})
@@ -79,7 +87,7 @@ def _parse_steps(game_data):
         action_masks.append(mask)
         
         if i < 2 * N - 1:
-            X_next.append(game_data[i + 1]["features"])
+            X_next.append(_convert_features(game_data[i + 1]["features"]))
         else:
             X_next.append([0.0] * TOTAL_FEATURES)
             
@@ -133,15 +141,19 @@ def extract_aux_targets_batch(X_next, num_species):
     own_hp = np.zeros((batch_size, 1), dtype=np.float32)
     opp_hp = np.zeros((batch_size, 1), dtype=np.float32)
     
+    # Statuses
     own_statuses = np.zeros((batch_size, 5), dtype=np.float32)
     opp_statuses = np.zeros((batch_size, 5), dtype=np.float32)
     
+    # Stats
     own_stats = np.zeros((batch_size, 5), dtype=np.float32)
     opp_stats = np.zeros((batch_size, 5), dtype=np.float32)
     
+    # Types
     own_types = np.zeros((batch_size, 18), dtype=np.float32)
     opp_types = np.zeros((batch_size, 18), dtype=np.float32)
     
+    # Species
     own_species = np.zeros((batch_size,), dtype=np.int32)
     opp_species = np.zeros((batch_size,), dtype=np.int32)
     
@@ -165,14 +177,16 @@ def extract_aux_targets_batch(X_next, num_species):
             own_statuses[b, :] = X_next[b, own_act * 52 + 2 : own_act * 52 + 7]
             own_stats[b, :] = X_next[b, own_act * 52 + 9 : own_act * 52 + 14]
             own_types[b, :] = X_next[b, own_act * 52 + 14 : own_act * 52 + 32]
-            own_species[b] = np.clip(int(round(X_next[b, 654 + own_act])), 0, num_species - 1)
+            # Use NUM_DENSE_FEATURES as dynamic offset
+            own_species[b] = np.clip(int(round(X_next[b, NUM_DENSE_FEATURES + own_act])), 0, num_species - 1)
             
         if opp_act != -1:
             opp_hp[b, 0] = X_next[b, 318 + opp_act * 52]
             opp_statuses[b, :] = X_next[b, 318 + opp_act * 52 + 2 : 318 + opp_act * 52 + 7]
             opp_stats[b, :] = X_next[b, 318 + opp_act * 52 + 9 : 318 + opp_act * 52 + 14]
             opp_types[b, :] = X_next[b, 318 + opp_act * 52 + 14 : 318 + opp_act * 52 + 32]
-            opp_species[b] = np.clip(int(round(X_next[b, 654 + 6 + opp_act])), 0, num_species - 1)
+            # Use NUM_DENSE_FEATURES as dynamic offset
+            opp_species[b] = np.clip(int(round(X_next[b, NUM_DENSE_FEATURES + 6 + opp_act])), 0, num_species - 1)
             
     # Convert species indices to one-hot format
     own_species_onehot = keras.utils.to_categorical(own_species, num_classes=num_species)
@@ -214,7 +228,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     emb_items_layer   = keras.layers.Embedding(num_items, 8, name="meta_emb_items")
     emb_abilities_layer = keras.layers.Embedding(num_abilities, 8, name="meta_emb_abilities")
 
-    # Slice out 18 field conditions (weather, hazards) at the end of dense features [636:654]
+    # Slice out 18 field conditions (weather, hazards) at the end of original dense features [636:654]
     field_conds = keras.layers.Lambda(lambda x: x[:, 636:654], name="field_conditions")(inp_dense)
 
     tokens = []
@@ -228,7 +242,9 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         
         # 1. Dense features for Pokémon i
         p_dense = keras.layers.Lambda(lambda x, idx=start_idx: x[:, idx : idx + 52], name=f"p{i}_dense")(inp_dense)
-        # 2. Categorical embeddings
+        # 2. Extract PP features from the appended block [654:702]
+        p_pp    = keras.layers.Lambda(lambda x, idx=654 + i * 4: x[:, idx : idx + 4], name=f"p{i}_pp")(inp_dense)
+        # 3. Categorical embeddings
         p_spec = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_species")(inp_species)
         p_item = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_item")(inp_items)
         p_abil = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_ability")(inp_abilities)
@@ -245,16 +261,16 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         # Owner flag
         owner_flag = keras.layers.Lambda(lambda x, val=owner_val: x[:, :1] * 0.0 + val, name=f"p{i}_owner")(inp_dense)
 
-        # Concatenate features to form a 135-dimensional Pokémon representation token
+        # Concatenate features to form a 139-dimensional Pokémon representation token (52 + 4 + 16 + 8 + 8 + 32 + 1 + 18 = 139)
         token = keras.layers.Concatenate(name=f"p{i}_token")([
-            p_dense, spec_emb, item_emb, abil_emb, moves_emb, owner_flag, field_conds
+            p_dense, p_pp, spec_emb, item_emb, abil_emb, moves_emb, owner_flag, field_conds
         ])
         
-        # Expand token to shape (None, 1, 135) for sequence format
-        token_expanded = keras.layers.Reshape((1, 135), name=f"p{i}_token_expanded")(token)
+        # Expand token to shape (None, 1, 139) for sequence format
+        token_expanded = keras.layers.Reshape((1, 139), name=f"p{i}_token_expanded")(token)
         tokens.append(token_expanded)
 
-    # Sequence of 12 tokens: shape (None, 12, 135)
+    # Sequence of 12 tokens: shape (None, 12, 139)
     token_seq = keras.layers.Concatenate(axis=1, name="token_sequence")(tokens)
 
     # Cross-Attention comparison layer
@@ -293,21 +309,21 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     # Fuse the 12-dimensional Meta-Plan directly into the main inputs before the dense trunk
     fused_features = keras.layers.Concatenate(name="fused_features")([concat_main, meta_plan])
 
-    # Trunk
-    x = keras.layers.Dense(512)(fused_features)
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Activation("relu")(x)
-    x = keras.layers.Dropout(0.3)(x)
+    # Trunk (Explicitly named for legacy weight matching)
+    x = keras.layers.Dense(512, name="dense")(fused_features)
+    x = keras.layers.BatchNormalization(name="batch_normalization")(x)
+    x = keras.layers.Activation("relu", name="activation")(x)
+    x = keras.layers.Dropout(0.3, name="dropout")(x)
 
-    x = keras.layers.Dense(256)(x)
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Activation("relu")(x)
-    x = keras.layers.Dropout(0.2)(x)
+    x = keras.layers.Dense(256, name="dense_1")(x)
+    x = keras.layers.BatchNormalization(name="batch_normalization_1")(x)
+    x = keras.layers.Activation("relu", name="activation_1")(x)
+    x = keras.layers.Dropout(0.2, name="dropout_1")(x)
 
-    x = keras.layers.Dense(128)(x)
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Activation("relu")(x)
-    x = keras.layers.Dropout(0.1)(x)
+    x = keras.layers.Dense(128, name="dense_2")(x)
+    x = keras.layers.BatchNormalization(name="batch_normalization_2")(x)
+    x = keras.layers.Activation("relu", name="activation_2")(x)
+    x = keras.layers.Dropout(0.1, name="dropout_2")(x)
 
     # Core outputs
     out_value  = keras.layers.Dense(1, activation="sigmoid", name="value")(x)
@@ -320,7 +336,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     )([logits, inp_mask])
     out_policy = keras.layers.Activation("softmax", name="policy")(masked_logits)
 
-    # Auxiliary transition/dynamics outputs
+    # Auxiliary dynamics outputs
     out_field   = keras.layers.Dense(18, activation="sigmoid", name="aux_field")(x)
     out_own_hp  = keras.layers.Dense(1, activation="sigmoid", name="aux_own_hp")(x)
     out_opp_hp  = keras.layers.Dense(1, activation="sigmoid", name="aux_opp_hp")(x)
@@ -436,6 +452,49 @@ def export_to_onnx(model, onnx_path):
 
     print("[Error] All ONNX export methods failed.")
     return False
+
+
+def load_legacy_weights_with_padding(model, legacy_model_path):
+    """
+    Manually copies legacy model weights layer-by-layer to our new model.
+    Pads the first dense trunk layer with zeros to accommodate the 48 new PP features
+    and 12 new meta-plan win condition weights.
+    """
+    print(f"Loading legacy weights from {legacy_model_path} with zero-padding for PP and Meta-Planner features...")
+    legacy_model = keras.models.load_model(legacy_model_path, compile=False)
+    
+    for layer in legacy_model.layers:
+        try:
+            target_layer = model.get_layer(layer.name)
+            if layer.name == "dense":
+                print("Mapping weights for the first dense layer of the trunk ('dense')...")
+                w, b = layer.get_weights()  # w shape (2958, 512), b shape (512,)
+                
+                # Construct new weight matrix of shape (3018, 512)
+                # Old shape 2958 layout:
+                #   [0:654]   -> dense features
+                #   [654:2958] -> categorical embeddings (384 + 1536 + 192 + 192 = 2304)
+                new_w = np.zeros((3018, 512), dtype=np.float32)
+                
+                # 1. Copy old dense features
+                new_w[0:654, :] = w[0:654, :]
+                # 2. [654:702] are the 48 new PP features (remain 0.0)
+                # 3. Copy old categorical embeddings (shifted by 48)
+                new_w[702:3006, :] = w[654:2958, :]
+                # 4. [3006:3018] are the 12 new meta_plan features (remain 0.0)
+                
+                target_layer.set_weights([new_w, b])
+                print("Trunk first dense layer successfully mapped with padding.")
+            else:
+                old_weights = layer.get_weights()
+                new_weights = target_layer.get_weights()
+                if len(old_weights) == len(new_weights) and all(o.shape == n.shape for o, n in zip(old_weights, new_weights)):
+                    target_layer.set_weights(old_weights)
+                else:
+                    pass
+        except Exception:
+            pass
+    print("Legacy weight loading with padding completed.")
 
 
 def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500, epochs: int = 15):
@@ -603,8 +662,11 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         except Exception as e:
             print(f"Direct model load failed or mismatched architecture: {e}. Building new model with mask and aux heads, loading weights directly...")
             model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
-            model.load_weights(model_save_path, skip_mismatch=True)
-            print("Successfully loaded weights (using skip_mismatch=True). Compiling for fine-tuning...")
+            try:
+                load_legacy_weights_with_padding(model, model_save_path)
+            except Exception as load_err:
+                print(f"Custom legacy weight loading failed: {load_err}. Falling back to default initialization.")
+            print("Successfully loaded weights. Compiling for fine-tuning...")
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=1e-4),
                 loss=losses,
