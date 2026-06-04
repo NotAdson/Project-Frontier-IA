@@ -291,7 +291,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
 
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path} for fine-tuning...")
-        model = keras.models.load_model(model_save_path)
+        model = keras.models.load_model(model_save_path, compile=False)
         print("Recompiling with lower learning rate for fine-tuning (1e-4)...")
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=1e-4),

@@ -88,8 +88,23 @@ class MCTSApproximationAgent(BlindMCTSAgent):
                 # Lazy state generation to avoid expensive engine calls for all leaves
                 if node.state is None:
                     opp_player = "p2" if player == "p1" else "p1"
-                    opp_actions = self.problem.actions(node.parent.state, opp_player)
-                    opp_action = random.choice(opp_actions) if opp_actions else None
+                    
+                    # Censor opponent state to prevent cheating (no access to unrevealed info)
+                    censored_parent_state = self._censor_opponent_state(node.parent.state, player)
+                    opp_actions = self.problem.actions(censored_parent_state, opp_player)
+                    
+                    opp_action = None
+                    if opp_actions:
+                        # Policy-guided opponent action selection using censored state
+                        _, opp_action_probs = self.evaluator.evaluate(censored_parent_state, opp_player, opp_actions)
+                        opp_probs = [opp_action_probs.get(a, 0.0) for a in opp_actions]
+                        sum_probs = sum(opp_probs)
+                        if sum_probs > 0:
+                            opp_probs = [p / sum_probs for p in opp_probs]
+                            opp_action = np.random.choice(opp_actions, p=opp_probs)
+                        else:
+                            opp_action = random.choice(opp_actions)
+                            
                     if player == "p1":
                         node.state = self.problem.result(node.parent.state, p1_action=node.action, p2_action=opp_action)
                     else:
@@ -159,3 +174,54 @@ class MCTSApproximationAgent(BlindMCTSAgent):
             
         node.is_expanded = True
         return reward
+
+    def _censor_opponent_state(self, state, player):
+        """
+        Returns a new PokemonState with a copy of state_dict where the opponent's
+        unrevealed Pokémon, moves, and items are stripped out.
+        This ensures MCTS opponent evaluation uses only public information.
+        """
+        import copy
+        from core.problem.pokemon_problem import PokemonState
+        
+        state_dict = state.state_dict
+        censored_dict = copy.deepcopy(state_dict)
+        
+        opp_player = "p2" if player == "p1" else "p1"
+        opp_idx = 1 if opp_player == "p2" else 0
+        
+        sides = censored_dict.get("sides", [])
+        if len(sides) > opp_idx:
+            opp_side = sides[opp_idx]
+            pokemon_list = opp_side.get("pokemon", [])
+            for p in pokemon_list:
+                # Determine if this Pokémon has ever been revealed
+                is_revealed = (
+                    p.get("isActive", False)
+                    or p.get("previouslySwitchedIn", 0) > 0
+                    or p.get("fainted", False)
+                )
+                if not is_revealed:
+                    # Clear completely (unknown Pokémon)
+                    p["details"] = ""
+                    p["hp"] = 0
+                    p["maxhp"] = 1
+                    p["condition"] = "0 fnt"
+                    p["fainted"] = False
+                    p["status"] = ""
+                    p["moveSlots"] = []
+                    p["item"] = ""
+                    p["ability"] = ""
+                    p["baseAbility"] = ""
+                else:
+                    # Keep only the moves that have been used/revealed in the battle
+                    move_slots = p.get("moveSlots", [])
+                    p["moveSlots"] = [m for m in move_slots if m.get("used", False)]
+                    
+        return PokemonState(
+            censored_dict, 
+            request_dict=state.request_dict, 
+            p2_request_dict=state.p2_request_dict, 
+            log=state.log, 
+            winner=state.winner
+        )

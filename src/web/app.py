@@ -21,6 +21,7 @@ class GameController:
         self.current_state = None
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.is_thinking = False
+        self.precomputed_p2_action = None
 
     def init_game(self):
         if self.client is not None:
@@ -34,12 +35,28 @@ class GameController:
         self.problem = PokemonProblem(self.client, formatid="gen3randombattle")
         self.agent = MCTSApproximationAgent(self.problem, iterations=400, max_rollout_depth=0, model_path=model_path)
         self.current_state = self.problem.initial
+        self.precomputed_p2_action = None
+        self.is_thinking = False
         
-        if not self.problem.is_terminal(self.current_state):
-            pass # No background thinking needed anymore
+        # Start precomputing the very first turn of the game in background
+        self.start_precompute()
 
     def reset(self):
         self.init_game()
+
+    def start_precompute(self):
+        """Starts background calculation of the AI move for the current state."""
+        if self.current_state is None or self.problem.is_terminal(self.current_state):
+            return
+        self.precomputed_p2_action = None
+        self.executor.submit(self._precompute_worker, self.current_state)
+
+    def _precompute_worker(self, state):
+        try:
+            action = self.agent.get_action(state, player="p2")
+            self.precomputed_p2_action = action
+        except Exception as e:
+            print(f"Error in precomputing AI move: {e}")
 
 game = GameController()
 app = Flask(__name__)
@@ -189,7 +206,14 @@ import time
 def do_action_bg(p1_action, current_state):
     game.is_thinking = True
     try:
-        p2_action = game.agent.get_action(current_state, player="p2")
+        # Since the ThreadPoolExecutor has max_workers=1, Task 2 (this resolver task)
+        # runs strictly after Task 1 (precompute worker). Thus, game.precomputed_p2_action
+        # is guaranteed to be finished and set here.
+        p2_action = game.precomputed_p2_action
+        if p2_action is None:
+            # Fallback in case of race condition or unexpected execution order
+            p2_action = game.agent.get_action(current_state, player="p2")
+            
         game.current_state = game.problem.result(current_state, p1_action=p1_action, p2_action=p2_action)
         
         if game.problem.is_terminal(game.current_state):
@@ -198,6 +222,9 @@ def do_action_bg(p1_action, current_state):
             filename = f"game_{int(time.time())}.txt"
             with open(os.path.join(history_dir, filename), "w") as f:
                 f.write("\n".join(game.current_state.log))
+        else:
+            # Precompute the AI's move for the next turn in the background
+            game.start_precompute()
                 
     except Exception as e:
         print(f"Error in background AI thread: {e}")
@@ -212,7 +239,7 @@ def do_action():
     if game.problem.is_terminal(game.current_state):
         return jsonify({"error": "Game over"})
         
-    # Start background calculation so Flask can respond instantly
+    # Start background execution to process and advance turn state
     game.is_thinking = True
     game.executor.submit(do_action_bg, p1_action, game.current_state)
     

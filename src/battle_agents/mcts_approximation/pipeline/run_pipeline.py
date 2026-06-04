@@ -339,7 +339,7 @@ if __name__ == "__main__":
     run_pipeline(
         num_games=150, 
         num_generations=30, 
-        mcts_iterations=100, 
+        mcts_iterations=300, 
         epochs=15, 
         wipe=False,
         games_per_matchup=10,

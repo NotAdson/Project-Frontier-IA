@@ -337,8 +337,8 @@ async function updateUI(data) {
     if (data.is_terminal) {
         document.getElementById('dialogBox').innerHTML = 'Battle ended.';
         document.getElementById('mainMenu').innerHTML = `
-            <div style="grid-column: span 2; text-align: center; color: ${data.winner === 'p1' ? 'green' : 'red'};">
-                Game Over! Winner: ${data.winner === 'p1' ? 'YOU' : 'AI'}
+            <div style="grid-column: span 2; text-align: center; color: ${data.winner === 'Player 1' ? 'green' : 'red'};">
+                Game Over! Winner: ${data.winner === 'Player 1' ? 'YOU' : 'AI'}
             </div>
             <button class="menu-btn" onclick="resetGame()" style="grid-column: span 2;">PLAY AGAIN</button>
         `;
