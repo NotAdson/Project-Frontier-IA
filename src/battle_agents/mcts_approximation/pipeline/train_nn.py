@@ -197,7 +197,7 @@ def extract_aux_targets_batch(X_next, num_species):
 
 def build_model(num_dense: int, num_moves: int, num_species: int,
                 num_items: int, num_abilities: int) -> keras.Model:
-    """Builds the multi-input value+policy network with auxiliary heads and action masking."""
+    """Builds the multi-input value+policy network with integrated Meta-Planner Transformer and action masking."""
 
     # Category Inputs
     inp_dense     = keras.layers.Input(shape=(num_dense,), name="dense_features")
@@ -207,18 +207,94 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     inp_abilities = keras.layers.Input(shape=(12,), name="ability_indices", dtype="int32")
     inp_mask      = keras.layers.Input(shape=(len(ACTION_SPACE),), name="action_mask")
 
-    # Shared Embeddings
-    emb_species   = keras.layers.Flatten()(keras.layers.Embedding(num_species,   32, name="emb_species")(inp_species))
-    emb_moves     = keras.layers.Flatten()(keras.layers.Embedding(num_moves,     32, name="emb_moves")(inp_moves))
-    emb_items     = keras.layers.Flatten()(keras.layers.Embedding(num_items,     16, name="emb_items")(inp_items))
-    emb_abilities = keras.layers.Flatten()(keras.layers.Embedding(num_abilities, 16, name="emb_abilities")(inp_abilities))
+    # --- META-PLANNER TRANSFORMER SUB-NETWORK ---
+    # Shared Embeddings for Token Construction
+    emb_species_layer = keras.layers.Embedding(num_species, 16, name="meta_emb_species")
+    emb_moves_layer   = keras.layers.Embedding(num_moves, 8, name="meta_emb_moves")
+    emb_items_layer   = keras.layers.Embedding(num_items, 8, name="meta_emb_items")
+    emb_abilities_layer = keras.layers.Embedding(num_abilities, 8, name="meta_emb_abilities")
 
-    concat = keras.layers.Concatenate()(
-        [inp_dense, emb_species, emb_moves, emb_items, emb_abilities]
+    # Slice out 18 field conditions (weather, hazards) at the end of dense features [636:654]
+    field_conds = keras.layers.Lambda(lambda x: x[:, 636:654], name="field_conditions")(inp_dense)
+
+    tokens = []
+    for i in range(12):
+        if i < 6:
+            start_idx = i * 52
+            owner_val = 1.0
+        else:
+            start_idx = 318 + (i - 6) * 52
+            owner_val = 0.0
+        
+        # 1. Dense features for Pokémon i
+        p_dense = keras.layers.Lambda(lambda x, idx=start_idx: x[:, idx : idx + 52], name=f"p{i}_dense")(inp_dense)
+        # 2. Categorical embeddings
+        p_spec = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_species")(inp_species)
+        p_item = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_item")(inp_items)
+        p_abil = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_ability")(inp_abilities)
+        
+        # 4 moves per Pokémon
+        m_start = i * 4 if i < 6 else 24 + (i - 6) * 4
+        p_moves = keras.layers.Lambda(lambda x, idx=m_start: x[:, idx : idx + 4], name=f"p{i}_moves")(inp_moves)
+
+        spec_emb = keras.layers.Flatten()(emb_species_layer(p_spec))
+        item_emb = keras.layers.Flatten()(emb_items_layer(p_item))
+        abil_emb = keras.layers.Flatten()(emb_abilities_layer(p_abil))
+        moves_emb = keras.layers.Flatten()(emb_moves_layer(p_moves))
+
+        # Owner flag
+        owner_flag = keras.layers.Lambda(lambda x, val=owner_val: x[:, :1] * 0.0 + val, name=f"p{i}_owner")(inp_dense)
+
+        # Concatenate features to form a 135-dimensional Pokémon representation token
+        token = keras.layers.Concatenate(name=f"p{i}_token")([
+            p_dense, spec_emb, item_emb, abil_emb, moves_emb, owner_flag, field_conds
+        ])
+        
+        # Expand token to shape (None, 1, 135) for sequence format
+        token_expanded = keras.layers.Reshape((1, 135), name=f"p{i}_token_expanded")(token)
+        tokens.append(token_expanded)
+
+    # Sequence of 12 tokens: shape (None, 12, 135)
+    token_seq = keras.layers.Concatenate(axis=1, name="token_sequence")(tokens)
+
+    # Cross-Attention comparison layer
+    attn_out = keras.layers.MultiHeadAttention(num_heads=4, key_dim=32, name="meta_attention")(
+        query=token_seq, value=token_seq
+    )
+    attn_out = keras.layers.Add()([token_seq, attn_out])
+    attn_out = keras.layers.LayerNormalization()(attn_out)
+
+    # Project token final states to importance scores: shape (None, 12)
+    scores = keras.layers.Dense(1, name="token_score_projection")(attn_out)
+    scores = keras.layers.Reshape((12,), name="token_scores")(scores)
+
+    # Separate own (P1) vs opponent (P2) scores
+    own_scores = keras.layers.Lambda(lambda x: x[:, :6], name="own_scores")(scores)
+    opp_scores = keras.layers.Lambda(lambda x: x[:, 6:], name="opp_scores")(scores)
+
+    # Activation scaling: Softmax for own win-conditions, Sigmoid for opponent threat evaluation
+    own_weights = keras.layers.Activation("softmax", name="meta_own_weights")(own_scores)
+    opp_weights = keras.layers.Activation("sigmoid", name="meta_opp_weights")(opp_scores)
+
+    # Final 12-dimensional Meta-Plan weights
+    meta_plan = keras.layers.Concatenate(name="meta_plan")([own_weights, opp_weights])
+
+    # --- MAIN TACTICAL NETWORK ---
+    # Shared Embeddings for the Main network trunk
+    emb_species_main   = keras.layers.Flatten()(keras.layers.Embedding(num_species,   32, name="emb_species")(inp_species))
+    emb_moves_main     = keras.layers.Flatten()(keras.layers.Embedding(num_moves,     32, name="emb_moves")(inp_moves))
+    emb_items_main     = keras.layers.Flatten()(keras.layers.Embedding(num_items,     16, name="emb_items")(inp_items))
+    emb_abilities_main = keras.layers.Flatten()(keras.layers.Embedding(num_abilities, 16, name="emb_abilities")(inp_abilities))
+
+    concat_main = keras.layers.Concatenate()(
+        [inp_dense, emb_species_main, emb_moves_main, emb_items_main, emb_abilities_main]
     )
 
+    # Fuse the 12-dimensional Meta-Plan directly into the main inputs before the dense trunk
+    fused_features = keras.layers.Concatenate(name="fused_features")([concat_main, meta_plan])
+
     # Trunk
-    x = keras.layers.Dense(512)(concat)
+    x = keras.layers.Dense(512)(fused_features)
     x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Activation("relu")(x)
     x = keras.layers.Dropout(0.3)(x)
