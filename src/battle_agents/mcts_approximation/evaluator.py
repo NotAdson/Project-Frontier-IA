@@ -212,8 +212,8 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             # Direct model call with training=False
             pred = self.model(inputs, training=False)
 
-            # pred is a list of two tensors: [value (1,1), policy (1, ACTION_SPACE)]
-            if isinstance(pred, (list, tuple)) and len(pred) == 2:
+            # pred is a list of tensors starting with: [value (1,1), policy (1, ACTION_SPACE)]
+            if isinstance(pred, (list, tuple)) and len(pred) >= 2:
                 value_pred, policy_pred = pred
                 reward = float(np.array(value_pred)[0][0])
                 policy_probs = np.array(policy_pred)[0]

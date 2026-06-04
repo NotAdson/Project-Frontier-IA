@@ -291,7 +291,13 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
 
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path} for fine-tuning...")
-        model = keras.models.load_model(model_save_path, compile=False)
+        try:
+            model = keras.models.load_model(model_save_path, compile=False)
+        except Exception as e:
+            print(f"Direct keras.models.load_model failed: {e}. Bypassing config loading and loading weights directly...")
+            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
+            model.load_weights(model_save_path)
+            
         print("Recompiling with lower learning rate for fine-tuning (1e-4)...")
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=1e-4),
