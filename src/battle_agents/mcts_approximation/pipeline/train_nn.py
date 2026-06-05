@@ -19,6 +19,7 @@ from battle_agents.mcts_approximation.state_encoder import (
     NUM_DENSE_FEATURES,
     NUM_EMBEDDING_INDICES,
     TOTAL_FEATURES,
+    NUM_FIELD_FEATURES,
     NUM_SPECIES_INDICES, NUM_MOVE_INDICES, NUM_ITEM_INDICES, NUM_ABILITY_INDICES,
     OFF_SPECIES, OFF_MOVES, OFF_ITEMS, OFF_ABILITIES,
     ACTION_SPACE,
@@ -38,8 +39,12 @@ def _split_features(X: np.ndarray):
 def _convert_features(features):
     if len(features) == 738:
         # Old layout has 654 dense features + 84 embedding indices.
-        # We insert 48 zeros at index 654 to separate dense and embedding blocks.
-        return features[:654] + [0.0] * 48 + features[654:]
+        # First insert 48 zeros at index 654 for PP features to get 786-dim layout.
+        features = features[:654] + [0.0] * 48 + features[654:]
+    if len(features) == 786:
+        # Intermediate layout has 702 dense features + 84 embedding indices.
+        # We expand the 18 field features [636:654] to 60 by appending 42 zeros.
+        return features[:636] + features[636:654] + [0.0] * 42 + features[654:]
     return features
 
 
@@ -130,8 +135,8 @@ def load_data_from_files(files):
 def extract_aux_targets_batch(X_next, num_species):
     batch_size = X_next.shape[0]
     
-    # 1. Field conditions (Field indices 636 to 654)
-    field = X_next[:, 636:654]
+    # 1. Field conditions (Field indices 636 to 696)
+    field = X_next[:, 636:696]
     
     # 2. Boosts
     own_boosts = X_next[:, 312:318]
@@ -228,8 +233,8 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     emb_items_layer   = keras.layers.Embedding(num_items, 8, name="meta_emb_items")
     emb_abilities_layer = keras.layers.Embedding(num_abilities, 8, name="meta_emb_abilities")
 
-    # Slice out 18 field conditions (weather, hazards) at the end of original dense features [636:654]
-    field_conds = keras.layers.Lambda(lambda x: x[:, 636:654], name="field_conditions")(inp_dense)
+    # Slice out 60 field conditions (weather, hazards, volatiles) at the end of original dense features [636:696]
+    field_conds = keras.layers.Lambda(lambda x: x[:, 636:696], name="field_conditions")(inp_dense)
 
     tokens = []
     for i in range(12):
@@ -242,8 +247,8 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         
         # 1. Dense features for Pokémon i
         p_dense = keras.layers.Lambda(lambda x, idx=start_idx: x[:, idx : idx + 52], name=f"p{i}_dense")(inp_dense)
-        # 2. Extract PP features from the appended block [654:702]
-        p_pp    = keras.layers.Lambda(lambda x, idx=654 + i * 4: x[:, idx : idx + 4], name=f"p{i}_pp")(inp_dense)
+        # 2. Extract PP features from the appended block [696:744]
+        p_pp    = keras.layers.Lambda(lambda x, idx=696 + i * 4: x[:, idx : idx + 4], name=f"p{i}_pp")(inp_dense)
         # 3. Categorical embeddings
         p_spec = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_species")(inp_species)
         p_item = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_item")(inp_items)
@@ -261,16 +266,16 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         # Owner flag
         owner_flag = keras.layers.Lambda(lambda x, val=owner_val: x[:, :1] * 0.0 + val, name=f"p{i}_owner")(inp_dense)
 
-        # Concatenate features to form a 139-dimensional Pokémon representation token (52 + 4 + 16 + 8 + 8 + 32 + 1 + 18 = 139)
+        # Concatenate features to form a 181-dimensional Pokémon representation token (52 + 4 + 16 + 8 + 8 + 32 + 1 + 60 = 181)
         token = keras.layers.Concatenate(name=f"p{i}_token")([
             p_dense, p_pp, spec_emb, item_emb, abil_emb, moves_emb, owner_flag, field_conds
         ])
         
-        # Expand token to shape (None, 1, 139) for sequence format
-        token_expanded = keras.layers.Reshape((1, 139), name=f"p{i}_token_expanded")(token)
+        # Expand token to shape (None, 1, 181) for sequence format
+        token_expanded = keras.layers.Reshape((1, 181), name=f"p{i}_token_expanded")(token)
         tokens.append(token_expanded)
 
-    # Sequence of 12 tokens: shape (None, 12, 139)
+    # Sequence of 12 tokens: shape (None, 12, 181)
     token_seq = keras.layers.Concatenate(axis=1, name="token_sequence")(tokens)
 
     # Cross-Attention comparison layer
@@ -337,7 +342,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     out_policy = keras.layers.Activation("softmax", name="policy")(masked_logits)
 
     # Auxiliary dynamics outputs
-    out_field   = keras.layers.Dense(18, activation="sigmoid", name="aux_field")(x)
+    out_field   = keras.layers.Dense(NUM_FIELD_FEATURES, activation="sigmoid", name="aux_field")(x)
     out_own_hp  = keras.layers.Dense(1, activation="sigmoid", name="aux_own_hp")(x)
     out_opp_hp  = keras.layers.Dense(1, activation="sigmoid", name="aux_opp_hp")(x)
     out_own_statuses = keras.layers.Dense(5, activation="sigmoid", name="aux_own_statuses")(x)
@@ -360,7 +365,8 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
             out_own_boosts, out_opp_boosts,
             out_own_stats, out_opp_stats,
             out_own_types, out_opp_types,
-            out_own_species, out_opp_species
+            out_own_species, out_opp_species,
+            meta_plan
         ],
     )
     return model
@@ -384,15 +390,22 @@ def export_to_onnx(model, onnx_path):
             print("Keras is using 'torch' backend. Attempting torch.onnx.export...")
             import torch
             
+            # Pack inputs as a list inside a tuple ( [inputs...], ) to match Keras call signature
             dummy_inputs = (
-                torch.zeros((1, NUM_DENSE_FEATURES), dtype=torch.float32),  # dense_features
-                torch.zeros((1, 12), dtype=torch.int32),    # species_indices
-                torch.zeros((1, 48), dtype=torch.int32),    # move_indices
-                torch.zeros((1, 12), dtype=torch.int32),    # item_indices
-                torch.zeros((1, 12), dtype=torch.int32),    # ability_indices
-                torch.zeros((1, len(ACTION_SPACE)), dtype=torch.float32),  # action_mask
+                [
+                    torch.zeros((1, NUM_DENSE_FEATURES), dtype=torch.float32),  # dense_features
+                    torch.zeros((1, 12), dtype=torch.int32),    # species_indices
+                    torch.zeros((1, 48), dtype=torch.int32),    # move_indices
+                    torch.zeros((1, 12), dtype=torch.int32),    # item_indices
+                    torch.zeros((1, 12), dtype=torch.int32),    # ability_indices
+                    torch.zeros((1, len(ACTION_SPACE)), dtype=torch.float32),  # action_mask
+                ],
             )
             
+            # Put model in eval mode for export
+            if hasattr(model, "eval"):
+                model.eval()
+                
             torch.onnx.export(
                 model,
                 dummy_inputs,
@@ -403,19 +416,9 @@ def export_to_onnx(model, onnx_path):
                 output_names=[
                     "value", "policy", "aux_field", "aux_own_hp", "aux_opp_hp", "aux_own_statuses", "aux_opp_statuses",
                     "aux_own_boosts", "aux_opp_boosts", "aux_own_stats", "aux_opp_stats", "aux_own_types", "aux_opp_types",
-                    "aux_own_species", "aux_opp_species"
+                    "aux_own_species", "aux_opp_species", "meta_plan"
                 ],
-                dynamic_axes={
-                    "dense_features": {0: "batch_size"},
-                    "species_indices": {0: "batch_size"},
-                    "move_indices": {0: "batch_size"},
-                    "item_indices": {0: "batch_size"},
-                    "ability_indices": {0: "batch_size"},
-                    "action_mask": {0: "batch_size"},
-                    "value": {0: "batch_size"},
-                    "policy": {0: "batch_size"},
-                },
-                opset_version=14,
+                opset_version=18,
             )
             print("ONNX export completed successfully using torch.onnx.export!")
             return True
@@ -456,45 +459,186 @@ def export_to_onnx(model, onnx_path):
 
 def load_legacy_weights_with_padding(model, legacy_model_path):
     """
-    Manually copies legacy model weights layer-by-layer to our new model.
-    Pads the first dense trunk layer with zeros to accommodate the 48 new PP features
-    and 12 new meta-plan win condition weights.
+    Manually copies legacy model weights from model.weights.h5 within the zip archive,
+    zero-padding the first dense trunk layer to fit our new input shape.
+    All other matching weights are loaded natively using model.load_weights.
     """
-    print(f"Loading legacy weights from {legacy_model_path} with zero-padding for PP and Meta-Planner features...")
-    legacy_model = keras.models.load_model(legacy_model_path, compile=False)
+    print(f"Loading legacy weights from {legacy_model_path}...")
     
-    for layer in legacy_model.layers:
-        try:
-            target_layer = model.get_layer(layer.name)
-            if layer.name == "dense":
-                print("Mapping weights for the first dense layer of the trunk ('dense')...")
-                w, b = layer.get_weights()  # w shape (2958, 512), b shape (512,)
-                
-                # Construct new weight matrix of shape (3018, 512)
-                # Old shape 2958 layout:
-                #   [0:654]   -> dense features
-                #   [654:2958] -> categorical embeddings (384 + 1536 + 192 + 192 = 2304)
-                new_w = np.zeros((3018, 512), dtype=np.float32)
-                
-                # 1. Copy old dense features
-                new_w[0:654, :] = w[0:654, :]
-                # 2. [654:702] are the 48 new PP features (remain 0.0)
-                # 3. Copy old categorical embeddings (shifted by 48)
-                new_w[702:3006, :] = w[654:2958, :]
-                # 4. [3006:3018] are the 12 new meta_plan features (remain 0.0)
-                
-                target_layer.set_weights([new_w, b])
-                print("Trunk first dense layer successfully mapped with padding.")
-            else:
-                old_weights = layer.get_weights()
-                new_weights = target_layer.get_weights()
-                if len(old_weights) == len(new_weights) and all(o.shape == n.shape for o, n in zip(old_weights, new_weights)):
-                    target_layer.set_weights(old_weights)
+    # 1. Load all matching layers using standard load_weights with skip_mismatch
+    try:
+        model.load_weights(legacy_model_path, by_name=True, skip_mismatch=True)
+        print("Pre-loaded matching weights from legacy file.")
+    except Exception as e:
+        print(f"[Warning] Native weight pre-loading failed: {e}. Will attempt direct H5 copy.")
+
+    # 2. Extract first dense layer weights directly from h5 to avoid lambda deserialization issues
+    import zipfile
+    import h5py
+    import io
+    
+    try:
+        with zipfile.ZipFile(legacy_model_path, "r") as z:
+            weights_bytes = z.read("model.weights.h5")
+        
+        with h5py.File(io.BytesIO(weights_bytes), "r") as f:
+            # Find the legacy dense trunk weights by scanning dataset shapes
+            w, b = None, None
+            
+            # Recursive scan
+            def scan_items(name, obj):
+                nonlocal w, b
+                if isinstance(obj, h5py.Dataset) and name.startswith("layers/"):
+                    # The trunk's first dense layer weight matrix has shape (2958, 512) or (3018, 512)
+                    if obj.shape in [(2958, 512), (3018, 512)]:
+                        w = obj[:]
+                        # Bias dataset is in the same vars/ group with suffix 1 instead of 0
+                        bias_path = name.rsplit("/", 1)[0] + "/1"
+                        if bias_path in f:
+                            b = f[bias_path][:]
+            
+            f.visititems(scan_items)
+
+            if w is not None and b is not None:
+                # Construct new weight matrix of shape (3060, 512)
+                if w.shape[0] == 2958:
+                    new_w = np.zeros((3060, 512), dtype=np.float32)
+                    new_w[0:636, :] = w[0:636, :]
+                    new_w[636:654, :] = w[636:654, :]
+                    new_w[744:3048, :] = w[654:2958, :]
+                elif w.shape[0] == 3018:
+                    new_w = np.zeros((3060, 512), dtype=np.float32)
+                    new_w[0:636, :] = w[0:636, :]
+                    new_w[636:654, :] = w[636:654, :]
+                    new_w[696:744, :] = w[654:702, :]
+                    new_w[744:3048, :] = w[702:3006, :]
+                    new_w[3048:3060, :] = w[3006:3018, :]
                 else:
-                    pass
-        except Exception:
-            pass
+                    new_w = w
+
+                target_layer = model.get_layer("dense")
+                target_layer.set_weights([new_w, b])
+                print(f"Direct H5 weight copy: mapped trunk layer 'dense' from shape {w.shape[0]} to {new_w.shape[0]}.")
+            else:
+                print("[Warning] Could not locate dense trunk weights in H5 archive.")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"[Warning] Direct H5 weights extraction failed: {e}.")
     print("Legacy weight loading with padding completed.")
+
+
+def compute_counterfactual_targets(model, inputs, is_scratch=False, batch_size=256):
+    """
+    Computes Counterfactual Value Drop targets for the Meta-Planner attention weights.
+    For each sample, sets each Pokémon's HP to 0 and fainted to 1, and measures
+    the resulting drop/increase in predicted win probability.
+    """
+    import numpy as np
+    dense = inputs["dense_features"]
+    N = len(dense)
+    
+    own_targets = np.zeros((N, 6), dtype=np.float32)
+    opp_targets = np.zeros((N, 6), dtype=np.float32)
+    
+    if is_scratch:
+        # Fallback to current HP-based targets
+        print("Model is uninitialized/scratch. Generating HP-based fallback targets.")
+        for i in range(6):
+            own_targets[:, i] = dense[:, i * 52] # HP ratio
+        # Normalize own_targets
+        for i in range(N):
+            s = np.sum(own_targets[i])
+            if s > 1e-5:
+                own_targets[i] /= s
+            else:
+                own_targets[i] = np.ones(6, dtype=np.float32) / 6.0
+                
+        for j in range(6):
+            opp_targets[:, j] = dense[:, 318 + j * 52] # HP ratio
+            
+        meta_targets = np.concatenate([own_targets, opp_targets], axis=1)
+        return meta_targets
+
+    print("Computing Counterfactual Value Drop targets for Meta-Planner...")
+    
+    for start in range(0, N, batch_size):
+        end = min(start + batch_size, N)
+        sub_n = end - start
+        
+        # Build parallel batch
+        sub_dense = dense[start:end]
+        sub_species = inputs["species_indices"][start:end]
+        sub_moves = inputs["move_indices"][start:end]
+        sub_items = inputs["item_indices"][start:end]
+        sub_abilities = inputs["ability_indices"][start:end]
+        sub_mask = inputs["action_mask"][start:end]
+        
+        # We need a total of 13 * sub_n states
+        parallel_dense = np.tile(sub_dense, (13, 1))
+        
+        # Modify the tiled dense features for counterfactuals
+        # Block 0: base (0 to sub_n) -> no changes
+        # Block 1..6: own fainted (1 to 6)
+        for i in range(6):
+            block_start = (1 + i) * sub_n
+            block_end = (2 + i) * sub_n
+            parallel_dense[block_start:block_end, i * 52] = 0.0
+            parallel_dense[block_start:block_end, i * 52 + 1] = 1.0
+            
+        # Block 7..12: opp fainted (7 to 12)
+        for j in range(6):
+            block_start = (7 + j) * sub_n
+            block_end = (8 + j) * sub_n
+            parallel_dense[block_start:block_end, 318 + j * 52] = 0.0
+            parallel_dense[block_start:block_end, 318 + j * 52 + 1] = 1.0
+            
+        # Tile categorical inputs to match parallel_dense shape
+        parallel_species = np.tile(sub_species, (13, 1))
+        parallel_moves = np.tile(sub_moves, (13, 1))
+        parallel_items = np.tile(sub_items, (13, 1))
+        parallel_abilities = np.tile(sub_abilities, (13, 1))
+        parallel_mask = np.tile(sub_mask, (13, 1))
+        
+        # Call model directly
+        preds = model(
+            [parallel_dense, parallel_species, parallel_moves, parallel_items, parallel_abilities, parallel_mask],
+            training=False
+        )
+        
+        # First output is value
+        if isinstance(preds, (list, tuple)):
+            val_tensor = preds[0]
+        else:
+            val_tensor = preds
+            
+        values = keras.ops.convert_to_numpy(val_tensor)
+        values = values.reshape((13, sub_n))
+        
+        # base values
+        v_base = values[0]
+        
+        # Own drop: v_base - v_own_fainted
+        for i in range(6):
+            v_fainted = values[1 + i]
+            own_targets[start:end, i] = np.maximum(0.0, v_base - v_fainted)
+            
+        # Opp drop: v_opp_fainted - v_base
+        for j in range(6):
+            v_fainted = values[7 + j]
+            opp_targets[start:end, j] = np.maximum(0.0, v_fainted - v_base)
+            
+    # Normalize own targets
+    for i in range(N):
+        s = np.sum(own_targets[i])
+        if s > 1e-5:
+            own_targets[i] /= s
+        else:
+            own_targets[i] = np.ones(6, dtype=np.float32) / 6.0
+            
+    opp_targets = np.clip(opp_targets, 0.0, 1.0)
+    meta_targets = np.concatenate([own_targets, opp_targets], axis=1)
+    return meta_targets
 
 
 def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500, epochs: int = 15):
@@ -624,7 +768,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "aux_own_types": "binary_crossentropy",
         "aux_opp_types": "binary_crossentropy",
         "aux_own_species": "categorical_crossentropy",
-        "aux_opp_species": "categorical_crossentropy"
+        "aux_opp_species": "categorical_crossentropy",
+        "meta_plan": "mse"
     }
 
     loss_weights = {
@@ -642,7 +787,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "aux_own_types": 0.2,
         "aux_opp_types": 0.2,
         "aux_own_species": 0.5,
-        "aux_opp_species": 0.5
+        "aux_opp_species": 0.5,
+        "meta_plan": 0.5
     }
 
     if os.path.exists(model_save_path):
@@ -650,8 +796,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         try:
             # Try to load directly (if model was already built/saved with action_mask and aux heads and deserialization succeeds)
             model = keras.models.load_model(model_save_path, compile=False)
-            if len(model.outputs) != 15:
-                raise ValueError(f"Architecture mismatch: expected 15 outputs, got {len(model.outputs)}")
+            if len(model.outputs) != 16:
+                raise ValueError(f"Architecture mismatch: expected 16 outputs, got {len(model.outputs)}")
             print("Successfully loaded existing model with matching architecture. Recompiling for fine-tuning...")
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=1e-4),
@@ -684,9 +830,24 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             metrics={"value": "mae", "policy": "accuracy"}
         )
 
+    # 3. Compute Counterfactual targets for the Meta-Planner attention heads
+    is_scratch = not os.path.exists(model_save_path)
+    train_outputs["meta_plan"] = compute_counterfactual_targets(model, train_inputs, is_scratch=is_scratch)
+    if val_data is not None:
+        val_inputs, val_outputs = val_data
+        val_outputs["meta_plan"] = compute_counterfactual_targets(model, val_inputs, is_scratch=is_scratch)
+        val_data = (val_inputs, val_outputs)
+
     model.summary()
 
     callbacks = []
+    
+    # Save training history to CSV log file
+    save_path = Path(model_save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    csv_log_path = save_path.parent / "training_log.csv"
+    callbacks.append(keras.callbacks.CSVLogger(str(csv_log_path), append=True))
+    
     if val_data is not None:
         callbacks.append(keras.callbacks.EarlyStopping(
             monitor="val_loss",

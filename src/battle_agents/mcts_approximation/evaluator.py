@@ -103,7 +103,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                                else None)
                 if actual_path:
                     try:
-                        self.model = keras.models.load_model(actual_path, compile=False)
+                        self.model = keras.models.load_model(actual_path, compile=False, safe_mode=False)
                         print(f"[NeuralStateEvaluator] Loaded Keras model from {actual_path} as fallback")
                     except Exception as err_keras:
                         print(f"[Warning] Failed to load Keras model due to Keras version mismatch/deserialization issues: {err_keras}. "
@@ -115,22 +115,57 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 print("[Error] Keras is not installed. Cannot use Neural Network fallback. "
                       "Please pip install keras and a backend (tensorflow / torch / jax).")
 
+        # Determine expected dense_features dimension from the loaded model/session
+        self.expected_dense_dim = NUM_DENSE_FEATURES
+        if self.onnx_session is not None:
+            try:
+                for inp in self.onnx_session.get_inputs():
+                    if "dense_features" in inp.name:
+                        self.expected_dense_dim = inp.shape[1]
+                        break
+            except Exception as e:
+                print(f"[Warning] Could not inspect ONNX input shape: {e}. Defaulting to {NUM_DENSE_FEATURES}")
+        elif self.model is not None:
+            try:
+                if hasattr(self.model, "input_shape"):
+                    if isinstance(self.model.input_shape, dict):
+                        self.expected_dense_dim = self.model.input_shape.get("dense_features", [None, NUM_DENSE_FEATURES])[1]
+                    elif isinstance(self.model.input_shape, list):
+                        self.expected_dense_dim = self.model.input_shape[0][1]
+                    else:
+                        self.expected_dense_dim = self.model.input_shape[1]
+            except Exception as e:
+                print(f"[Warning] Could not inspect Keras model input shape: {e}. Defaulting to {NUM_DENSE_FEATURES}")
+        print(f"[NeuralStateEvaluator] Configured expected dense dimension: {self.expected_dense_dim}")
+
     def _build_inputs(self, features: np.ndarray) -> dict:
         """
         Splits the flat feature vector into the 5 named model inputs.
+        Supports down-converting the expanded features for legacy formats (702 or 654).
         Zero allocations due to pre-allocated buffers.
         """
-        n = NUM_DENSE_FEATURES
+        if self.expected_dense_dim == 702:
+            # Down-convert 744 to 702 (symmetrically removing the 42 new volatiles at indices [654:696])
+            features_dense = np.concatenate([features[:654], features[696:744]])
+            features_embed = features[744:]
+        elif self.expected_dense_dim == 654:
+            # Down-convert 744 to 654 (removing PP features and new volatiles)
+            features_dense = features[:654]
+            features_embed = features[744:]
+        else:
+            # New shape 744 dense
+            features_dense = features[:NUM_DENSE_FEATURES]
+            features_embed = features[NUM_DENSE_FEATURES:]
         
-        # In-place copy to pre-allocated buffers
-        self._buf_dense[0, :] = features[:n]
-        self._buf_species[0, :] = features[n + OFF_SPECIES : n + OFF_SPECIES + NUM_SPECIES_INDICES]
-        self._buf_moves[0, :] = features[n + OFF_MOVES : n + OFF_MOVES + NUM_MOVE_INDICES]
-        self._buf_items[0, :] = features[n + OFF_ITEMS : n + OFF_ITEMS + NUM_ITEM_INDICES]
-        self._buf_abilities[0, :] = features[n + OFF_ABILITIES : n + OFF_ABILITIES + NUM_ABILITY_INDICES]
+        # Copy to pre-allocated buffers
+        self._buf_dense[0, :self.expected_dense_dim] = features_dense
+        self._buf_species[0, :] = features_embed[OFF_SPECIES : OFF_SPECIES + NUM_SPECIES_INDICES]
+        self._buf_moves[0, :] = features_embed[OFF_MOVES : OFF_MOVES + NUM_MOVE_INDICES]
+        self._buf_items[0, :] = features_embed[OFF_ITEMS : OFF_ITEMS + NUM_ITEM_INDICES]
+        self._buf_abilities[0, :] = features_embed[OFF_ABILITIES : OFF_ABILITIES + NUM_ABILITY_INDICES]
 
         return {
-            "dense_features":   self._buf_dense,
+            "dense_features":   self._buf_dense[:, :self.expected_dense_dim],
             "species_indices":  self._buf_species,
             "move_indices":     self._buf_moves,
             "item_indices":     self._buf_items,
@@ -224,7 +259,8 @@ class NeuralStateEvaluator(BaseStateEvaluator):
 
             # pred is a list of tensors starting with: [value (1,1), policy (1, ACTION_SPACE)]
             if isinstance(pred, (list, tuple)) and len(pred) >= 2:
-                value_pred, policy_pred = pred
+                value_pred = pred[0]
+                policy_pred = pred[1]
                 reward = float(np.array(value_pred)[0][0])
                 policy_probs = np.array(policy_pred)[0]
 

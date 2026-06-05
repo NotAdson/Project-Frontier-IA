@@ -210,10 +210,15 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             )
             
             # --- PHASE 3: Archive Model ---
-            print(f"\n--- [Gen {gen}] Phase 3: Archiving Model ---")
+            print(f"\n--- [Gen {gen}] Phase 3: Archiving Model & Logs ---")
             shutil.copy(model_path, os.path.join(next_gen_dir, "mcts_model.keras"))
             if os.path.exists(onnx_path):
                 shutil.copy(onnx_path, os.path.join(next_gen_dir, "mcts_model.onnx"))
+            
+            # Copy training history log to the generation archive
+            log_path = os.path.join(data_dir, "training_log.csv")
+            if os.path.exists(log_path):
+                shutil.copy(log_path, os.path.join(next_gen_dir, "training_log.csv"))
                 
         # --- PHASE 4: Round-Robin Tournament evaluation ---
         benchmark_json_path = os.path.join(next_gen_dir, "benchmark_report.json")
@@ -323,7 +328,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 shutil.copy(champion_onnx, onnx_path)
                 
         # --- Early Stopping Evaluation: learning quality check ---
-        if gen - champion_gen >= 3:
+        if gen - champion_gen >= 10:
             print("\n========================================================")
             print(" [Early Stopping] Pipeline Halted Early!")
             print(f" Reason: The champion has not been updated for the last 3 generations.")

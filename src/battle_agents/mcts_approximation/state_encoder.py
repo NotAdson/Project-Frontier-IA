@@ -212,15 +212,22 @@ def _encode_active_boosts(side: dict) -> list:
 # All field conditions listed below are publicly visible to both players.
 WEATHERS       = ["raindance", "sunnyday", "sandstorm", "hail"]
 SIDE_CONDS     = ["stealthrock", "spikes", "toxicspikes", "reflect", "lightscreen"]
-ACTIVE_VOLS    = ["choicelock", "substitute", "twoturnmove", "focuspunch"]
+ACTIVE_VOLS    = [
+    "choicelock", "substitute", "twoturnmove", "focuspunch", "taunt",
+    "encore", "confusion", "leechseed", "yawn", "perishsong",
+    "attract", "curse", "nightmare", "destinybond", "charge",
+    "defensecurl", "minimize", "torment", "ingrain", "imprison",
+    "disable", "bide", "flinch"
+]
 
 def _encode_field_conditions(state_dict: dict, player: str) -> list:
     """
-    Encodes 18 publicly-visible field features:
+    Encodes 60 publicly-visible field features:
       Weather       (4): one-hot flags for rain/sun/sand/hail
       Own side      (5): stealthrock, spikes/3, toxicspikes/2, reflect, lightscreen
       Opp side      (5): same 5 (public — you can see their hazards/screens)
-      Own volatiles (4): choicelock, substitute, twoturnmove, focuspunch
+      Own volatiles (23): active volatiles like taunt, encore, confusion, substitute, etc.
+      Opp volatiles (23): opponent active volatiles like taunt, encore, confusion, substitute, etc.
     All values are floats in [0, 1].
     """
     own_idx = 0 if player == "p1" else 1
@@ -253,14 +260,22 @@ def _encode_field_conditions(state_dict: dict, player: str) -> list:
     opp_sc = _side_conds(opp_side)
 
     # Own active Pokémon volatile statuses
-    vol_feats = [0.0] * len(ACTIVE_VOLS)
+    own_vol_feats = [0.0] * len(ACTIVE_VOLS)
     for poke in own_side.get("pokemon", []):
         if poke.get("isActive", False):
             vols = poke.get("volatiles", {})
-            vol_feats = [1.0 if v in vols else 0.0 for v in ACTIVE_VOLS]
+            own_vol_feats = [1.0 if v in vols else 0.0 for v in ACTIVE_VOLS]
             break
 
-    return weather_feats + own_sc + opp_sc + vol_feats  # 4+5+5+4 = 18
+    # Opponent active Pokémon volatile statuses
+    opp_vol_feats = [0.0] * len(ACTIVE_VOLS)
+    for poke in opp_side.get("pokemon", []):
+        if poke.get("isActive", False):
+            vols = poke.get("volatiles", {})
+            opp_vol_feats = [1.0 if v in vols else 0.0 for v in ACTIVE_VOLS]
+            break
+
+    return weather_feats + own_sc + opp_sc + own_vol_feats + opp_vol_feats  # 4+5+5+23+23 = 60
 
 
 def _encode_opp_team_revealed(state_dict: dict, player: str):
@@ -495,10 +510,10 @@ def encode_state(state, player: str = "p1") -> np.ndarray:
 
 # Dense features:
 #   6×52 own team (312) + 6 active boosts (6)
-#   + 6×52 opp revealed team (312) + 6 opp active boosts (6) + 18 field conditions (654 original)
-#   + 48 PP features (24 own PP, 24 opponent PP) = 702 dense
-NUM_FIELD_FEATURES   = len(WEATHERS) + len(SIDE_CONDS) * 2 + len(ACTIVE_VOLS)  # = 4+10+4 = 18
-NUM_DENSE_FEATURES   = 6 * 52 + 6 + 6 * 52 + 6 + NUM_FIELD_FEATURES + 48   # = 654 + 48 = 702
+#   + 6×52 opp revealed team (312) + 6 opp active boosts (6) + 60 field conditions (696 new)
+#   + 48 PP features (24 own PP, 24 opponent PP) = 744 dense
+NUM_FIELD_FEATURES   = len(WEATHERS) + len(SIDE_CONDS) * 2 + len(ACTIVE_VOLS) * 2  # = 4+10+46 = 60
+NUM_DENSE_FEATURES   = 6 * 52 + 6 + 6 * 52 + 6 + NUM_FIELD_FEATURES + 48   # = 696 + 48 = 744
 
 # Grouped category counts
 NUM_SPECIES_INDICES      = 12  # 6 own + 6 opp
@@ -510,13 +525,13 @@ NUM_EMBEDDING_INDICES = (
     NUM_SPECIES_INDICES + NUM_MOVE_INDICES + NUM_ITEM_INDICES + NUM_ABILITY_INDICES
 )  # = 12 + 48 + 12 + 12 = 84
 
-TOTAL_FEATURES = NUM_DENSE_FEATURES + NUM_EMBEDDING_INDICES  # = 702 + 84 = 786
+TOTAL_FEATURES = NUM_DENSE_FEATURES + NUM_EMBEDDING_INDICES  # = 744 + 84 = 828
 
-# Slice offsets within the embedding block (relative to NUM_DENSE_FEATURES = 702)
-OFF_SPECIES      = 0                                                # [702:714]
-OFF_MOVES        = OFF_SPECIES      + NUM_SPECIES_INDICES           # [714:762]
-OFF_ITEMS        = OFF_MOVES        + NUM_MOVE_INDICES              # [762:774]
-OFF_ABILITIES    = OFF_ITEMS        + NUM_ITEM_INDICES              # [774:786]
+# Slice offsets within the embedding block (relative to NUM_DENSE_FEATURES = 744)
+OFF_SPECIES      = 0                                                # [744:756]
+OFF_MOVES        = OFF_SPECIES      + NUM_SPECIES_INDICES           # [756:804]
+OFF_ITEMS        = OFF_MOVES        + NUM_MOVE_INDICES              # [804:816]
+OFF_ABILITIES    = OFF_ITEMS        + NUM_ITEM_INDICES              # [816:828]
 
 # Define fixed action space for Policy Network mapping
 ACTION_SPACE = [
