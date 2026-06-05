@@ -345,7 +345,7 @@ if __name__ == "__main__":
         num_games=150, 
         num_generations=30, 
         mcts_iterations=300, 
-        epochs=15, 
+        epochs=50, 
         wipe=False,
         games_per_matchup=10,
         max_rollout_depth=30,

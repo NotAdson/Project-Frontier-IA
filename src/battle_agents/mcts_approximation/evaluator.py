@@ -107,7 +107,45 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                         print(f"[NeuralStateEvaluator] Loaded Keras model from {actual_path} as fallback")
                     except Exception as err_keras:
                         print(f"[Warning] Failed to load Keras model due to Keras version mismatch/deserialization issues: {err_keras}. "
-                              "Search will continue with default (0.5 value) predictions.")
+                              "Attempting build_model + load_weights fallback...")
+                        try:
+                            from battle_agents.mcts_approximation.pipeline.train_nn import build_model
+                            from battle_agents.mcts_approximation.db.species_db import get_num_species, get_num_items, get_num_abilities
+                            from battle_agents.mcts_approximation.db.moves_db import get_num_moves
+                            
+                            num_species = get_num_species()
+                            num_moves = get_num_moves()
+                            num_items = get_num_items()
+                            num_abilities = get_num_abilities()
+                            
+                            # First try modern shape 744
+                            try:
+                                self.model = build_model(
+                                    num_dense=NUM_DENSE_FEATURES,
+                                    num_moves=num_moves,
+                                    num_species=num_species,
+                                    num_items=num_items,
+                                    num_abilities=num_abilities
+                                )
+                                self.model.load_weights(actual_path)
+                                self.expected_dense_dim = NUM_DENSE_FEATURES
+                                print(f"[NeuralStateEvaluator] Loaded Keras weights from {actual_path} successfully (744 features)!")
+                            except Exception as e_shape:
+                                # Retry with legacy shape 654
+                                print(f"[Warning] Failed loading with 744 features: {e_shape}. Retrying with legacy 654 features...")
+                                self.model = build_model(
+                                    num_dense=654,
+                                    num_moves=num_moves,
+                                    num_species=num_species,
+                                    num_items=num_items,
+                                    num_abilities=num_abilities
+                                )
+                                self.model.load_weights(actual_path)
+                                self.expected_dense_dim = 654
+                                print(f"[NeuralStateEvaluator] Loaded Keras weights from {actual_path} successfully (654 features)!")
+                        except Exception as err_weights:
+                            print(f"[Warning] Failed to load weights directly: {err_weights}. "
+                                  "Search will continue with default (0.5 value) predictions.")
                 else:
                     print(f"[Warning] MCTS Approximation model not found at {model_path}. "
                           "Will predict 0.5 for all states.")
@@ -251,7 +289,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         elif self.model is not None:
             features = encode_state(state, player)
             inputs = self._build_inputs(features)
-            if hasattr(self.model, "input_names") and "action_mask" in self.model.input_names:
+            if self.expected_dense_dim == NUM_DENSE_FEATURES or (hasattr(self.model, "input_names") and "action_mask" in self.model.input_names):
                 inputs["action_mask"] = mask_array
             
             # Direct model call with training=False
@@ -284,3 +322,100 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 action_probs[a] = 1.0 / len(valid_actions)
                 
         return reward, action_probs
+
+    def predict_opponent_active(self, state, player: str = "p1") -> dict:
+        """
+        Predicts the opponent's active Pokémon using the model's auxiliary heads.
+        Returns the closest matching species from the Knowledge Base.
+        """
+        from battle_agents.mcts_approximation.db.knowledge_base import find_closest_species
+        
+        # Build action mask (unused but needed for model call shape matching)
+        mask_array = np.zeros((1, len(ACTION_SPACE)), dtype=np.float32)
+        mask_array[0, ACTION_SPACE.index("pass")] = 1.0
+        
+        features = encode_state(state, player)
+        inputs = self._build_inputs(features)
+        
+        opp_stats = None
+        opp_types = None
+        opp_species = None
+        
+        if self.onnx_session is not None:
+            if hasattr(self, "input_names") and "action_mask" in self.input_names:
+                inputs["action_mask"] = mask_array
+            else:
+                # Find matching input name for action_mask
+                for name in self.input_names:
+                    if "action_mask" in name:
+                        inputs[name] = mask_array
+                        
+            ort_inputs = {}
+            for name in self.input_names:
+                clean_name = name.split(':')[0]
+                if clean_name in inputs:
+                    ort_inputs[name] = inputs[clean_name]
+                else:
+                    matched = False
+                    for k in inputs:
+                        if k in name or name in k:
+                            ort_inputs[name] = inputs[k]
+                            matched = True
+                            break
+            
+            try:
+                ort_outs = self.onnx_session.run(self.output_names, ort_inputs)
+                
+                # Retrieve by output name
+                for name, out in zip(self.output_names, ort_outs):
+                    if "aux_opp_stats" in name:
+                        opp_stats = out[0]
+                    elif "aux_opp_types" in name:
+                        opp_types = out[0]
+                    elif "aux_opp_species" in name:
+                        opp_species = out[0]
+                        
+                # Fallback by output shape if names are decorated or mismatches
+                if opp_stats is None or opp_types is None or opp_species is None:
+                    for out in ort_outs:
+                        if out.shape == (1, 5):
+                            opp_stats = out[0]
+                        elif out.shape == (1, 18):
+                            opp_types = out[0]
+                        elif len(out.shape) == 2 and out.shape[0] == 1 and out.shape[1] > 100:
+                            opp_species = out[0]
+                            
+                # Index-based absolute fallback (based on standard order)
+                if (opp_stats is None or opp_types is None or opp_species is None) and len(ort_outs) >= 15:
+                    opp_stats = ort_outs[10][0]
+                    opp_types = ort_outs[12][0]
+                    opp_species = ort_outs[14][0]
+            except Exception as e:
+                print(f"[Warning] ONNX active prediction failed: {e}")
+                
+        elif self.model is not None:
+            if self.expected_dense_dim == NUM_DENSE_FEATURES or (hasattr(self.model, "input_names") and "action_mask" in self.model.input_names):
+                inputs["action_mask"] = mask_array
+                
+            try:
+                pred = self.model(inputs, training=False)
+                # Model returns outputs as list of tensors
+                if isinstance(pred, (list, tuple)) and len(pred) >= 15:
+                    opp_stats = np.array(pred[10])[0]
+                    opp_types = np.array(pred[12])[0]
+                    opp_species = np.array(pred[14])[0]
+            except Exception as e:
+                print(f"[Warning] Keras active prediction failed: {e}")
+                
+        if opp_stats is not None and opp_types is not None and opp_species is not None:
+            # We assign high weight to physical coordinate dimensions (stats & types) to drive matching
+            matches = find_closest_species(
+                opp_species, opp_stats, opp_types,
+                weight_species=1.0, weight_stats=5.0, weight_types=5.0,
+                top_k=1
+            )
+            if matches:
+                return matches[0]
+                
+        return None
+
