@@ -249,11 +249,11 @@
   },
   "hiddenpower": {
     "id": "hiddenpower",
-    "name": "Hidden Power Water",
-    "basePower": 70,
-    "type": "Water",
+    "name": "Hidden Power",
+    "basePower": 0,
+    "type": "Normal",
     "accuracy": 100,
-    "category": "Special"
+    "category": "Physical"
   },
   "highjumpkick": {
     "id": "highjumpkick",
@@ -1181,6 +1181,134 @@
     "basePower": 100,
     "type": "Fire",
     "accuracy": 90,
+    "category": "Special"
+  },
+  "hiddenpowerbug": {
+    "id": "hiddenpowerbug",
+    "name": "Hidden Power Bug",
+    "basePower": 70,
+    "type": "Bug",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowerdark": {
+    "id": "hiddenpowerdark",
+    "name": "Hidden Power Dark",
+    "basePower": 70,
+    "type": "Dark",
+    "accuracy": 100,
+    "category": "Special"
+  },
+  "hiddenpowerdragon": {
+    "id": "hiddenpowerdragon",
+    "name": "Hidden Power Dragon",
+    "basePower": 70,
+    "type": "Dragon",
+    "accuracy": 100,
+    "category": "Special"
+  },
+  "hiddenpowerelectric": {
+    "id": "hiddenpowerelectric",
+    "name": "Hidden Power Electric",
+    "basePower": 70,
+    "type": "Electric",
+    "accuracy": 100,
+    "category": "Special"
+  },
+  "hiddenpowerfighting": {
+    "id": "hiddenpowerfighting",
+    "name": "Hidden Power Fighting",
+    "basePower": 70,
+    "type": "Fighting",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowerfire": {
+    "id": "hiddenpowerfire",
+    "name": "Hidden Power Fire",
+    "basePower": 70,
+    "type": "Fire",
+    "accuracy": 100,
+    "category": "Special"
+  },
+  "hiddenpowerflying": {
+    "id": "hiddenpowerflying",
+    "name": "Hidden Power Flying",
+    "basePower": 70,
+    "type": "Flying",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowerghost": {
+    "id": "hiddenpowerghost",
+    "name": "Hidden Power Ghost",
+    "basePower": 70,
+    "type": "Ghost",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowergrass": {
+    "id": "hiddenpowergrass",
+    "name": "Hidden Power Grass",
+    "basePower": 70,
+    "type": "Grass",
+    "accuracy": 100,
+    "category": "Special"
+  },
+  "hiddenpowerground": {
+    "id": "hiddenpowerground",
+    "name": "Hidden Power Ground",
+    "basePower": 70,
+    "type": "Ground",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowerice": {
+    "id": "hiddenpowerice",
+    "name": "Hidden Power Ice",
+    "basePower": 70,
+    "type": "Ice",
+    "accuracy": 100,
+    "category": "Special"
+  },
+  "hiddenpowerpoison": {
+    "id": "hiddenpowerpoison",
+    "name": "Hidden Power Poison",
+    "basePower": 70,
+    "type": "Poison",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowerpsychic": {
+    "id": "hiddenpowerpsychic",
+    "name": "Hidden Power Psychic",
+    "basePower": 70,
+    "type": "Psychic",
+    "accuracy": 100,
+    "category": "Special"
+  },
+  "hiddenpowerrock": {
+    "id": "hiddenpowerrock",
+    "name": "Hidden Power Rock",
+    "basePower": 70,
+    "type": "Rock",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowersteel": {
+    "id": "hiddenpowersteel",
+    "name": "Hidden Power Steel",
+    "basePower": 70,
+    "type": "Steel",
+    "accuracy": 100,
+    "category": "Physical"
+  },
+  "hiddenpowerwater": {
+    "id": "hiddenpowerwater",
+    "name": "Hidden Power Water",
+    "basePower": 70,
+    "type": "Water",
+    "accuracy": 100,
     "category": "Special"
   },
   "hydropump": {

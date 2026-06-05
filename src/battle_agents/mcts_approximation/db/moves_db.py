@@ -36,16 +36,12 @@ def get_move_data(move_id):
     # Correct category for Gen 3 mechanics (global type-based split)
     if db_move.get("category") != "Status":
         db_move = dict(db_move) # copy to avoid in-place mutation of cache
-        move_id_str = str(db_move.get("id", "")).lower()
-        if move_id_str.startswith("hiddenpower"):
+        move_type = db_move.get("type", "Normal").lower()
+        special_types = {"fire", "water", "grass", "electric", "psychic", "ice", "dragon", "dark"}
+        if move_type in special_types:
             db_move["category"] = "Special"
         else:
-            move_type = db_move.get("type", "Normal").lower()
-            special_types = {"fire", "water", "grass", "electric", "psychic", "ice", "dragon", "dark"}
-            if move_type in special_types:
-                db_move["category"] = "Special"
-            else:
-                db_move["category"] = "Physical"
+            db_move["category"] = "Physical"
                 
     return db_move
 

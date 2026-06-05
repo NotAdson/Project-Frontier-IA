@@ -326,9 +326,10 @@ class NeuralStateEvaluator(BaseStateEvaluator):
     def predict_opponent_active(self, state, player: str = "p1") -> dict:
         """
         Predicts the opponent's active Pokémon using the model's auxiliary heads.
-        Returns the closest matching species from the Knowledge Base.
+        Returns the closest matching species from the Knowledge Base, including predicted moves.
         """
         from battle_agents.mcts_approximation.db.knowledge_base import find_closest_species
+        from battle_agents.mcts_approximation.db.moves_db import _move_to_idx, _load_db
         
         # Build action mask (unused but needed for model call shape matching)
         mask_array = np.zeros((1, len(ACTION_SPACE)), dtype=np.float32)
@@ -340,6 +341,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         opp_stats = None
         opp_types = None
         opp_species = None
+        opp_moves = None
         
         if self.onnx_session is not None:
             if hasattr(self, "input_names") and "action_mask" in self.input_names:
@@ -374,9 +376,11 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                         opp_types = out[0]
                     elif "aux_opp_species" in name:
                         opp_species = out[0]
+                    elif "aux_opp_moves" in name:
+                        opp_moves = out[0]
                         
                 # Fallback by output shape if names are decorated or mismatches
-                if opp_stats is None or opp_types is None or opp_species is None:
+                if opp_stats is None or opp_types is None or opp_species is None or opp_moves is None:
                     for out in ort_outs:
                         if out.shape == (1, 5):
                             opp_stats = out[0]
@@ -384,9 +388,16 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                             opp_types = out[0]
                         elif len(out.shape) == 2 and out.shape[0] == 1 and out.shape[1] > 100:
                             opp_species = out[0]
+                        elif len(out.shape) == 2 and out.shape[0] == 1 and out.shape[1] > 300:
+                            opp_moves = out[0]
                             
-                # Index-based absolute fallback (based on standard order)
-                if (opp_stats is None or opp_types is None or opp_species is None) and len(ort_outs) >= 15:
+                # Index-based absolute fallback (based on standard order with 18 outputs)
+                if (opp_stats is None or opp_types is None or opp_species is None or opp_moves is None) and len(ort_outs) >= 17:
+                    opp_stats = ort_outs[10][0]
+                    opp_types = ort_outs[12][0]
+                    opp_species = ort_outs[14][0]
+                    opp_moves = ort_outs[16][0]
+                elif (opp_stats is None or opp_types is None or opp_species is None) and len(ort_outs) >= 15:
                     opp_stats = ort_outs[10][0]
                     opp_types = ort_outs[12][0]
                     opp_species = ort_outs[14][0]
@@ -400,10 +411,16 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             try:
                 pred = self.model(inputs, training=False)
                 # Model returns outputs as list of tensors
-                if isinstance(pred, (list, tuple)) and len(pred) >= 15:
-                    opp_stats = np.array(pred[10])[0]
-                    opp_types = np.array(pred[12])[0]
-                    opp_species = np.array(pred[14])[0]
+                if isinstance(pred, (list, tuple)):
+                    if len(pred) >= 17:
+                        opp_stats = np.array(pred[10])[0]
+                        opp_types = np.array(pred[12])[0]
+                        opp_species = np.array(pred[14])[0]
+                        opp_moves = np.array(pred[16])[0]
+                    elif len(pred) >= 15:
+                        opp_stats = np.array(pred[10])[0]
+                        opp_types = np.array(pred[12])[0]
+                        opp_species = np.array(pred[14])[0]
             except Exception as e:
                 print(f"[Warning] Keras active prediction failed: {e}")
                 
@@ -415,7 +432,21 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 top_k=1
             )
             if matches:
-                return matches[0]
+                res = dict(matches[0])
+                if opp_moves is not None:
+                    _load_db()
+                    idx_to_move = {idx: mid for mid, idx in _move_to_idx.items()}
+                    top_move_idxs = np.argsort(opp_moves)[::-1]
+                    top_moves = []
+                    for idx in top_move_idxs:
+                        if idx in idx_to_move and idx != 0:
+                            top_moves.append(idx_to_move[idx])
+                            if len(top_moves) == 4:
+                                break
+                    res["predicted_moves"] = top_moves
+                else:
+                    res["predicted_moves"] = []
+                return res
                 
         return None
 

@@ -16,9 +16,19 @@ for (const move of moves) {
     // Only Gen 3 or earlier moves
     if (move.gen > 3) continue;
     
-    moveDict[move.id] = {
-        id: move.id,
-        name: move.name,
+    let moveId = move.id;
+    let moveName = move.name;
+    if (moveId === 'hiddenpower') {
+        const typeStr = move.type.toLowerCase();
+        if (typeStr !== 'normal') {
+            moveId = 'hiddenpower' + typeStr;
+            moveName = 'Hidden Power ' + move.type;
+        }
+    }
+    
+    moveDict[moveId] = {
+        id: moveId,
+        name: moveName,
         basePower: move.basePower,
         type: move.type,
         accuracy: move.accuracy === true ? 100 : move.accuracy,

@@ -132,7 +132,7 @@ def load_data_from_files(files):
             np.array(action_masks, dtype=np.float32))
 
 
-def extract_aux_targets_batch(X_next, num_species):
+def extract_aux_targets_batch(X_next, num_species, num_moves):
     batch_size = X_next.shape[0]
     
     # 1. Field conditions (Field indices 636 to 696)
@@ -162,6 +162,10 @@ def extract_aux_targets_batch(X_next, num_species):
     own_species = np.zeros((batch_size,), dtype=np.int32)
     opp_species = np.zeros((batch_size,), dtype=np.int32)
     
+    # Moves
+    own_moves_multihot = np.zeros((batch_size, num_moves), dtype=np.float32)
+    opp_moves_multihot = np.zeros((batch_size, num_moves), dtype=np.float32)
+    
     for b in range(batch_size):
         # Find active own Pokémon index
         own_act = -1
@@ -185,6 +189,12 @@ def extract_aux_targets_batch(X_next, num_species):
             # Use NUM_DENSE_FEATURES as dynamic offset
             own_species[b] = np.clip(int(round(X_next[b, NUM_DENSE_FEATURES + own_act])), 0, num_species - 1)
             
+            # Extract own active moves
+            for k in range(4):
+                idx = int(round(X_next[b, NUM_DENSE_FEATURES + OFF_MOVES + own_act * 4 + k]))
+                if 0 < idx < num_moves:
+                    own_moves_multihot[b, idx] = 1.0
+            
         if opp_act != -1:
             opp_hp[b, 0] = X_next[b, 318 + opp_act * 52]
             opp_statuses[b, :] = X_next[b, 318 + opp_act * 52 + 2 : 318 + opp_act * 52 + 7]
@@ -192,6 +202,12 @@ def extract_aux_targets_batch(X_next, num_species):
             opp_types[b, :] = X_next[b, 318 + opp_act * 52 + 14 : 318 + opp_act * 52 + 32]
             # Use NUM_DENSE_FEATURES as dynamic offset
             opp_species[b] = np.clip(int(round(X_next[b, NUM_DENSE_FEATURES + 6 + opp_act])), 0, num_species - 1)
+            
+            # Extract opponent active moves
+            for k in range(4):
+                idx = int(round(X_next[b, NUM_DENSE_FEATURES + OFF_MOVES + 24 + opp_act * 4 + k]))
+                if 0 < idx < num_moves:
+                    opp_moves_multihot[b, idx] = 1.0
             
     # Convert species indices to one-hot format
     own_species_onehot = keras.utils.to_categorical(own_species, num_classes=num_species)
@@ -211,6 +227,8 @@ def extract_aux_targets_batch(X_next, num_species):
         "aux_opp_types": opp_types,
         "aux_own_species": own_species_onehot,
         "aux_opp_species": opp_species_onehot,
+        "aux_own_moves": own_moves_multihot,
+        "aux_opp_moves": opp_moves_multihot,
     }
 
 
@@ -355,6 +373,8 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     out_opp_types = keras.layers.Dense(18, activation="sigmoid", name="aux_opp_types")(x)
     out_own_species = keras.layers.Dense(num_species, activation="softmax", name="aux_own_species")(x)
     out_opp_species = keras.layers.Dense(num_species, activation="softmax", name="aux_opp_species")(x)
+    out_own_moves = keras.layers.Dense(num_moves, activation="sigmoid", name="aux_own_moves")(x)
+    out_opp_moves = keras.layers.Dense(num_moves, activation="sigmoid", name="aux_opp_moves")(x)
 
     model = keras.Model(
         inputs=[inp_dense, inp_species, inp_moves, inp_items, inp_abilities, inp_mask],
@@ -366,6 +386,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
             out_own_stats, out_opp_stats,
             out_own_types, out_opp_types,
             out_own_species, out_opp_species,
+            out_own_moves, out_opp_moves,
             meta_plan
         ],
     )
@@ -713,7 +734,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     num_abilities = get_num_abilities()
 
     # Extract auxiliary targets
-    aux_targets_train = extract_aux_targets_batch(X_next_train, num_species)
+    aux_targets_train = extract_aux_targets_batch(X_next_train, num_species, num_moves)
     train_inputs = {
         "dense_features":   X_dense_train,
         "species_indices":  X_species_train,
@@ -732,7 +753,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     if len(X_val) > 0:
         splits_val = _split_features(X_val)
         X_dense_val, X_species_val, X_moves_val, X_items_val, X_abilities_val = splits_val
-        aux_targets_val = extract_aux_targets_batch(X_next_val, num_species)
+        aux_targets_val = extract_aux_targets_batch(X_next_val, num_species, num_moves)
         val_inputs = {
             "dense_features":   X_dense_val,
             "species_indices":  X_species_val,
@@ -769,6 +790,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "aux_opp_types": "binary_crossentropy",
         "aux_own_species": "categorical_crossentropy",
         "aux_opp_species": "categorical_crossentropy",
+        "aux_own_moves": "binary_crossentropy",
+        "aux_opp_moves": "binary_crossentropy",
         "meta_plan": "mse"
     }
 
@@ -788,6 +811,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "aux_opp_types": 0.2,
         "aux_own_species": 0.5,
         "aux_opp_species": 0.5,
+        "aux_own_moves": 0.5,
+        "aux_opp_moves": 0.5,
         "meta_plan": 0.5
     }
 
@@ -796,7 +821,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         try:
             # Try to load directly (if model was already built/saved with action_mask and aux heads and deserialization succeeds)
             model = keras.models.load_model(model_save_path, compile=False)
-            if len(model.outputs) != 16:
+            if len(model.outputs) != 18:
                 raise ValueError(f"Architecture mismatch: expected 16 outputs, got {len(model.outputs)}")
             print("Successfully loaded existing model with matching architecture. Recompiling for fine-tuning...")
             model.compile(

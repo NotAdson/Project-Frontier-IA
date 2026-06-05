@@ -87,7 +87,9 @@ class MCTSApproximationAgent(BlindMCTSAgent):
                 return action, {action: 1.0}
             return action
         
-        root = MCTSApproximationNode(state=state)
+        # Predict hidden opponent information and fill the state before MCTS search
+        filled_state = self._predict_and_fill_opponent_state(state, player)
+        root = MCTSApproximationNode(state=filled_state)
         
         # Initial expansion
         self._expand(root)
@@ -238,5 +240,78 @@ class MCTSApproximationAgent(BlindMCTSAgent):
             request_dict=state.request_dict, 
             p2_request_dict=state.p2_request_dict, 
             log=state.log, 
+            winner=state.winner
+        )
+
+    def _predict_and_fill_opponent_state(self, state, player):
+        """
+        Predicts the opponent's active Pokémon and move sets using the Neural Network + KB,
+        and returns a new state where this predicted information fills the unrevealed slots.
+        """
+        import copy
+        from core.problem.pokemon_problem import PokemonState
+        
+        opp_player = "p2" if player == "p1" else "p1"
+        opp_idx = 1 if opp_player == "p2" else 0
+        
+        # 1. Query the predictor to get the closest species and its predicted moves
+        try:
+            pred_dict = self.evaluator.predict_opponent_active(state, player)
+        except Exception as e:
+            print(f"[Warning] predict_opponent_active failed: {e}")
+            pred_dict = None
+            
+        if not pred_dict:
+            return state  # Fallback: keep state unchanged if prediction fails
+            
+        pred_species = pred_dict.get("species_id", "")
+        pred_moves = pred_dict.get("predicted_moves", [])
+        
+        # 2. Construct the new filled state_dict
+        state_dict = state.state_dict
+        filled_dict = copy.deepcopy(state_dict)
+        
+        sides = filled_dict.get("sides", [])
+        if len(sides) > opp_idx:
+            opp_side = sides[opp_idx]
+            pokemon_list = opp_side.get("pokemon", [])
+            for p in pokemon_list:
+                # Find the active opponent pokemon
+                is_active = p.get("isActive", False) or p.get("active", False)
+                if is_active:
+                    # If species is unknown or unrevealed, fill it!
+                    details = p.get("details", "")
+                    if not details or details.lower().startswith("unknown") or p.get("speciesState", {}).get("id", "") == "":
+                        p["details"] = pred_dict.get("name", "")
+                        p["speciesState"] = {"id": pred_species}
+                        p["stats"] = pred_dict.get("baseStats", {})
+                    
+                    # Fill unrevealed moveSlots
+                    move_slots = p.get("moveSlots", [])
+                    revealed_moves = [m.get("id", "").lower() for m in move_slots]
+                    
+                    # We want to fill the moves to a total of 4
+                    filled_moves = list(move_slots)
+                    for pm in pred_moves:
+                        if len(filled_moves) >= 4:
+                            break
+                        if pm.lower() not in revealed_moves:
+                            filled_moves.append({
+                                "id": pm,
+                                "name": pm.replace("_", " ").title(),
+                                "pp": 8,
+                                "maxpp": 8,
+                                "target": "normal",
+                                "disabled": False,
+                                "used": True # mark as used so it is not stripped by censor
+                            })
+                    p["moveSlots"] = filled_moves
+                    break # Only fill active for now
+                    
+        return PokemonState(
+            filled_dict,
+            request_dict=state.request_dict,
+            p2_request_dict=state.p2_request_dict,
+            log=state.log,
             winner=state.winner
         )
