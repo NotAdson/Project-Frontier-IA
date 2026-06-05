@@ -1,0 +1,6407 @@
+[
+  {
+    "id": "absorb",
+    "name": "Absorb",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "drain": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "acid",
+    "name": "Acid",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "boosts": {
+        "def": -1
+      }
+    }
+  },
+  {
+    "id": "ancientpower",
+    "name": "Ancient Power",
+    "type": "Rock",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "self": {
+        "boosts": {
+          "atk": 1,
+          "def": 1,
+          "spa": 1,
+          "spd": 1,
+          "spe": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "assist",
+    "name": "Assist",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1,
+      "noassist": 1,
+      "nosleeptalk": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "astonish",
+    "name": "Astonish",
+    "type": "Ghost",
+    "category": "Physical",
+    "basePower": 30,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "beatup",
+    "name": "Beat Up",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 10,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "bide",
+    "name": "Bide",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "metronome": 1,
+      "nosleeptalk": 1,
+      "failinstruct": 1
+    },
+    "secondary": null,
+    "volatileStatus": "bide"
+  },
+  {
+    "id": "blizzard",
+    "name": "Blizzard",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 120,
+    "accuracy": 70,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "wind": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "frz"
+    }
+  },
+  {
+    "id": "brickbreak",
+    "name": "Brick Break",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 75,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "charge",
+    "name": "Charge",
+    "type": "Electric",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": null,
+    "volatileStatus": "charge"
+  },
+  {
+    "id": "conversion",
+    "name": "Conversion",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "counter",
+    "name": "Counter",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": -5,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "failmefirst": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "covet",
+    "name": "Covet",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "noassist": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "crunch",
+    "name": "Crunch",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bite": 1
+    },
+    "secondary": {
+      "chance": 20,
+      "boosts": {
+        "spd": -1
+      }
+    }
+  },
+  {
+    "id": "dig",
+    "name": "Dig",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1,
+      "nosleeptalk": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "disable",
+    "name": "Disable",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 55,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "disable"
+  },
+  {
+    "id": "dive",
+    "name": "Dive",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1,
+      "nosleeptalk": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "doomdesire",
+    "name": "Doom Desire",
+    "type": "Steel",
+    "category": "Physical",
+    "basePower": 120,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "metronome": 1,
+      "futuremove": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "encore",
+    "name": "Encore",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1,
+      "failencore": 1
+    },
+    "secondary": null,
+    "volatileStatus": "encore"
+  },
+  {
+    "id": "extrasensory",
+    "name": "Extrasensory",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "fakeout",
+    "name": "Fake Out",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 1,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 100,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "feintattack",
+    "name": "Feint Attack",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "flail",
+    "name": "Flail",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "flash",
+    "name": "Flash",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 70,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "accuracy": -1
+    }
+  },
+  {
+    "id": "fly",
+    "name": "Fly",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "gravity": 1,
+      "distance": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "followme",
+    "name": "Follow Me",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 3,
+    "flags": {
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "foresight",
+    "name": "Foresight",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "foresight"
+  },
+  {
+    "id": "furycutter",
+    "name": "Fury Cutter",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 10,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "slicing": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "gigadrain",
+    "name": "Giga Drain",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "drain": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "glare",
+    "name": "Glare",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "par"
+  },
+  {
+    "id": "haze",
+    "name": "Haze",
+    "type": "Ice",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "highjumpkick",
+    "name": "High Jump Kick",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 85,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "gravity": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hypnosis",
+    "name": "Hypnosis",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 60,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "slp"
+  },
+  {
+    "id": "jumpkick",
+    "name": "Jump Kick",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "gravity": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "leafblade",
+    "name": "Leaf Blade",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "slicing": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "lockon",
+    "name": "Lock-On",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "megadrain",
+    "name": "Mega Drain",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "drain": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "memento",
+    "name": "Memento",
+    "type": "Dark",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": -2,
+      "spa": -2
+    }
+  },
+  {
+    "id": "mindreader",
+    "name": "Mind Reader",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "mimic",
+    "name": "Mimic",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "bypasssub": 1,
+      "allyanim": 1,
+      "failencore": 1,
+      "noassist": 1,
+      "failmimic": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "mirrorcoat",
+    "name": "Mirror Coat",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": -5,
+    "flags": {
+      "protect": 1,
+      "failmefirst": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "mirrormove",
+    "name": "Mirror Move",
+    "type": "Flying",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1,
+      "failencore": 1,
+      "nosleeptalk": 1,
+      "noassist": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "naturepower",
+    "name": "Nature Power",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "needlearm",
+    "name": "Needle Arm",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "nightmare",
+    "name": "Nightmare",
+    "type": "Ghost",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "nightmare"
+  },
+  {
+    "id": "odorsleuth",
+    "name": "Odor Sleuth",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "foresight"
+  },
+  {
+    "id": "outrage",
+    "name": "Outrage",
+    "type": "Dragon",
+    "category": "Special",
+    "basePower": 90,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "failinstruct": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "lockedmove"
+    }
+  },
+  {
+    "id": "overheat",
+    "name": "Overheat",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 140,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "boosts": {
+        "spa": -2
+      }
+    }
+  },
+  {
+    "id": "petaldance",
+    "name": "Petal Dance",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "dance": 1,
+      "metronome": 1,
+      "failinstruct": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "lockedmove"
+    }
+  },
+  {
+    "id": "recover",
+    "name": "Recover",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "heal": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "reversal",
+    "name": "Reversal",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "rocksmash",
+    "name": "Rock Smash",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 50,
+      "boosts": {
+        "def": -1
+      }
+    }
+  },
+  {
+    "id": "sketch",
+    "name": "Sketch",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "failencore": 1,
+      "noassist": 1,
+      "failmimic": 1,
+      "nosketch": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "sleeptalk",
+    "name": "Sleep Talk",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "nosleeptalk": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "spite",
+    "name": "Spite",
+    "type": "Ghost",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "stockpile",
+    "name": "Stockpile",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "stockpile"
+  },
+  {
+    "id": "struggle",
+    "name": "Struggle",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "noassist": 1,
+      "failencore": 1,
+      "failmimic": 1,
+      "nosketch": 1
+    },
+    "secondary": null,
+    "recoil": [
+      1,
+      4
+    ]
+  },
+  {
+    "id": "surf",
+    "name": "Surf",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 95,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "taunt",
+    "name": "Taunt",
+    "type": "Dark",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "taunt"
+  },
+  {
+    "id": "teeterdance",
+    "name": "Teeter Dance",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "confusion"
+  },
+  {
+    "id": "tickle",
+    "name": "Tickle",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": -1,
+      "def": -1
+    }
+  },
+  {
+    "id": "uproar",
+    "name": "Uproar",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1,
+      "nosleeptalk": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "uproar"
+    }
+  },
+  {
+    "id": "vinewhip",
+    "name": "Vine Whip",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 35,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "volttackle",
+    "name": "Volt Tackle",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 120,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "recoil": [
+      1,
+      3
+    ]
+  },
+  {
+    "id": "waterfall",
+    "name": "Waterfall",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "weatherball",
+    "name": "Weather Ball",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "zapcannon",
+    "name": "Zap Cannon",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 100,
+    "accuracy": 50,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": {
+      "chance": 100,
+      "status": "par"
+    }
+  },
+  {
+    "id": "aromatherapy",
+    "name": "Aromatherapy",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "distance": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "bind",
+    "name": "Bind",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "partiallytrapped"
+  },
+  {
+    "id": "bonerush",
+    "name": "Bone Rush",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 25,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "bulletseed",
+    "name": "Bullet Seed",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 10,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "camouflage",
+    "name": "Camouflage",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "clamp",
+    "name": "Clamp",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 35,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "partiallytrapped"
+  },
+  {
+    "id": "cottonspore",
+    "name": "Cotton Spore",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "powder": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spe": -2
+    }
+  },
+  {
+    "id": "crabhammer",
+    "name": "Crabhammer",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 90,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "curse",
+    "name": "Curse",
+    "type": "???",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "curse"
+  },
+  {
+    "id": "detect",
+    "name": "Detect",
+    "type": "Fighting",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 3,
+    "flags": {
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null,
+    "volatileStatus": "protect"
+  },
+  {
+    "id": "doubleedge",
+    "name": "Double-Edge",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 120,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "recoil": [
+      1,
+      3
+    ]
+  },
+  {
+    "id": "dreameater",
+    "name": "Dream Eater",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 100,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "drain": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "endeavor",
+    "name": "Endeavor",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "noparentalbond": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "extremespeed",
+    "name": "Extreme Speed",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 1,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "firespin",
+    "name": "Fire Spin",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 15,
+    "accuracy": 70,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "partiallytrapped"
+  },
+  {
+    "id": "focuspunch",
+    "name": "Focus Punch",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 150,
+    "accuracy": 100,
+    "priority": -3,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "punch": 1,
+      "failmefirst": 1,
+      "nosleeptalk": 1,
+      "noassist": 1,
+      "failcopycat": 1,
+      "failinstruct": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "futuresight",
+    "name": "Future Sight",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 80,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "metronome": 1,
+      "futuremove": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "growth",
+    "name": "Growth",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spa": 1
+    }
+  },
+  {
+    "id": "healbell",
+    "name": "Heal Bell",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "iciclespear",
+    "name": "Icicle Spear",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 10,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "imprison",
+    "name": "Imprison",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "imprison"
+  },
+  {
+    "id": "ingrain",
+    "name": "Ingrain",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "ingrain"
+  },
+  {
+    "id": "knockoff",
+    "name": "Knock Off",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "leechseed",
+    "name": "Leech Seed",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "leechseed"
+  },
+  {
+    "id": "lightscreen",
+    "name": "Light Screen",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "magiccoat",
+    "name": "Magic Coat",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 4,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "magiccoat"
+  },
+  {
+    "id": "metronome",
+    "name": "Metronome",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "noassist": 1,
+      "failcopycat": 1,
+      "nosleeptalk": 1,
+      "failmimic": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "minimize",
+    "name": "Minimize",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "evasion": 1
+    },
+    "volatileStatus": "minimize"
+  },
+  {
+    "id": "mist",
+    "name": "Mist",
+    "type": "Ice",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "moonlight",
+    "name": "Moonlight",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "morningsun",
+    "name": "Morning Sun",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "mudsport",
+    "name": "Mud Sport",
+    "type": "Ground",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "mudsport"
+  },
+  {
+    "id": "payday",
+    "name": "Pay Day",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "perishsong",
+    "name": "Perish Song",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "sound": 1,
+      "distance": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "poisongas",
+    "name": "Poison Gas",
+    "type": "Poison",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 55,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "psn"
+  },
+  {
+    "id": "protect",
+    "name": "Protect",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 3,
+    "flags": {
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null,
+    "volatileStatus": "protect"
+  },
+  {
+    "id": "psychup",
+    "name": "Psych Up",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "pursuit",
+    "name": "Pursuit",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "rapidspin",
+    "name": "Rapid Spin",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {}
+  },
+  {
+    "id": "recycle",
+    "name": "Recycle",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "reflect",
+    "name": "Reflect",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "roar",
+    "name": "Roar",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": -6,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "sound": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "rockblast",
+    "name": "Rock Blast",
+    "type": "Rock",
+    "category": "Physical",
+    "basePower": 25,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "roleplay",
+    "name": "Role Play",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "safeguard",
+    "name": "Safeguard",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "sandtomb",
+    "name": "Sand Tomb",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 70,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "partiallytrapped"
+  },
+  {
+    "id": "scaryface",
+    "name": "Scary Face",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spe": -2
+    }
+  },
+  {
+    "id": "secretpower",
+    "name": "Secret Power",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "par"
+    }
+  },
+  {
+    "id": "skillswap",
+    "name": "Skill Swap",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "snatch",
+    "name": "Snatch",
+    "type": "Dark",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 4,
+    "flags": {
+      "bypasssub": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null,
+    "volatileStatus": "snatch"
+  },
+  {
+    "id": "snore",
+    "name": "Snore",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "spikes",
+    "name": "Spikes",
+    "type": "Ground",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1,
+      "mustpressure": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "substitute",
+    "name": "Substitute",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "substitute"
+  },
+  {
+    "id": "swallow",
+    "name": "Swallow",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "synthesis",
+    "name": "Synthesis",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "tackle",
+    "name": "Tackle",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 35,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "tailglow",
+    "name": "Tail Glow",
+    "type": "Bug",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spa": 2
+    }
+  },
+  {
+    "id": "thrash",
+    "name": "Thrash",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 90,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "failinstruct": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "lockedmove"
+    }
+  },
+  {
+    "id": "torment",
+    "name": "Torment",
+    "type": "Dark",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "torment"
+  },
+  {
+    "id": "toxic",
+    "name": "Toxic",
+    "type": "Poison",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "tox"
+  },
+  {
+    "id": "transform",
+    "name": "Transform",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "metronome": 1,
+      "failencore": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "trick",
+    "name": "Trick",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "watersport",
+    "name": "Water Sport",
+    "type": "Water",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "watersport"
+  },
+  {
+    "id": "whirlpool",
+    "name": "Whirlpool",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 15,
+    "accuracy": 70,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "partiallytrapped"
+  },
+  {
+    "id": "whirlwind",
+    "name": "Whirlwind",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": -6,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "wish",
+    "name": "Wish",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "wrap",
+    "name": "Wrap",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "partiallytrapped"
+  },
+  {
+    "id": "yawn",
+    "name": "Yawn",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "yawn"
+  },
+  {
+    "id": "acidarmor",
+    "name": "Acid Armor",
+    "type": "Poison",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": 2
+    }
+  },
+  {
+    "id": "aircutter",
+    "name": "Air Cutter",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 55,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "slicing": 1,
+      "wind": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "barrier",
+    "name": "Barrier",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": 2
+    }
+  },
+  {
+    "id": "block",
+    "name": "Block",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "bounce",
+    "name": "Bounce",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 85,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "gravity": 1,
+      "distance": 1,
+      "metronome": 1,
+      "nosleeptalk": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "par"
+    }
+  },
+  {
+    "id": "bubble",
+    "name": "Bubble",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "boosts": {
+        "spe": -1
+      }
+    }
+  },
+  {
+    "id": "charm",
+    "name": "Charm",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": -2
+    }
+  },
+  {
+    "id": "fireblast",
+    "name": "Fire Blast",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 120,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "flamethrower",
+    "name": "Flamethrower",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 95,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "grasswhistle",
+    "name": "Grass Whistle",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 55,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "slp"
+  },
+  {
+    "id": "growl",
+    "name": "Growl",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": -1
+    }
+  },
+  {
+    "id": "heatwave",
+    "name": "Heat Wave",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 100,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "wind": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Bug",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Dark",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Dragon",
+    "type": "Dragon",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Electric",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Fighting",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Fire",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Flying",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Ghost",
+    "type": "Ghost",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Grass",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Ground",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Ice",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Poison",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Psychic",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Rock",
+    "type": "Rock",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Steel",
+    "type": "Steel",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hiddenpower",
+    "name": "Hidden Power Water",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hydropump",
+    "name": "Hydro Pump",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 120,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hypervoice",
+    "name": "Hyper Voice",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 90,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "icebeam",
+    "name": "Ice Beam",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 95,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "frz"
+    }
+  },
+  {
+    "id": "leechlife",
+    "name": "Leech Life",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "drain": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "lick",
+    "name": "Lick",
+    "type": "Ghost",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "par"
+    }
+  },
+  {
+    "id": "meanlook",
+    "name": "Mean Look",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "metalsound",
+    "name": "Metal Sound",
+    "type": "Steel",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spd": -2
+    }
+  },
+  {
+    "id": "meteormash",
+    "name": "Meteor Mash",
+    "type": "Steel",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 20,
+      "self": {
+        "boosts": {
+          "atk": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "muddywater",
+    "name": "Muddy Water",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 95,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "boosts": {
+        "accuracy": -1
+      }
+    }
+  },
+  {
+    "id": "pinmissile",
+    "name": "Pin Missile",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 14,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "poisonfang",
+    "name": "Poison Fang",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bite": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "tox"
+    }
+  },
+  {
+    "id": "poisonpowder",
+    "name": "Poison Powder",
+    "type": "Poison",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "powder": 1
+    },
+    "secondary": null,
+    "status": "psn"
+  },
+  {
+    "id": "psywave",
+    "name": "Psywave",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 0,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "rocktomb",
+    "name": "Rock Tomb",
+    "type": "Rock",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 100,
+      "boosts": {
+        "spe": -1
+      }
+    }
+  },
+  {
+    "id": "screech",
+    "name": "Screech",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": -2
+    }
+  },
+  {
+    "id": "sing",
+    "name": "Sing",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 55,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "slp"
+  },
+  {
+    "id": "skullbash",
+    "name": "Skull Bash",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "nosleeptalk": 1,
+      "failinstruct": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "sleeppowder",
+    "name": "Sleep Powder",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "powder": 1
+    },
+    "secondary": null,
+    "status": "slp"
+  },
+  {
+    "id": "smellingsalts",
+    "name": "Smelling Salts",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "smog",
+    "name": "Smog",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 70,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 40,
+      "status": "psn"
+    }
+  },
+  {
+    "id": "spore",
+    "name": "Spore",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "powder": 1
+    },
+    "secondary": null,
+    "status": "slp"
+  },
+  {
+    "id": "stringshot",
+    "name": "String Shot",
+    "type": "Bug",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spe": -1
+    }
+  },
+  {
+    "id": "stunspore",
+    "name": "Stun Spore",
+    "type": "Grass",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "powder": 1
+    },
+    "secondary": null,
+    "status": "par"
+  },
+  {
+    "id": "submission",
+    "name": "Submission",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "recoil": [
+      1,
+      4
+    ]
+  },
+  {
+    "id": "supersonic",
+    "name": "Supersonic",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 55,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "sound": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "confusion"
+  },
+  {
+    "id": "sweetkiss",
+    "name": "Sweet Kiss",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "confusion"
+  },
+  {
+    "id": "sweetscent",
+    "name": "Sweet Scent",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "evasion": -1
+    }
+  },
+  {
+    "id": "swordsdance",
+    "name": "Swords Dance",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "dance": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": 2
+    }
+  },
+  {
+    "id": "thief",
+    "name": "Thief",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "failmefirst": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "thunder",
+    "name": "Thunder",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 120,
+    "accuracy": 70,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "par"
+    }
+  },
+  {
+    "id": "thunderbolt",
+    "name": "Thunderbolt",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 95,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "par"
+    }
+  },
+  {
+    "id": "willowisp",
+    "name": "Will-O-Wisp",
+    "type": "Fire",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "brn"
+  },
+  {
+    "id": "destinybond",
+    "name": "Destiny Bond",
+    "type": "Ghost",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null,
+    "volatileStatus": "destinybond"
+  },
+  {
+    "id": "sheercold",
+    "name": "Sheer Cold",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 0,
+    "accuracy": 30,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "swagger",
+    "name": "Swagger",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": 2
+    },
+    "volatileStatus": "confusion"
+  },
+  {
+    "id": "thunderwave",
+    "name": "Thunder Wave",
+    "type": "Electric",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "par"
+  },
+  {
+    "id": "barrage",
+    "name": "Barrage",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "boneclub",
+    "name": "Bone Club",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 65,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "cometpunch",
+    "name": "Comet Punch",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 18,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "constrict",
+    "name": "Constrict",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 10,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "boosts": {
+        "spe": -1
+      }
+    }
+  },
+  {
+    "id": "dizzypunch",
+    "name": "Dizzy Punch",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 20,
+      "volatileStatus": "confusion"
+    }
+  },
+  {
+    "id": "doubleslap",
+    "name": "Double Slap",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "dragonrage",
+    "name": "Dragon Rage",
+    "type": "Dragon",
+    "category": "Special",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "eggbomb",
+    "name": "Egg Bomb",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "frustration",
+    "name": "Frustration",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "howl",
+    "name": "Howl",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": 1
+    }
+  },
+  {
+    "id": "hyperfang",
+    "name": "Hyper Fang",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bite": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "iceball",
+    "name": "Ice Ball",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 30,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "failinstruct": 1,
+      "bullet": 1,
+      "noparentalbond": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "karatechop",
+    "name": "Karate Chop",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "lowkick",
+    "name": "Low Kick",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "magnitude",
+    "name": "Magnitude",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "meditate",
+    "name": "Meditate",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": 1
+    }
+  },
+  {
+    "id": "psychoboost",
+    "name": "Psycho Boost",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 140,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "boosts": {
+        "spa": -2
+      }
+    }
+  },
+  {
+    "id": "rage",
+    "name": "Rage",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "rage"
+    }
+  },
+  {
+    "id": "razorwind",
+    "name": "Razor Wind",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "nosleeptalk": 1,
+      "failinstruct": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "refresh",
+    "name": "Refresh",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "return",
+    "name": "Return",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "rollingkick",
+    "name": "Rolling Kick",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "sharpen",
+    "name": "Sharpen",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": 1
+    }
+  },
+  {
+    "id": "signalbeam",
+    "name": "Signal Beam",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 75,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "volatileStatus": "confusion"
+    }
+  },
+  {
+    "id": "silverwind",
+    "name": "Silver Wind",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "self": {
+        "boosts": {
+          "atk": 1,
+          "def": 1,
+          "spa": 1,
+          "spd": 1,
+          "spe": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "skyuppercut",
+    "name": "Sky Uppercut",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 85,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "sonicboom",
+    "name": "Sonic Boom",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "spiderweb",
+    "name": "Spider Web",
+    "type": "Bug",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "spikecannon",
+    "name": "Spike Cannon",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "teleport",
+    "name": "Teleport",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "twineedle",
+    "name": "Twineedle",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 25,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 20,
+      "status": "psn"
+    },
+    "multihit": 2
+  },
+  {
+    "id": "bonemerang",
+    "name": "Bonemerang",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": 2
+  },
+  {
+    "id": "cut",
+    "name": "Cut",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "slicing": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "grudge",
+    "name": "Grudge",
+    "type": "Ghost",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "grudge"
+  },
+  {
+    "id": "hail",
+    "name": "Hail",
+    "type": "Ice",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "kinesis",
+    "name": "Kinesis",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "accuracy": -1
+    }
+  },
+  {
+    "id": "lovelykiss",
+    "name": "Lovely Kiss",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "status": "slp"
+  },
+  {
+    "id": "lusterpurge",
+    "name": "Luster Purge",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 50,
+      "boosts": {
+        "spd": -1
+      }
+    }
+  },
+  {
+    "id": "milkdrink",
+    "name": "Milk Drink",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "heal": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "mistball",
+    "name": "Mist Ball",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": {
+      "chance": 50,
+      "boosts": {
+        "spa": -1
+      }
+    }
+  },
+  {
+    "id": "octazooka",
+    "name": "Octazooka",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 65,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": {
+      "chance": 50,
+      "boosts": {
+        "accuracy": -1
+      }
+    }
+  },
+  {
+    "id": "rest",
+    "name": "Rest",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "revenge",
+    "name": "Revenge",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": -4,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "slackoff",
+    "name": "Slack Off",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "heal": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "softboiled",
+    "name": "Soft-Boiled",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "heal": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "heal": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "vitalthrow",
+    "name": "Vital Throw",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 0,
+    "priority": -1,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "aerialace",
+    "name": "Aerial Ace",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1,
+      "slicing": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "aeroblast",
+    "name": "Aeroblast",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1,
+      "wind": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "agility",
+    "name": "Agility",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spe": 2
+    }
+  },
+  {
+    "id": "amnesia",
+    "name": "Amnesia",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spd": 2
+    }
+  },
+  {
+    "id": "armthrust",
+    "name": "Arm Thrust",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "attract",
+    "name": "Attract",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "attract"
+  },
+  {
+    "id": "aurorabeam",
+    "name": "Aurora Beam",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 65,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "boosts": {
+        "atk": -1
+      }
+    }
+  },
+  {
+    "id": "batonpass",
+    "name": "Baton Pass",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {}
+  },
+  {
+    "id": "bellydrum",
+    "name": "Belly Drum",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "bite",
+    "name": "Bite",
+    "type": "Dark",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bite": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "blastburn",
+    "name": "Blast Burn",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 150,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "recharge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "mustrecharge"
+    }
+  },
+  {
+    "id": "blazekick",
+    "name": "Blaze Kick",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 85,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "bodyslam",
+    "name": "Body Slam",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 85,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "par"
+    }
+  },
+  {
+    "id": "bubblebeam",
+    "name": "Bubble Beam",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 65,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "boosts": {
+        "spe": -1
+      }
+    }
+  },
+  {
+    "id": "bulkup",
+    "name": "Bulk Up",
+    "type": "Fighting",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": 1,
+      "def": 1
+    }
+  },
+  {
+    "id": "calmmind",
+    "name": "Calm Mind",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spa": 1,
+      "spd": 1
+    }
+  },
+  {
+    "id": "confuseray",
+    "name": "Confuse Ray",
+    "type": "Ghost",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "confusion"
+  },
+  {
+    "id": "confusion",
+    "name": "Confusion",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 50,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "volatileStatus": "confusion"
+    }
+  },
+  {
+    "id": "conversion2",
+    "name": "Conversion 2",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "bypasssub": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "cosmicpower",
+    "name": "Cosmic Power",
+    "type": "Psychic",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": 1,
+      "spd": 1
+    }
+  },
+  {
+    "id": "crosschop",
+    "name": "Cross Chop",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "crushclaw",
+    "name": "Crush Claw",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 75,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 50,
+      "boosts": {
+        "def": -1
+      }
+    }
+  },
+  {
+    "id": "defensecurl",
+    "name": "Defense Curl",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": 1
+    },
+    "volatileStatus": "defensecurl"
+  },
+  {
+    "id": "doublekick",
+    "name": "Double Kick",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 30,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": 2
+  },
+  {
+    "id": "doubleteam",
+    "name": "Double Team",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "evasion": 1
+    }
+  },
+  {
+    "id": "dragonbreath",
+    "name": "Dragon Breath",
+    "type": "Dragon",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "par"
+    }
+  },
+  {
+    "id": "dragonclaw",
+    "name": "Dragon Claw",
+    "type": "Dragon",
+    "category": "Special",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "dragondance",
+    "name": "Dragon Dance",
+    "type": "Dragon",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "dance": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": 1,
+      "spe": 1
+    }
+  },
+  {
+    "id": "drillpeck",
+    "name": "Drill Peck",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "dynamicpunch",
+    "name": "Dynamic Punch",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 50,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 100,
+      "volatileStatus": "confusion"
+    }
+  },
+  {
+    "id": "earthquake",
+    "name": "Earthquake",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "ember",
+    "name": "Ember",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "endure",
+    "name": "Endure",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 4,
+    "flags": {
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null,
+    "volatileStatus": "endure"
+  },
+  {
+    "id": "eruption",
+    "name": "Eruption",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 150,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "explosion",
+    "name": "Explosion",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 250,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "noparentalbond": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "facade",
+    "name": "Facade",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "faketears",
+    "name": "Fake Tears",
+    "type": "Dark",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spd": -2
+    }
+  },
+  {
+    "id": "falseswipe",
+    "name": "False Swipe",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "featherdance",
+    "name": "Feather Dance",
+    "type": "Flying",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "dance": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "atk": -2
+    }
+  },
+  {
+    "id": "firepunch",
+    "name": "Fire Punch",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 75,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "fissure",
+    "name": "Fissure",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 30,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "flamewheel",
+    "name": "Flame Wheel",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "defrost": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "flatter",
+    "name": "Flatter",
+    "type": "Dark",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "spa": 1
+    },
+    "volatileStatus": "confusion"
+  },
+  {
+    "id": "focusenergy",
+    "name": "Focus Energy",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "volatileStatus": "focusenergy"
+  },
+  {
+    "id": "frenzyplant",
+    "name": "Frenzy Plant",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 150,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "recharge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "mustrecharge"
+    }
+  },
+  {
+    "id": "furyattack",
+    "name": "Fury Attack",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "furyswipes",
+    "name": "Fury Swipes",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 18,
+    "accuracy": 80,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": [
+      2,
+      5
+    ]
+  },
+  {
+    "id": "guillotine",
+    "name": "Guillotine",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 30,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "gust",
+    "name": "Gust",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1,
+      "wind": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "harden",
+    "name": "Harden",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": 1
+    }
+  },
+  {
+    "id": "headbutt",
+    "name": "Headbutt",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "helpinghand",
+    "name": "Helping Hand",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 5,
+    "flags": {
+      "bypasssub": 1,
+      "noassist": 1,
+      "failcopycat": 1
+    },
+    "secondary": null,
+    "volatileStatus": "helpinghand"
+  },
+  {
+    "id": "hornattack",
+    "name": "Horn Attack",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 65,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "horndrill",
+    "name": "Horn Drill",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 30,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "hydrocannon",
+    "name": "Hydro Cannon",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 150,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "recharge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "mustrecharge"
+    }
+  },
+  {
+    "id": "hyperbeam",
+    "name": "Hyper Beam",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 150,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "recharge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "volatileStatus": "mustrecharge"
+    }
+  },
+  {
+    "id": "icepunch",
+    "name": "Ice Punch",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 75,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "frz"
+    }
+  },
+  {
+    "id": "icywind",
+    "name": "Icy Wind",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 55,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "wind": 1
+    },
+    "secondary": {
+      "chance": 100,
+      "boosts": {
+        "spe": -1
+      }
+    }
+  },
+  {
+    "id": "irondefense",
+    "name": "Iron Defense",
+    "type": "Steel",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": 2
+    }
+  },
+  {
+    "id": "irontail",
+    "name": "Iron Tail",
+    "type": "Steel",
+    "category": "Physical",
+    "basePower": 100,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "boosts": {
+        "def": -1
+      }
+    }
+  },
+  {
+    "id": "leer",
+    "name": "Leer",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": -1
+    }
+  },
+  {
+    "id": "machpunch",
+    "name": "Mach Punch",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 1,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "magicalleaf",
+    "name": "Magical Leaf",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "megahorn",
+    "name": "Megahorn",
+    "type": "Bug",
+    "category": "Physical",
+    "basePower": 120,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "megakick",
+    "name": "Mega Kick",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 120,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "megapunch",
+    "name": "Mega Punch",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "metalclaw",
+    "name": "Metal Claw",
+    "type": "Steel",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "self": {
+        "boosts": {
+          "atk": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "mudshot",
+    "name": "Mud Shot",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 55,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 100,
+      "boosts": {
+        "spe": -1
+      }
+    }
+  },
+  {
+    "id": "mudslap",
+    "name": "Mud-Slap",
+    "type": "Ground",
+    "category": "Physical",
+    "basePower": 20,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 100,
+      "boosts": {
+        "accuracy": -1
+      }
+    }
+  },
+  {
+    "id": "nightshade",
+    "name": "Night Shade",
+    "type": "Ghost",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "painsplit",
+    "name": "Pain Split",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "allyanim": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "peck",
+    "name": "Peck",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 35,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "poisonsting",
+    "name": "Poison Sting",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 15,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "psn"
+    }
+  },
+  {
+    "id": "poisontail",
+    "name": "Poison Tail",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "psn"
+    }
+  },
+  {
+    "id": "pound",
+    "name": "Pound",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "powdersnow",
+    "name": "Powder Snow",
+    "type": "Ice",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "frz"
+    }
+  },
+  {
+    "id": "present",
+    "name": "Present",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "psybeam",
+    "name": "Psybeam",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 65,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "volatileStatus": "confusion"
+    }
+  },
+  {
+    "id": "psychic",
+    "name": "Psychic",
+    "type": "Psychic",
+    "category": "Special",
+    "basePower": 90,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "boosts": {
+        "spd": -1
+      }
+    }
+  },
+  {
+    "id": "quickattack",
+    "name": "Quick Attack",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 1,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "raindance",
+    "name": "Rain Dance",
+    "type": "Water",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "razorleaf",
+    "name": "Razor Leaf",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 55,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "slicing": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "rockslide",
+    "name": "Rock Slide",
+    "type": "Rock",
+    "category": "Physical",
+    "basePower": 75,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "rockthrow",
+    "name": "Rock Throw",
+    "type": "Rock",
+    "category": "Physical",
+    "basePower": 50,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "rollout",
+    "name": "Rollout",
+    "type": "Rock",
+    "category": "Physical",
+    "basePower": 30,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "failinstruct": 1,
+      "noparentalbond": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "sacredfire",
+    "name": "Sacred Fire",
+    "type": "Fire",
+    "category": "Special",
+    "basePower": 100,
+    "accuracy": 95,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "defrost": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 50,
+      "status": "brn"
+    }
+  },
+  {
+    "id": "sandattack",
+    "name": "Sand Attack",
+    "type": "Ground",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "accuracy": -1
+    }
+  },
+  {
+    "id": "sandstorm",
+    "name": "Sandstorm",
+    "type": "Rock",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1,
+      "wind": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "scratch",
+    "name": "Scratch",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "seismictoss",
+    "name": "Seismic Toss",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "selfdestruct",
+    "name": "Self-Destruct",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 200,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "noparentalbond": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "shadowball",
+    "name": "Shadow Ball",
+    "type": "Ghost",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": {
+      "chance": 20,
+      "boosts": {
+        "spd": -1
+      }
+    }
+  },
+  {
+    "id": "shadowpunch",
+    "name": "Shadow Punch",
+    "type": "Ghost",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "shockwave",
+    "name": "Shock Wave",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "skyattack",
+    "name": "Sky Attack",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 140,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1,
+      "nosleeptalk": 1,
+      "failinstruct": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "slam",
+    "name": "Slam",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 75,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "slash",
+    "name": "Slash",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "slicing": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "sludge",
+    "name": "Sludge",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 65,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "psn"
+    }
+  },
+  {
+    "id": "sludgebomb",
+    "name": "Sludge Bomb",
+    "type": "Poison",
+    "category": "Physical",
+    "basePower": 90,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "bullet": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "psn"
+    }
+  },
+  {
+    "id": "smokescreen",
+    "name": "Smokescreen",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "accuracy": -1
+    }
+  },
+  {
+    "id": "solarbeam",
+    "name": "Solar Beam",
+    "type": "Grass",
+    "category": "Special",
+    "basePower": 120,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "charge": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "nosleeptalk": 1,
+      "failinstruct": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "spark",
+    "name": "Spark",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 65,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "status": "par"
+    }
+  },
+  {
+    "id": "spitup",
+    "name": "Spit Up",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "splash",
+    "name": "Splash",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "gravity": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "steelwing",
+    "name": "Steel Wing",
+    "type": "Steel",
+    "category": "Physical",
+    "basePower": 70,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "self": {
+        "boosts": {
+          "def": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "stomp",
+    "name": "Stomp",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 65,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "nonsky": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 30,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "strength",
+    "name": "Strength",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "sunnyday",
+    "name": "Sunny Day",
+    "type": "Fire",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "superfang",
+    "name": "Super Fang",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 0,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "superpower",
+    "name": "Superpower",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 120,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "self": {
+      "boosts": {
+        "atk": -1,
+        "def": -1
+      }
+    }
+  },
+  {
+    "id": "swift",
+    "name": "Swift",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "tailwhip",
+    "name": "Tail Whip",
+    "type": "Normal",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "reflectable": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": -1
+    }
+  },
+  {
+    "id": "takedown",
+    "name": "Take Down",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 90,
+    "accuracy": 85,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "recoil": [
+      1,
+      4
+    ]
+  },
+  {
+    "id": "thunderpunch",
+    "name": "Thunder Punch",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 75,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "punch": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "par"
+    }
+  },
+  {
+    "id": "thundershock",
+    "name": "Thunder Shock",
+    "type": "Electric",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 10,
+      "status": "par"
+    }
+  },
+  {
+    "id": "triattack",
+    "name": "Tri Attack",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": {
+      "chance": 20
+    }
+  },
+  {
+    "id": "triplekick",
+    "name": "Triple Kick",
+    "type": "Fighting",
+    "category": "Physical",
+    "basePower": 10,
+    "accuracy": 90,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "multihit": 3
+  },
+  {
+    "id": "twister",
+    "name": "Twister",
+    "type": "Dragon",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1,
+      "wind": 1
+    },
+    "secondary": {
+      "chance": 20,
+      "volatileStatus": "flinch"
+    }
+  },
+  {
+    "id": "visegrip",
+    "name": "Vise Grip",
+    "type": "Normal",
+    "category": "Physical",
+    "basePower": 55,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "watergun",
+    "name": "Water Gun",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 40,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "waterpulse",
+    "name": "Water Pulse",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1,
+      "pulse": 1
+    },
+    "secondary": {
+      "chance": 20,
+      "volatileStatus": "confusion"
+    }
+  },
+  {
+    "id": "waterspout",
+    "name": "Water Spout",
+    "type": "Water",
+    "category": "Special",
+    "basePower": 150,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "protect": 1,
+      "mirror": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "wingattack",
+    "name": "Wing Attack",
+    "type": "Flying",
+    "category": "Physical",
+    "basePower": 60,
+    "accuracy": 100,
+    "priority": 0,
+    "flags": {
+      "contact": 1,
+      "protect": 1,
+      "mirror": 1,
+      "distance": 1,
+      "metronome": 1
+    },
+    "secondary": null
+  },
+  {
+    "id": "withdraw",
+    "name": "Withdraw",
+    "type": "Water",
+    "category": "Status",
+    "basePower": 0,
+    "accuracy": 0,
+    "priority": 0,
+    "flags": {
+      "snatch": 1,
+      "metronome": 1
+    },
+    "secondary": null,
+    "boosts": {
+      "def": 1
+    }
+  }
+]

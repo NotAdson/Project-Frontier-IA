@@ -44,7 +44,7 @@ function getValidActions(battle, player) {
 }
 
 // Cache settings to avoid memory leaks
-const MAX_CACHE_SIZE = 20000;
+const MAX_CACHE_SIZE = 2000;
 const stateCache = new Map();
 const stateIdQueue = [];
 let nextStateId = 1;

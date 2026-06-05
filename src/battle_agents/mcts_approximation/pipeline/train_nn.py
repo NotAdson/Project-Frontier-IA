@@ -111,12 +111,23 @@ def load_data(data_dir: str = "data/games"):
 
 def load_data_from_files(files):
     X, y_value, y_policy, X_next, action_masks = [], [], [], [], []
+    skipped_count = 0
     for f in files:
         try:
-            gx, gv, gp, gn, gm = _parse_steps(json.loads(f.read_text()))
+            data = json.loads(f.read_text())
+            if not data:
+                continue
+            # Gracefully skip files with legacy feature shapes
+            if len(data[0]["features"]) != TOTAL_FEATURES:
+                skipped_count += 1
+                continue
+            gx, gv, gp, gn, gm = _parse_steps(data)
             X += gx; y_value += gv; y_policy += gp; X_next += gn; action_masks += gm
         except Exception as e:
             print(f"Error loading file {f}: {e}")
+            
+    if skipped_count > 0:
+        print(f"Skipped {skipped_count} game files due to feature shape mismatch (expected {TOTAL_FEATURES} features).")
             
     if len(X) == 0:
         return (np.empty((0, TOTAL_FEATURES), dtype=np.float32),
@@ -482,71 +493,162 @@ def load_legacy_weights_with_padding(model, legacy_model_path):
     """
     Manually copies legacy model weights from model.weights.h5 within the zip archive,
     zero-padding the first dense trunk layer to fit our new input shape.
-    All other matching weights are loaded natively using model.load_weights.
+    All other matching weights are loaded natively or mapped.
     """
     print(f"Loading legacy weights from {legacy_model_path}...")
-    
-    # 1. Load all matching layers using standard load_weights with skip_mismatch
-    try:
-        model.load_weights(legacy_model_path, by_name=True, skip_mismatch=True)
-        print("Pre-loaded matching weights from legacy file.")
-    except Exception as e:
-        print(f"[Warning] Native weight pre-loading failed: {e}. Will attempt direct H5 copy.")
-
-    # 2. Extract first dense layer weights directly from h5 to avoid lambda deserialization issues
     import zipfile
     import h5py
     import io
+    
+    name_map = {
+        "embedding": "meta_emb_species",
+        "embedding_1": "meta_emb_items",
+        "embedding_2": "meta_emb_abilities",
+        "embedding_3": "meta_emb_moves",
+        "embedding_4": "emb_species",
+        "embedding_5": "emb_moves",
+        "embedding_6": "emb_items",
+        "embedding_7": "emb_abilities",
+        "dense": "token_score_projection",
+        "dense_1": "dense",
+        "dense_2": "dense_1",
+        "dense_3": "dense_2",
+        "dense_4": "policy_logits",
+        "dense_5": "value",
+        "dense_6": "aux_field",
+        "dense_7": "aux_own_hp",
+        "dense_8": "aux_opp_hp",
+        "dense_9": "aux_own_statuses",
+        "dense_10": "aux_opp_statuses",
+        "dense_11": "aux_own_boosts",
+        "dense_12": "aux_opp_boosts",
+        "dense_13": "aux_own_stats",
+        "dense_14": "aux_opp_stats",
+        "dense_15": "aux_own_types",
+        "dense_16": "aux_opp_types",
+        "dense_17": "aux_own_species",
+        "dense_18": "aux_opp_species",
+        "layer_normalization": "layer_normalization",
+        "batch_normalization": "batch_normalization",
+        "batch_normalization_1": "batch_normalization_1",
+        "batch_normalization_2": "batch_normalization_2"
+    }
+    
+    attn_map = {
+        "multi_head_attention/query_dense": ("meta_attention", "query_dense"),
+        "multi_head_attention/key_dense": ("meta_attention", "key_dense"),
+        "multi_head_attention/value_dense": ("meta_attention", "value_dense"),
+        "multi_head_attention/output_dense": ("meta_attention", "output_dense")
+    }
     
     try:
         with zipfile.ZipFile(legacy_model_path, "r") as z:
             weights_bytes = z.read("model.weights.h5")
         
         with h5py.File(io.BytesIO(weights_bytes), "r") as f:
-            # Find the legacy dense trunk weights by scanning dataset shapes
-            w, b = None, None
-            
-            # Recursive scan
-            def scan_items(name, obj):
-                nonlocal w, b
-                if isinstance(obj, h5py.Dataset) and name.startswith("layers/"):
-                    # The trunk's first dense layer weight matrix has shape (2958, 512) or (3018, 512)
-                    if obj.shape in [(2958, 512), (3018, 512)]:
-                        w = obj[:]
-                        # Bias dataset is in the same vars/ group with suffix 1 instead of 0
-                        bias_path = name.rsplit("/", 1)[0] + "/1"
-                        if bias_path in f:
-                            b = f[bias_path][:]
-            
-            f.visititems(scan_items)
-
-            if w is not None and b is not None:
-                # Construct new weight matrix of shape (3060, 512)
-                if w.shape[0] == 2958:
-                    new_w = np.zeros((3060, 512), dtype=np.float32)
-                    new_w[0:636, :] = w[0:636, :]
-                    new_w[636:654, :] = w[636:654, :]
-                    new_w[744:3048, :] = w[654:2958, :]
-                elif w.shape[0] == 3018:
-                    new_w = np.zeros((3060, 512), dtype=np.float32)
-                    new_w[0:636, :] = w[0:636, :]
-                    new_w[636:654, :] = w[636:654, :]
-                    new_w[696:744, :] = w[654:702, :]
-                    new_w[744:3048, :] = w[702:3006, :]
-                    new_w[3048:3060, :] = w[3006:3018, :]
-                else:
-                    new_w = w
-
-                target_layer = model.get_layer("dense")
-                target_layer.set_weights([new_w, b])
-                print(f"Direct H5 weight copy: mapped trunk layer 'dense' from shape {w.shape[0]} to {new_w.shape[0]}.")
-            else:
-                print("[Warning] Could not locate dense trunk weights in H5 archive.")
+            # 1. Load standard layers
+            for saved_name, target_name in name_map.items():
+                group_path = f"layers/{saved_name}"
+                if group_path not in f:
+                    # Try direct name mapping
+                    if f"layers/{target_name}" in f:
+                        group_path = f"layers/{target_name}"
+                    else:
+                        continue
+                
+                datasets = {}
+                def find_datasets(name, obj):
+                    if isinstance(obj, h5py.Dataset):
+                        datasets[name] = obj[:]
+                f[group_path].visititems(find_datasets)
+                
+                if not datasets:
+                    continue
+                    
+                try:
+                    layer = model.get_layer(target_name)
+                except ValueError:
+                    continue
+                    
+                sorted_keys = sorted(datasets.keys(), key=lambda x: int(x.split('/')[-1]))
+                weights = [datasets[k] for k in sorted_keys]
+                
+                target_weights = layer.get_weights()
+                adjusted_weights = []
+                for tw, w in zip(target_weights, weights):
+                    if tw.shape != w.shape:
+                        # Trunk first dense layer padding logic
+                        if target_name == "dense" and len(tw.shape) == 2 and len(w.shape) == 2:
+                            w_shape = w.shape[0]
+                            tw_shape = tw.shape[0]
+                            print(f"  [Trunk Padding] Mapping layer 'dense' shape {w_shape} -> {tw_shape}")
+                            if w_shape == 2958:
+                                adjusted = np.zeros(tw.shape, dtype=tw.dtype)
+                                adjusted[0:636, :] = w[0:636, :]
+                                adjusted[636:654, :] = w[636:654, :]
+                                adjusted[744:3048, :] = w[654:2958, :]
+                                adjusted_weights.append(adjusted)
+                            elif w_shape == 3018:
+                                adjusted = np.zeros(tw.shape, dtype=tw.dtype)
+                                adjusted[0:636, :] = w[0:636, :]
+                                adjusted[636:654, :] = w[636:654, :]
+                                adjusted[696:744, :] = w[654:702, :]
+                                adjusted[744:3048, :] = w[702:3006, :]
+                                adjusted[3048:3060, :] = w[3006:3018, :]
+                                adjusted_weights.append(adjusted)
+                            else:
+                                adjusted = np.zeros(tw.shape, dtype=tw.dtype)
+                                min_rows = min(tw.shape[0], w.shape[0])
+                                min_cols = min(tw.shape[1], w.shape[1])
+                                adjusted[:min_rows, :min_cols] = w[:min_rows, :min_cols]
+                                adjusted_weights.append(adjusted)
+                        # Standard embedding or generic size padding
+                        elif len(tw.shape) == 2 and len(w.shape) == 2:
+                            adjusted = np.zeros(tw.shape, dtype=tw.dtype)
+                            min_rows = min(tw.shape[0], w.shape[0])
+                            min_cols = min(tw.shape[1], w.shape[1])
+                            adjusted[:min_rows, :min_cols] = w[:min_rows, :min_cols]
+                            adjusted_weights.append(adjusted)
+                        elif len(tw.shape) == 1 and len(w.shape) == 1:
+                            adjusted = np.zeros(tw.shape, dtype=tw.dtype)
+                            min_len = min(tw.shape[0], w.shape[0])
+                            adjusted[:min_len] = w[:min_len]
+                            adjusted_weights.append(adjusted)
+                        else:
+                            adjusted_weights.append(tw)
+                    else:
+                        adjusted_weights.append(w)
+                layer.set_weights(adjusted_weights)
+                
+            # 2. Load attention sub-layers
+            for saved_sub, (target_layer_name, sub_attr) in attn_map.items():
+                group_path = f"layers/{saved_sub}"
+                if group_path not in f:
+                    continue
+                    
+                datasets = {}
+                def find_datasets(name, obj):
+                    if isinstance(obj, h5py.Dataset):
+                        datasets[name] = obj[:]
+                f[group_path].visititems(find_datasets)
+                
+                if not datasets:
+                    continue
+                    
+                try:
+                    parent_layer = model.get_layer(target_layer_name)
+                    sub_layer = getattr(parent_layer, sub_attr)
+                except (ValueError, AttributeError):
+                    continue
+                    
+                sorted_keys = sorted(datasets.keys(), key=lambda x: int(x.split('/')[-1]))
+                weights = [datasets[k] for k in sorted_keys]
+                sub_layer.set_weights(weights)
+        print("Legacy weight loading with mapped padding completed successfully.")
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print(f"[Warning] Direct H5 weights extraction failed: {e}.")
-    print("Legacy weight loading with padding completed.")
+        print(f"[Warning] Mapped legacy weight loading failed: {e}")
 
 
 def compute_counterfactual_targets(model, inputs, is_scratch=False, batch_size=256):

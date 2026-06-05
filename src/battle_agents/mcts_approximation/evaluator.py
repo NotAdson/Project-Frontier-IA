@@ -15,6 +15,127 @@ from battle_agents.mcts_approximation.state_encoder import (
 )
 
 
+def _load_weights_mapped_keras(model, legacy_model_path):
+    import zipfile
+    import h5py
+    import io
+    print(f"[NeuralStateEvaluator] Loading mapped weights from {legacy_model_path}...")
+    with zipfile.ZipFile(legacy_model_path, "r") as z:
+        weights_bytes = z.read("model.weights.h5")
+        
+    name_map = {
+        "embedding": "meta_emb_species",
+        "embedding_1": "meta_emb_items",
+        "embedding_2": "meta_emb_abilities",
+        "embedding_3": "meta_emb_moves",
+        "embedding_4": "emb_species",
+        "embedding_5": "emb_moves",
+        "embedding_6": "emb_items",
+        "embedding_7": "emb_abilities",
+        "dense": "token_score_projection",
+        "dense_1": "dense",
+        "dense_2": "dense_1",
+        "dense_3": "dense_2",
+        "dense_4": "policy_logits",
+        "dense_5": "value",
+        "dense_6": "aux_field",
+        "dense_7": "aux_own_hp",
+        "dense_8": "aux_opp_hp",
+        "dense_9": "aux_own_statuses",
+        "dense_10": "aux_opp_statuses",
+        "dense_11": "aux_own_boosts",
+        "dense_12": "aux_opp_boosts",
+        "dense_13": "aux_own_stats",
+        "dense_14": "aux_opp_stats",
+        "dense_15": "aux_own_types",
+        "dense_16": "aux_opp_types",
+        "dense_17": "aux_own_species",
+        "dense_18": "aux_opp_species",
+        "layer_normalization": "layer_normalization",
+        "batch_normalization": "batch_normalization",
+        "batch_normalization_1": "batch_normalization_1",
+        "batch_normalization_2": "batch_normalization_2"
+    }
+    
+    attn_map = {
+        "multi_head_attention/query_dense": ("meta_attention", "query_dense"),
+        "multi_head_attention/key_dense": ("meta_attention", "key_dense"),
+        "multi_head_attention/value_dense": ("meta_attention", "value_dense"),
+        "multi_head_attention/output_dense": ("meta_attention", "output_dense")
+    }
+    
+    with h5py.File(io.BytesIO(weights_bytes), "r") as f:
+        # Load standard layers
+        for saved_name, target_name in name_map.items():
+            group_path = f"layers/{saved_name}"
+            if group_path not in f:
+                continue
+            
+            datasets = {}
+            def find_datasets(name, obj):
+                if isinstance(obj, h5py.Dataset):
+                    datasets[name] = obj[:]
+            f[group_path].visititems(find_datasets)
+            
+            if not datasets:
+                continue
+                
+            try:
+                layer = model.get_layer(target_name)
+            except ValueError:
+                continue
+                
+            sorted_keys = sorted(datasets.keys(), key=lambda x: int(x.split('/')[-1]))
+            weights = [datasets[k] for k in sorted_keys]
+            
+            target_weights = layer.get_weights()
+            adjusted_weights = []
+            for tw, w in zip(target_weights, weights):
+                if tw.shape != w.shape:
+                    if len(tw.shape) == 2 and len(w.shape) == 2:
+                        adjusted = np.zeros(tw.shape, dtype=tw.dtype)
+                        min_rows = min(tw.shape[0], w.shape[0])
+                        min_cols = min(tw.shape[1], w.shape[1])
+                        adjusted[:min_rows, :min_cols] = w[:min_rows, :min_cols]
+                        adjusted_weights.append(adjusted)
+                    elif len(tw.shape) == 1 and len(w.shape) == 1:
+                        adjusted = np.zeros(tw.shape, dtype=tw.dtype)
+                        min_len = min(tw.shape[0], w.shape[0])
+                        adjusted[:min_len] = w[:min_len]
+                        adjusted_weights.append(adjusted)
+                    else:
+                        adjusted_weights.append(tw)
+                else:
+                    adjusted_weights.append(w)
+            layer.set_weights(adjusted_weights)
+            
+        # Load attention sub-layers
+        for saved_sub, (target_layer_name, sub_attr) in attn_map.items():
+            group_path = f"layers/{saved_sub}"
+            if group_path not in f:
+                continue
+                
+            datasets = {}
+            def find_datasets(name, obj):
+                if isinstance(obj, h5py.Dataset):
+                    datasets[name] = obj[:]
+            f[group_path].visititems(find_datasets)
+            
+            if not datasets:
+                continue
+                
+            try:
+                parent_layer = model.get_layer(target_layer_name)
+                sub_layer = getattr(parent_layer, sub_attr)
+            except (ValueError, AttributeError):
+                continue
+                
+            sorted_keys = sorted(datasets.keys(), key=lambda x: int(x.split('/')[-1]))
+            weights = [datasets[k] for k in sorted_keys]
+            sub_layer.set_weights(weights)
+    print("[NeuralStateEvaluator] Mapped weight loading completed successfully.")
+
+
 class BaseStateEvaluator:
     """
     Abstract Base Class for state evaluation in Neural Monte Carlo Tree Search.
@@ -33,7 +154,7 @@ class BaseStateEvaluator:
             A tuple of (value, action_probs) where:
               - value: float in [0.0, 1.0] representing probability of winning.
               - action_probs: dict mapping valid action strings to prior probabilities.
-        """
+              """
         raise NotImplementedError
 
 
@@ -98,7 +219,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
 
             if keras is not None:
                 fallback = "data/mcts_model.h5"
-                actual_path = (model_path if os.path.exists(model_path)
+                actual_path = (model_path if (model_path and os.path.exists(model_path))
                                else fallback if os.path.exists(fallback)
                                else None)
                 if actual_path:
@@ -127,7 +248,10 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                                     num_items=num_items,
                                     num_abilities=num_abilities
                                 )
-                                self.model.load_weights(actual_path)
+                                try:
+                                    self.model.load_weights(actual_path)
+                                except Exception:
+                                    _load_weights_mapped_keras(self.model, actual_path)
                                 self.expected_dense_dim = NUM_DENSE_FEATURES
                                 print(f"[NeuralStateEvaluator] Loaded Keras weights from {actual_path} successfully (744 features)!")
                             except Exception as e_shape:
@@ -140,7 +264,10 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                                     num_items=num_items,
                                     num_abilities=num_abilities
                                 )
-                                self.model.load_weights(actual_path)
+                                try:
+                                    self.model.load_weights(actual_path)
+                                except Exception:
+                                    _load_weights_mapped_keras(self.model, actual_path)
                                 self.expected_dense_dim = 654
                                 print(f"[NeuralStateEvaluator] Loaded Keras weights from {actual_path} successfully (654 features)!")
                         except Exception as err_weights:
