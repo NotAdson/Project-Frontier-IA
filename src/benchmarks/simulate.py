@@ -1,9 +1,13 @@
-import os
 import html
-from core.problem.pokemon_problem import PokemonProblem
-from core.client.showdown_client import ShowdownClient
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from battle_agents.mcts.mcts_agent import MCTSAgent
 from battle_agents.random.random_agent import RandomAgent
+from core.client.cpp_client import CppClient
+from core.problem.pokemon_problem import PokemonProblem
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html><head>
@@ -16,7 +20,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <h2 style="text-align: center;">Random Blind Search AI Battle</h2>
 <script type="text/plain" class="battle-log-data">{BATTLE_LOG_TEXT}</script>
 <script src="https://play.pokemonshowdown.com/js/replay-embed.js"></script>
-</body></html>
+</head><body>
 """
 
 def generate_replay_html(full_log, filename="replay.html"):
@@ -30,15 +34,13 @@ def generate_replay_html(full_log, filename="replay.html"):
         f.write(html_content)
     print(f"Replay saved to {filename}. Open this file in your browser!")
 
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 if __name__ == "__main__":
+    lib_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "new_engine", "libbattle.so"))
     engine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "engine"))
-    client = ShowdownClient(engine_path)
+    client = CppClient(lib_path, engine_path)
     
     try:
-        print("Initializing Battle Simulator...")
+        print("Initializing C++ Battle Simulator...")
         problem = PokemonProblem(client, formatid="gen3randombattle")
         
         print("Running Monte Carlo Tree Search (MCTS) Simulation...")
@@ -46,7 +48,8 @@ if __name__ == "__main__":
         turn = 1
         
         # Instantiate our multi-agent framework
-        from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
+        from battle_agents.mcts_approximation.mcts_approximation_agent import \
+            MCTSApproximationAgent
         p1_agent = MCTSApproximationAgent(problem, iterations=80)
         p2_agent = MCTSAgent(problem, iterations=50, max_rollout_depth=20)
         
@@ -54,7 +57,16 @@ if __name__ == "__main__":
             print(f"\n--- Turn {turn} ---")
             p1_action = p1_agent.get_action(state, player="p1")
             p2_action = p2_agent.get_action(state, player="p2")
+            print(f"  P1 action: {p1_action} | P2 action: {p2_action}")
+            
             state = problem.result(state, p1_action=p1_action, p2_action=p2_action)
+            
+            # Print active Pokemon status
+            p1_active = next(p for p in state.state_dict['sides'][0]['pokemon'] if p['isActive'])
+            p2_active = next(p for p in state.state_dict['sides'][1]['pokemon'] if p['isActive'])
+            print(f"  P1 {p1_active['name']}: {p1_active['hp']}/{p1_active['maxhp']} ({p1_active['status']})")
+            print(f"  P2 {p2_active['name']}: {p2_active['hp']}/{p2_active['maxhp']} ({p2_active['status']})")
+            
             turn += 1
             
         print(f"\nSimulation ended at turn {turn-1}.")
@@ -64,9 +76,8 @@ if __name__ == "__main__":
             print("Match ended or Player 1 lost.")
             
         # Extract full battle log from the final state
-        # The battle engine returns the complete log history at each step
         full_log = state.log if state.log else []
-                
+        
         # Generate the replay
         replay_filename = "replay.html"
         generate_replay_html(full_log, replay_filename)

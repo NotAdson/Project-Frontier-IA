@@ -1,17 +1,19 @@
+import json
 import os
 import sys
-import json
 from concurrent.futures import ThreadPoolExecutor
-from flask import Flask, render_template, request, jsonify
+
+from flask import Flask, jsonify, render_template, request
 
 # Add src to path so we can import core and battle_agents
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from battle_agents.mcts_approximation.db.moves_db import get_move_data
+from battle_agents.mcts_approximation.mcts_approximation_agent import \
+    MCTSApproximationAgent
 from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
-from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
 
-from battle_agents.mcts_approximation.db.moves_db import get_move_data
 
 class GameController:
     def __init__(self):
@@ -202,6 +204,7 @@ def get_state():
     })
 
 import time
+
 
 def do_action_bg(p1_action, current_state):
     game.is_thinking = True

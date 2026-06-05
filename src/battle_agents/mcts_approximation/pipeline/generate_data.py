@@ -1,16 +1,19 @@
-import os
-from pathlib import Path
 import json
-import uuid
 import multiprocessing
-import traceback
+import os
 import random
-from core.client.showdown_client import ShowdownClient
-from core.problem.pokemon_problem import PokemonProblem
-from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
-from battle_agents.mcts.mcts_agent import MCTSAgent
-from battle_agents.mcts_approximation.state_encoder import encode_state
+import traceback
+import uuid
+from pathlib import Path
+
 from tqdm import tqdm
+
+from battle_agents.mcts.mcts_agent import MCTSAgent
+from battle_agents.mcts_approximation.mcts_approximation_agent import \
+    MCTSApproximationAgent
+from battle_agents.mcts_approximation.state_encoder import encode_state
+from core.client.cpp_client import CppClient
+from core.problem.pokemon_problem import PokemonProblem
 
 
 def run_simulation(args):
@@ -21,7 +24,8 @@ def run_simulation(args):
     """
     engine_path, formatid, mcts_iterations, use_cheating_mcts = args
     
-    client = ShowdownClient(engine_path)
+    lib_path = os.path.abspath(os.path.join(engine_path, "..", "new_engine", "libbattle.so"))
+    client = CppClient(lib_path, engine_path)
     try:
         problem = PokemonProblem(client, formatid=formatid)
         

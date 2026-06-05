@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+
 from core.problem.aima_problem import Problem
+
 
 class Agent(ABC):
     """

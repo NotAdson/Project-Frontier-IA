@@ -1,9 +1,12 @@
 import json
-import subprocess
 import os
+import subprocess
 import time
 
-class ShowdownClient:
+from core.client.base_client import BaseClient
+
+
+class ShowdownClient(BaseClient):
     def __init__(self, engine_path):
         self.engine_path = engine_path
         bridge_path = os.path.join(self.engine_path, 'bridge.js')
@@ -90,18 +93,3 @@ class ShowdownClient:
             self.process.terminate()
             self.process.wait()
 
-if __name__ == "__main__":
-    # Test
-    client = ShowdownClient(os.path.abspath("../battle_engine"))
-    print("Bridge ready!")
-    res = client.init_battle(formatid="gen3randombattle")
-    print("Initial state received. Actions available:")
-    request = res.get('request', {})
-    if 'active' in request and request['active']:
-        for move in request['active'][0]['moves']:
-            print(f" - move {move['move']}")
-            
-    print("\nExecuting a move...")
-    res2 = client.get_result(res['state'], p1_action="move 1")
-    print("New state received!")
-    client.close()

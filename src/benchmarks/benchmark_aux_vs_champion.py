@@ -1,14 +1,15 @@
-import os
 import json
+import os
 import sys
 from collections import defaultdict
 
 # Add src to python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from core.client.showdown_client import ShowdownClient
+from battle_agents.mcts_approximation.mcts_approximation_agent import \
+    MCTSApproximationAgent
 from benchmarks.round_robin import RoundRobinBenchmark
-from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
+from core.client.showdown_client import ShowdownClient
 
 if __name__ == "__main__":
     print("Initializing Showdown Engine for Benchmark...")

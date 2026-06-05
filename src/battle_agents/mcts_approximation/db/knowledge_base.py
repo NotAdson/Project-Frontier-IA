@@ -4,6 +4,7 @@ Combines multiple neural network predictions (species probability, base stats, t
 to query and match the closest real Pokémon in the database.
 """
 import numpy as np
+
 from battle_agents.mcts_approximation.db import species_db
 from battle_agents.mcts_approximation.state_encoder import TYPES, _encode_types
 

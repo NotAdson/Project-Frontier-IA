@@ -28,8 +28,12 @@ used (revealed) in battle, maintaining strict compliance with fog-of-war rules.
 
 import numpy as np
 
-from battle_agents.mcts_approximation.db.moves_db import get_move_data, get_move_idx
-from battle_agents.mcts_approximation.db.species_db import get_species_idx, get_item_idx, get_ability_idx, get_species_data
+from battle_agents.mcts_approximation.db.moves_db import (get_move_data,
+                                                          get_move_idx)
+from battle_agents.mcts_approximation.db.species_db import (get_ability_idx,
+                                                            get_item_idx,
+                                                            get_species_data,
+                                                            get_species_idx)
 
 STATUSES = ["tox", "brn", "par", "slp", "frz"]
 BOOST_STATS = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]

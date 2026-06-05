@@ -1,24 +1,23 @@
-import os
 import math
+import os
 import random
+
 import numpy as np
 
 # Keras is imported lazily inside __init__ as a fallback to avoid backend loading overhead
 keras = None
 
 from battle_agents.mcts_approximation.state_encoder import (
-    encode_state,
-    NUM_DENSE_FEATURES,
-    NUM_SPECIES_INDICES, NUM_MOVE_INDICES, NUM_ITEM_INDICES, NUM_ABILITY_INDICES,
-    OFF_SPECIES, OFF_MOVES, OFF_ITEMS, OFF_ABILITIES,
-    ACTION_SPACE,
-)
+    ACTION_SPACE, NUM_ABILITY_INDICES, NUM_DENSE_FEATURES, NUM_ITEM_INDICES,
+    NUM_MOVE_INDICES, NUM_SPECIES_INDICES, OFF_ABILITIES, OFF_ITEMS, OFF_MOVES,
+    OFF_SPECIES, encode_state)
 
 
 def _load_weights_mapped_keras(model, legacy_model_path):
-    import zipfile
-    import h5py
     import io
+    import zipfile
+
+    import h5py
     print(f"[NeuralStateEvaluator] Loading mapped weights from {legacy_model_path}...")
     with zipfile.ZipFile(legacy_model_path, "r") as z:
         weights_bytes = z.read("model.weights.h5")
@@ -189,7 +188,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         if onnx_path:
             try:
                 import onnxruntime as ort
-                
+
                 # Configure thread pools to avoid "pthread_create failed" (EAGAIN / Resource temporarily unavailable) in VMs
                 opts = ort.SessionOptions()
                 opts.intra_op_num_threads = 1
@@ -230,9 +229,13 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                         print(f"[Warning] Failed to load Keras model due to Keras version mismatch/deserialization issues: {err_keras}. "
                               "Attempting build_model + load_weights fallback...")
                         try:
-                            from battle_agents.mcts_approximation.pipeline.train_nn import build_model
-                            from battle_agents.mcts_approximation.db.species_db import get_num_species, get_num_items, get_num_abilities
-                            from battle_agents.mcts_approximation.db.moves_db import get_num_moves
+                            from battle_agents.mcts_approximation.db.moves_db import \
+                                get_num_moves
+                            from battle_agents.mcts_approximation.db.species_db import (
+                                get_num_abilities, get_num_items,
+                                get_num_species)
+                            from battle_agents.mcts_approximation.pipeline.train_nn import \
+                                build_model
                             
                             num_species = get_num_species()
                             num_moves = get_num_moves()
@@ -455,9 +458,11 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         Predicts the opponent's active Pokémon using the model's auxiliary heads.
         Returns the closest matching species from the Knowledge Base, including predicted moves.
         """
-        from battle_agents.mcts_approximation.db.knowledge_base import find_closest_species
-        from battle_agents.mcts_approximation.db.moves_db import _move_to_idx, _load_db
-        
+        from battle_agents.mcts_approximation.db.knowledge_base import \
+            find_closest_species
+        from battle_agents.mcts_approximation.db.moves_db import (_load_db,
+                                                                  _move_to_idx)
+
         # Build action mask (unused but needed for model call shape matching)
         mask_array = np.zeros((1, len(ACTION_SPACE)), dtype=np.float32)
         mask_array[0, ACTION_SPACE.index("pass")] = 1.0

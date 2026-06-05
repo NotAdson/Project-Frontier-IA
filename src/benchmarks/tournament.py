@@ -1,6 +1,8 @@
 import random
 from collections import defaultdict
+
 from core.benchmark import BaseBenchmark
+
 
 class TournamentBenchmark(BaseBenchmark):
     """ Benchmark that structures agents into a single-elimination bracket tournament. """

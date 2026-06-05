@@ -1,11 +1,12 @@
 import math
-import random
 import os
+import random
+
 import numpy as np
 
-from core.agent import Agent
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 from battle_agents.mcts_approximation.state_encoder import ACTION_SPACE
+from core.agent import Agent
 
 
 def select_p1_action(node, c_param=1.414):
@@ -74,7 +75,8 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         if evaluator is not None:
             self.evaluator = evaluator
         else:
-            from battle_agents.mcts_approximation.evaluator import NeuralStateEvaluator
+            from battle_agents.mcts_approximation.evaluator import \
+                NeuralStateEvaluator
             self.evaluator = NeuralStateEvaluator(model_path)
 
     # ─── MCTS loop ──────────────────────────────────────────────────────────
@@ -199,6 +201,7 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         This ensures MCTS opponent evaluation uses only public information.
         """
         import copy
+
         from core.problem.pokemon_problem import PokemonState
         
         state_dict = state.state_dict
@@ -249,6 +252,7 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         and returns a new state where this predicted information fills the unrevealed slots.
         """
         import copy
+
         from core.problem.pokemon_problem import PokemonState
         
         opp_player = "p2" if player == "p1" else "p1"

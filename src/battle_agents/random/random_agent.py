@@ -1,5 +1,7 @@
 import random
+
 from core.agent import Agent
+
 
 class RandomAgent(Agent):
     """

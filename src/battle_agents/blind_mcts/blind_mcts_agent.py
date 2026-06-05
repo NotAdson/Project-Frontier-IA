@@ -1,6 +1,8 @@
 import math
 import random
+
 from core.agent import Agent
+
 
 class MCTSNode:
     def __init__(self, state, parent=None, action=None):

@@ -1,8 +1,10 @@
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from core.problem.pokemon_problem import PokemonProblem
+
 from core.client.showdown_client import ShowdownClient
+from core.problem.pokemon_problem import PokemonProblem
+
 
 class BaseBenchmark(ABC):
     """

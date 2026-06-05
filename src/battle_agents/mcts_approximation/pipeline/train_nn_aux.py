@@ -7,22 +7,22 @@ Backend selection:
     KERAS_BACKEND=torch
     KERAS_BACKEND=jax
 """
-import os
 import json
+import os
 from pathlib import Path
-import numpy as np
+
 import keras
+import numpy as np
 
 from battle_agents.mcts_approximation.db.moves_db import get_num_moves
-from battle_agents.mcts_approximation.db.species_db import get_num_species, get_num_items, get_num_abilities
+from battle_agents.mcts_approximation.db.species_db import (get_num_abilities,
+                                                            get_num_items,
+                                                            get_num_species)
 from battle_agents.mcts_approximation.state_encoder import (
-    NUM_DENSE_FEATURES,
-    NUM_EMBEDDING_INDICES,
-    TOTAL_FEATURES,
-    NUM_SPECIES_INDICES, NUM_MOVE_INDICES, NUM_ITEM_INDICES, NUM_ABILITY_INDICES,
-    OFF_SPECIES, OFF_MOVES, OFF_ITEMS, OFF_ABILITIES,
-    ACTION_SPACE,
-)
+    ACTION_SPACE, NUM_ABILITY_INDICES, NUM_DENSE_FEATURES,
+    NUM_EMBEDDING_INDICES, NUM_ITEM_INDICES, NUM_MOVE_INDICES,
+    NUM_SPECIES_INDICES, OFF_ABILITIES, OFF_ITEMS, OFF_MOVES, OFF_SPECIES,
+    TOTAL_FEATURES)
 
 
 def _split_features(X: np.ndarray):

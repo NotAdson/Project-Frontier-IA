@@ -1,12 +1,13 @@
 import os
-from core.client.showdown_client import ShowdownClient
+import sys
+
+from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
+from battle_agents.mcts.mcts_agent import MCTSAgent
+from battle_agents.random.random_agent import RandomAgent
 from benchmarks.round_robin import RoundRobinBenchmark
 from benchmarks.tournament import TournamentBenchmark
-from battle_agents.random.random_agent import RandomAgent
-from battle_agents.mcts.mcts_agent import MCTSAgent
-from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
+from core.client.showdown_client import ShowdownClient
 
-import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 if __name__ == "__main__":

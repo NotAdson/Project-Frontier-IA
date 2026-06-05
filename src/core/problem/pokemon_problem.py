@@ -1,7 +1,9 @@
 import json
 import os
-from core.problem.aima_problem import Problem
+
 from core.client.showdown_client import ShowdownClient
+from core.problem.aima_problem import Problem
+
 
 class PokemonState:
     def __init__(self, state_dict, request_dict=None, p2_request_dict=None, log=None, winner=None, state_id=None):
@@ -87,8 +89,12 @@ class PokemonProblem(Problem):
         return self.client.rollout(state.state_dict, player, max_depth, state_id=state.state_id)
 
     def is_terminal(self, state: PokemonState):
-        """ Returns True if the match has ended. """
-        return state.winner is not None
+        """ Returns True if the match has ended (winner set, or 1000-turn draw). """
+        if state.winner is not None:
+            return True
+        # Fallback turn limit: mirrors Battle::MAX_TURNS = 1000 in C++ engine
+        turn = state.state_dict.get('turn', 0)
+        return turn >= 1000
 
     def is_goal(self, state: PokemonState):
         """ Returns True if Player 1 won the match. """

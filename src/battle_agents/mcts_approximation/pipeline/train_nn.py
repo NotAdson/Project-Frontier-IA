@@ -7,23 +7,22 @@ Backend selection:
     KERAS_BACKEND=torch
     KERAS_BACKEND=jax
 """
-import os
 import json
+import os
 from pathlib import Path
-import numpy as np
+
 import keras
+import numpy as np
 
 from battle_agents.mcts_approximation.db.moves_db import get_num_moves
-from battle_agents.mcts_approximation.db.species_db import get_num_species, get_num_items, get_num_abilities
+from battle_agents.mcts_approximation.db.species_db import (get_num_abilities,
+                                                            get_num_items,
+                                                            get_num_species)
 from battle_agents.mcts_approximation.state_encoder import (
-    NUM_DENSE_FEATURES,
-    NUM_EMBEDDING_INDICES,
-    TOTAL_FEATURES,
-    NUM_FIELD_FEATURES,
-    NUM_SPECIES_INDICES, NUM_MOVE_INDICES, NUM_ITEM_INDICES, NUM_ABILITY_INDICES,
-    OFF_SPECIES, OFF_MOVES, OFF_ITEMS, OFF_ABILITIES,
-    ACTION_SPACE,
-)
+    ACTION_SPACE, NUM_ABILITY_INDICES, NUM_DENSE_FEATURES,
+    NUM_EMBEDDING_INDICES, NUM_FIELD_FEATURES, NUM_ITEM_INDICES,
+    NUM_MOVE_INDICES, NUM_SPECIES_INDICES, OFF_ABILITIES, OFF_ITEMS, OFF_MOVES,
+    OFF_SPECIES, TOTAL_FEATURES)
 
 
 def _split_features(X: np.ndarray):
@@ -421,7 +420,7 @@ def export_to_onnx(model, onnx_path):
         if keras.backend.backend() == "torch":
             print("Keras is using 'torch' backend. Attempting torch.onnx.export...")
             import torch
-            
+
             # Pack inputs as a list inside a tuple ( [inputs...], ) to match Keras call signature
             dummy_inputs = (
                 [
@@ -496,9 +495,10 @@ def load_legacy_weights_with_padding(model, legacy_model_path):
     All other matching weights are loaded natively or mapped.
     """
     print(f"Loading legacy weights from {legacy_model_path}...")
-    import zipfile
-    import h5py
     import io
+    import zipfile
+
+    import h5py
     
     name_map = {
         "embedding": "meta_emb_species",

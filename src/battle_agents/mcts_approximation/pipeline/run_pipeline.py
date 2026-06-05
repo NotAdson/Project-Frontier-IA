@@ -1,23 +1,22 @@
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import glob
+import json
+import os
 import shutil
 import sys
-import json
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
-# Fix path to allow importing from core/battle_agents
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
-from battle_agents.mcts_approximation.pipeline.generate_data import generate_dataset
-from battle_agents.mcts_approximation.pipeline.train_nn import train
-from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
+from battle_agents.mcts_approximation.mcts_approximation_agent import \
+    MCTSApproximationAgent
+from battle_agents.mcts_approximation.pipeline.generate_data import \
+    generate_dataset
+from battle_agents.mcts_approximation.pipeline.train_nn import train
 from battle_agents.random.random_agent import RandomAgent
-
-from core.client.showdown_client import ShowdownClient
 from benchmarks.round_robin import RoundRobinBenchmark
+from core.client.cpp_client import CppClient
 
 
 def check_generation_won(gen_dir, gen_idx, champion_idx):
@@ -228,7 +227,8 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             print(f"[Skip Benchmark] Gen {gen} benchmark already completed and saved.")
         else:
             print(f"\n--- [Gen {gen}] Phase 4: Running Generational Round-Robin Tournament ---")
-            client = ShowdownClient(engine_path)
+            lib_path = os.path.abspath(os.path.join(engine_path, "..", "new_engine", "libbattle.so"))
+            client = CppClient(lib_path, engine_path)
             try:
                 # Build agent factories dynamically
                 agent_factories = {}
@@ -340,7 +340,6 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
 
 
 if __name__ == "__main__":
-    # Test settings: 4 self-play games per gen, 3 generations, 15 MCTS iterations, 2 training epochs, wipe=False
     run_pipeline(
         num_games=150, 
         num_generations=30, 
