@@ -36,7 +36,6 @@ class Battle {
 public:
     Side p1;
     Side p2;
-    static constexpr int MAX_TURNS = 1000;
     int turn_count = 1;
     std::string winner = "";
     Weather weather = Weather::NONE;
@@ -393,12 +392,6 @@ public:
     // Run one complete turn of the battle
     void run_turn(Action a1, Action a2) {
         if (!winner.empty()) return;
-
-        // --- TURN LIMIT: declare a draw after 1000 turns ---
-        if (turn_count >= MAX_TURNS) {
-            winner = "Tie";
-            return;
-        }
 
         // --- STEP 1: Handle Trapping switch verification ---
         bool p1_switch_trapped = (a1.type == ActionType::SWITCH && is_trapped(p1.get_active(), p2.get_active()));
@@ -1013,23 +1006,6 @@ public:
         // 10. Clean temporary turn tags (Destiny Bond)
         p1.get_active().destiny_bond_active = false;
         p2.get_active().destiny_bond_active = false;
-
-        // --- STEP 4b: Auto-resolve forced switches after faints ---
-        // If the active Pokémon fainted (from end-of-turn effects or combat),
-        // immediately switch to the first available benched Pokémon.
-        // This prevents MCTS from seeing "switch-only" states on the next turn.
-        auto resolve_faint = [&](Side& side) {
-            if (side.get_active().is_fainted() && side.has_usable_pokemon()) {
-                for (int i = 0; i < (int)side.team.size(); i++) {
-                    if (i != side.active_idx && !side.team[i].is_fainted()) {
-                        execute_switch(side, i);
-                        break;
-                    }
-                }
-            }
-        };
-        resolve_faint(p1);
-        resolve_faint(p2);
 
         // --- STEP 5: Victory/Defeat Check ---
         bool p1_alive = p1.has_usable_pokemon();
