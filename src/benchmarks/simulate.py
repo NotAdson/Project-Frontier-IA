@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from battle_agents.mcts.mcts_agent import MCTSAgent
 from battle_agents.random.random_agent import RandomAgent
-from core.client.cpp_client import CppClient
+from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -35,12 +35,11 @@ def generate_replay_html(full_log, filename="replay.html"):
     print(f"Replay saved to {filename}. Open this file in your browser!")
 
 if __name__ == "__main__":
-    lib_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "new_engine", "libbattle.so"))
     engine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "engine"))
-    client = CppClient(lib_path, engine_path)
+    client = ShowdownClient(engine_path)
     
     try:
-        print("Initializing C++ Battle Simulator...")
+        print("Initializing Battle Simulator...")
         problem = PokemonProblem(client, formatid="gen3randombattle")
         
         print("Running Monte Carlo Tree Search (MCTS) Simulation...")

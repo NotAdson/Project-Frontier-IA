@@ -11,8 +11,33 @@ import json
 import os
 from pathlib import Path
 
+# Configure PyTorch device before Keras is imported if using torch backend
+# NOTE: Do NOT call torch.set_default_device("cuda") here — it causes the Keras/PyTorch
+# DataLoader sampler to create a CUDA generator while training data is on CPU, resulting in:
+#   RuntimeError: Expected a 'cuda' device type for generator but found 'cpu'
+if os.environ.get("KERAS_BACKEND") == "torch":
+    import torch
+    if torch.cuda.is_available():
+        print("[PyTorch Backend] CUDA GPU detected.")
+    else:
+        print("[PyTorch Backend] CUDA GPU NOT detected. Defaulting to 'cpu'.")
+
 import keras
 import numpy as np
+
+
+class PrimaryLossCallback(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        policy_loss = logs.get("val_policy_loss", 0.0)
+        value_loss = logs.get("val_value_loss", 0.0)
+        # Combined validation loss: 5.0 * policy_loss + 1.0 * value_loss
+        logs["val_primary_loss"] = float(policy_loss * 5.0 + value_loss * 1.0)
+        
+        train_policy = logs.get("policy_loss", 0.0)
+        train_value = logs.get("value_loss", 0.0)
+        logs["primary_loss"] = float(train_policy * 5.0 + train_value * 1.0)
+
 
 from battle_agents.mcts_approximation.db.moves_db import get_num_moves
 from battle_agents.mcts_approximation.db.species_db import (get_num_abilities,
@@ -450,6 +475,7 @@ def export_to_onnx(model, onnx_path):
                     "aux_own_species", "aux_opp_species", "meta_plan"
                 ],
                 opset_version=18,
+                verbose=False,
             )
             print("ONNX export completed successfully using torch.onnx.export!")
             return True
@@ -924,7 +950,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             # Try to load directly (if model was already built/saved with action_mask and aux heads and deserialization succeeds)
             model = keras.models.load_model(model_save_path, compile=False)
             if len(model.outputs) != 18:
-                raise ValueError(f"Architecture mismatch: expected 16 outputs, got {len(model.outputs)}")
+                raise ValueError(f"Architecture mismatch: expected 18 outputs, got {len(model.outputs)}")
             print("Successfully loaded existing model with matching architecture. Recompiling for fine-tuning...")
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=1e-4),
@@ -941,7 +967,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
                 print(f"Custom legacy weight loading failed: {load_err}. Falling back to default initialization.")
             print("Successfully loaded weights. Compiling for fine-tuning...")
             model.compile(
-                optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+                optimizer=keras.optimizers.Adam(learning_rate=3e-4),
                 loss=losses,
                 loss_weights=loss_weights,
                 metrics={"value": "mae", "policy": "accuracy"}
@@ -967,7 +993,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
 
     model.summary()
 
-    callbacks = []
+    callbacks = [PrimaryLossCallback()]
     
     # Save training history to CSV log file
     save_path = Path(model_save_path)
@@ -977,7 +1003,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     
     if val_data is not None:
         callbacks.append(keras.callbacks.EarlyStopping(
-            monitor="val_loss",
+            monitor="val_primary_loss",
             patience=5,
             restore_best_weights=True,
             verbose=1,

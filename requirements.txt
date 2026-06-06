@@ -5,7 +5,8 @@ pyyaml>=6.0
 
 # ── Backend (install exactly ONE) ──────────────────────────────────────────
 # TensorFlow  : pip install tensorflow
-# PyTorch     : pip install torch
+# PyTorch (GPU): pip install torch
+# PyTorch (CPU): pip install torch --index-url https://download.pytorch.org/whl/cpu
 # JAX (CPU)   : pip install jax
 # JAX (GPU)   : pip install "jax[cuda12]"
 #

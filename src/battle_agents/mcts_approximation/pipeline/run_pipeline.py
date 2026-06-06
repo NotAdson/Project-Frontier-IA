@@ -16,7 +16,20 @@ from battle_agents.mcts_approximation.pipeline.generate_data import \
 from battle_agents.mcts_approximation.pipeline.train_nn import train
 from battle_agents.random.random_agent import RandomAgent
 from benchmarks.round_robin import RoundRobinBenchmark
-from core.client.cpp_client import CppClient
+from core.client.showdown_client import ShowdownClient
+
+
+def copy_onnx(src_onnx: str, dst_onnx: str):
+    """Copy an ONNX model, including the external .onnx.data file if present."""
+    if os.path.exists(src_onnx):
+        shutil.copy(src_onnx, dst_onnx)
+    src_data = src_onnx + ".data"
+    dst_data = dst_onnx + ".data"
+    if os.path.exists(src_data):
+        shutil.copy(src_data, dst_data)
+    elif os.path.exists(dst_data):
+        # Remove stale .data file if the new model doesn't have one
+        os.remove(dst_data)
 
 
 def check_generation_won(gen_dir, gen_idx, champion_idx):
@@ -171,8 +184,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             if os.path.exists(champion_keras):
                 shutil.copy(champion_keras, model_path)
                 print(f"[Self-Play Setup] Copied Champion Gen {champion_gen} model to root for self-play.")
-            if os.path.exists(champion_onnx):
-                shutil.copy(champion_onnx, onnx_path)
+            copy_onnx(champion_onnx, onnx_path)
                 
         # Check if this generation's self-play dataset is already complete
         games_count = len(glob.glob(os.path.join(next_gen_dir, "game_*.json")))
@@ -196,8 +208,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             print(f"[Skip Training] Gen {gen} model already exists in archive.")
             # Restore model to root for next generation's self-play
             shutil.copy(os.path.join(next_gen_dir, "mcts_model.keras"), model_path)
-            if os.path.exists(os.path.join(next_gen_dir, "mcts_model.onnx")):
-                shutil.copy(os.path.join(next_gen_dir, "mcts_model.onnx"), onnx_path)
+            copy_onnx(os.path.join(next_gen_dir, "mcts_model.onnx"), onnx_path)
         else:
             # --- PHASE 2: Neural Network Training ---
             print(f"\n--- [Gen {gen}] Phase 2: Training Neural Network ---")
@@ -211,8 +222,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             # --- PHASE 3: Archive Model ---
             print(f"\n--- [Gen {gen}] Phase 3: Archiving Model & Logs ---")
             shutil.copy(model_path, os.path.join(next_gen_dir, "mcts_model.keras"))
-            if os.path.exists(onnx_path):
-                shutil.copy(onnx_path, os.path.join(next_gen_dir, "mcts_model.onnx"))
+            copy_onnx(onnx_path, os.path.join(next_gen_dir, "mcts_model.onnx"))
             
             # Copy training history log to the generation archive
             log_path = os.path.join(data_dir, "training_log.csv")
@@ -227,8 +237,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             print(f"[Skip Benchmark] Gen {gen} benchmark already completed and saved.")
         else:
             print(f"\n--- [Gen {gen}] Phase 4: Running Generational Round-Robin Tournament ---")
-            lib_path = os.path.abspath(os.path.join(engine_path, "..", "new_engine", "libbattle.so"))
-            client = CppClient(lib_path, engine_path)
+            client = ShowdownClient(engine_path)
             try:
                 # Build agent factories dynamically
                 agent_factories = {}
@@ -324,8 +333,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             champion_onnx = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.onnx")
             if os.path.exists(champion_keras):
                 shutil.copy(champion_keras, model_path)
-            if os.path.exists(champion_onnx):
-                shutil.copy(champion_onnx, onnx_path)
+            copy_onnx(champion_onnx, onnx_path)
                 
         # --- Early Stopping Evaluation: learning quality check ---
         if gen - champion_gen >= 10:
@@ -341,10 +349,10 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
 
 if __name__ == "__main__":
     run_pipeline(
-        num_games=150, 
+        num_games=300, 
         num_generations=30, 
-        mcts_iterations=300, 
-        epochs=50, 
+        mcts_iterations=100, 
+        epochs=100, 
         wipe=False,
         games_per_matchup=10,
         max_rollout_depth=30,

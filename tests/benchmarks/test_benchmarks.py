@@ -3,7 +3,7 @@ import sys
 import pytest
 from unittest.mock import patch
 
-from core.client.cpp_client import CppClient
+from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
 from battle_agents.random.random_agent import RandomAgent
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
@@ -14,14 +14,13 @@ from benchmarks.tournament import TournamentBenchmark
 from benchmarks.round_robin import RoundRobinBenchmark
 
 # Setup path constants
-LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../new_engine/libbattle.so'))
 ENGINE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../engine'))
 MODEL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src/data/mcts_model.keras'))
 
 @pytest.fixture(scope="module")
 def client():
-    # Use CppClient for fast testing
-    cli = CppClient(LIB_PATH, ENGINE_PATH)
+    # Use ShowdownClient
+    cli = ShowdownClient(ENGINE_PATH)
     yield cli
     cli.close()
 

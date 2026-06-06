@@ -44,7 +44,7 @@ function getValidActions(battle, player) {
 }
 
 // Cache settings to avoid memory leaks
-const MAX_CACHE_SIZE = 2000;
+const MAX_CACHE_SIZE = 500;
 const stateCache = new Map();
 const stateIdQueue = [];
 let nextStateId = 1;
@@ -174,6 +174,10 @@ rl.on('line', (line) => {
                 reward: reward
             };
             console.log(JSON.stringify(response));
+        } else if (request.type === 'clear_cache') {
+            stateCache.clear();
+            stateIdQueue.length = 0;
+            console.log(JSON.stringify({ type: "success" }));
         }
     } catch (e) {
         console.log(JSON.stringify({ type: "error", error: e.message, stack: e.stack }));

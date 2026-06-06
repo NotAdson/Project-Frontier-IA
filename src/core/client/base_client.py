@@ -34,3 +34,9 @@ class BaseClient(ABC):
         Cleans up resources.
         """
         pass
+
+    def clear_cache(self) -> None:
+        """
+        Clears any state caches to free memory.
+        """
+        pass

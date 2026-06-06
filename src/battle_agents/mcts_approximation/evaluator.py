@@ -3,6 +3,7 @@ import os
 import random
 
 import numpy as np
+import threading
 
 # Keras is imported lazily inside __init__ as a fallback to avoid backend loading overhead
 keras = None
@@ -135,6 +136,57 @@ def _load_weights_mapped_keras(model, legacy_model_path):
     print("[NeuralStateEvaluator] Mapped weight loading completed successfully.")
 
 
+def _preload_nvidia_cuda_libs():
+    import glob
+    import os
+    import ctypes
+    import sys
+    
+    # Try to find the nvidia base directory in site-packages
+    possible_nvidia_dirs = [
+        # Conda base site-packages
+        "/home/adson/Apps/miniconda3/lib/python3.13/site-packages/nvidia",
+        # Local .venv site-packages
+        os.path.join(os.path.dirname(__file__), "../../../.venv/lib/python3.13/site-packages/nvidia"),
+    ]
+    # Also add standard sys.path locations
+    for p in sys.path:
+        possible_nvidia_dirs.append(os.path.join(p, "nvidia"))
+        
+    nvidia_dir = None
+    for d in possible_nvidia_dirs:
+        if os.path.isdir(d):
+            nvidia_dir = d
+            break
+            
+    if not nvidia_dir:
+        return
+        
+    # Order of loading to resolve dependencies:
+    libs_to_load = [
+        "cuda_runtime/lib/libcudart.so.*",
+        "nvjitlink/lib/libnvjitlink.so.*",
+        "cublas/lib/libcublasLt.so.*",
+        "cublas/lib/libcublas.so.*",
+        "cufft/lib/libcufft.so.*",
+        "curand/lib/libcurand.so.*",
+        "cusparse/lib/libcusparse.so.*",
+        "cusolver/lib/libcusolver.so.*",
+        "cudnn/lib/libcudnn.so.*"
+    ]
+    
+    for lib_pattern in libs_to_load:
+        full_pattern = os.path.join(nvidia_dir, lib_pattern)
+        matching_files = glob.glob(full_pattern)
+        if matching_files:
+            lib_path = sorted(matching_files)[-1]
+            try:
+                # Load globally so onnxruntime dynamic linker can see it
+                ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
+            except Exception:
+                pass
+
+
 class BaseStateEvaluator:
     """
     Abstract Base Class for state evaluation in Neural Monte Carlo Tree Search.
@@ -175,7 +227,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
 
         # Check for ONNX model first
         onnx_path = None
-        if model_path:
+        if model_path and os.environ.get("DISABLE_ONNX") != "1":
             possible_onnx_paths = [
                 model_path,
                 model_path.replace(".keras", ".onnx").replace(".h5", ".onnx")
@@ -187,6 +239,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
 
         if onnx_path:
             try:
+                _preload_nvidia_cuda_libs()
                 import onnxruntime as ort
 
                 # Configure thread pools to avoid "pthread_create failed" (EAGAIN / Resource temporarily unavailable) in VMs
@@ -194,16 +247,25 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 opts.intra_op_num_threads = 1
                 opts.inter_op_num_threads = 1
                 opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
-                
-                # Load with CPU Execution Provider to ensure strictly CPU execution
+                # By default we use CPUExecutionProvider for batch-size 1 MCTS inference because it is significantly faster (no PCIe copy overhead).
+                # To override and use GPU, set the environment variable USE_GPU_INFERENCE=1.
+                providers = ['CPUExecutionProvider']
+                if os.environ.get("USE_GPU_INFERENCE") == "1" and 'CUDAExecutionProvider' in ort.get_available_providers():
+                    providers = ['CUDAExecutionProvider'] + providers
+                    print("[NeuralStateEvaluator] Using CUDAExecutionProvider for ONNX inference")
+                else:
+                    print("[NeuralStateEvaluator] Using CPUExecutionProvider for ONNX inference (optimized for batch size = 1)")
+
                 self.onnx_session = ort.InferenceSession(
                     onnx_path, 
                     sess_options=opts, 
-                    providers=['CPUExecutionProvider']
+                    providers=providers
                 )
                 self.input_names = [inp.name for inp in self.onnx_session.get_inputs()]
                 self.output_names = [out.name for out in self.onnx_session.get_outputs()]
-                print(f"[NeuralStateEvaluator] Loaded ONNX model from {onnx_path} using onnxruntime (CPU, 1 thread)")
+                active_providers = self.onnx_session.get_providers()
+                provider_str = ", ".join(active_providers)
+                print(f"[NeuralStateEvaluator] Loaded ONNX model from {onnx_path} using onnxruntime ({provider_str})")
             except Exception as e:
                 print(f"[Warning] Failed to load ONNX model using onnxruntime: {e}. Falling back to Keras.")
 
@@ -306,6 +368,30 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 print(f"[Warning] Could not inspect Keras model input shape: {e}. Defaulting to {NUM_DENSE_FEATURES}")
         print(f"[NeuralStateEvaluator] Configured expected dense dimension: {self.expected_dense_dim}")
 
+        # Configure embedding limits to prevent index out of bounds crashes
+        self.max_move_idx = 357
+        self.max_species_idx = 388
+        self.max_item_idx = 200
+        self.max_ability_idx = 200
+        
+        if self.model is not None:
+            try:
+                self.max_move_idx = self.model.get_layer("meta_emb_moves").input_dim
+            except Exception:
+                pass
+            try:
+                self.max_species_idx = self.model.get_layer("meta_emb_species").input_dim
+            except Exception:
+                pass
+            try:
+                self.max_item_idx = self.model.get_layer("meta_emb_items").input_dim
+            except Exception:
+                pass
+            try:
+                self.max_ability_idx = self.model.get_layer("meta_emb_abilities").input_dim
+            except Exception:
+                pass
+
     def _build_inputs(self, features: np.ndarray) -> dict:
         """
         Splits the flat feature vector into the 5 named model inputs.
@@ -325,12 +411,23 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             features_dense = features[:NUM_DENSE_FEATURES]
             features_embed = features[NUM_DENSE_FEATURES:]
         
-        # Copy to pre-allocated buffers
+        # Copy to pre-allocated buffers with index clipping
+        species_in = features_embed[OFF_SPECIES : OFF_SPECIES + NUM_SPECIES_INDICES]
+        moves_in = features_embed[OFF_MOVES : OFF_MOVES + NUM_MOVE_INDICES]
+        items_in = features_embed[OFF_ITEMS : OFF_ITEMS + NUM_ITEM_INDICES]
+        abilities_in = features_embed[OFF_ABILITIES : OFF_ABILITIES + NUM_ABILITY_INDICES]
+        
+        # Clip indices exceeding limits to 0 (padding/unknown)
+        species_in = np.where(species_in < self.max_species_idx, species_in, 0)
+        moves_in = np.where(moves_in < self.max_move_idx, moves_in, 0)
+        items_in = np.where(items_in < self.max_item_idx, items_in, 0)
+        abilities_in = np.where(abilities_in < self.max_ability_idx, abilities_in, 0)
+        
         self._buf_dense[0, :self.expected_dense_dim] = features_dense
-        self._buf_species[0, :] = features_embed[OFF_SPECIES : OFF_SPECIES + NUM_SPECIES_INDICES]
-        self._buf_moves[0, :] = features_embed[OFF_MOVES : OFF_MOVES + NUM_MOVE_INDICES]
-        self._buf_items[0, :] = features_embed[OFF_ITEMS : OFF_ITEMS + NUM_ITEM_INDICES]
-        self._buf_abilities[0, :] = features_embed[OFF_ABILITIES : OFF_ABILITIES + NUM_ABILITY_INDICES]
+        self._buf_species[0, :] = species_in
+        self._buf_moves[0, :] = moves_in
+        self._buf_items[0, :] = items_in
+        self._buf_abilities[0, :] = abilities_in
 
         return {
             "dense_features":   self._buf_dense[:, :self.expected_dense_dim],
@@ -429,8 +526,16 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             if isinstance(pred, (list, tuple)) and len(pred) >= 2:
                 value_pred = pred[0]
                 policy_pred = pred[1]
-                reward = float(np.array(value_pred)[0][0])
-                policy_probs = np.array(policy_pred)[0]
+                # Move to CPU before numpy conversion (handles CUDA tensors)
+                def _to_np(t):
+                    try:
+                        if hasattr(t, 'cpu'):
+                            return t.cpu().detach().numpy()
+                        return np.array(t)
+                    except Exception:
+                        return np.array(t)
+                reward = float(_to_np(value_pred)[0][0])
+                policy_probs = _to_np(policy_pred)[0]
 
                 for a in valid_actions:
                     idx = ACTION_SPACE.index(a) if a in ACTION_SPACE else ACTION_SPACE.index("pass")
@@ -581,4 +686,8 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 return res
                 
         return None
+
+
+
+
 

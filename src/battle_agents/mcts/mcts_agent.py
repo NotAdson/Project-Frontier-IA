@@ -95,6 +95,9 @@ class MCTSAgent(Agent):
                 node.value += reward
                 node = node.parent
                 
+        # Clear engine cache after MCTS search finishes to free memory
+        self.problem.client.clear_cache()
+
         if not root.children:
             actions = self.problem.actions(state, player)
             best_action = random.choice(actions) if actions else "pass"

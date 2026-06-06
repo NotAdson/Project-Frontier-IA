@@ -12,7 +12,7 @@ from battle_agents.mcts.mcts_agent import MCTSAgent
 from battle_agents.mcts_approximation.mcts_approximation_agent import \
     MCTSApproximationAgent
 from battle_agents.mcts_approximation.state_encoder import encode_state
-from core.client.cpp_client import CppClient
+from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
 
 
@@ -24,8 +24,7 @@ def run_simulation(args):
     """
     engine_path, formatid, mcts_iterations, use_cheating_mcts = args
     
-    lib_path = os.path.abspath(os.path.join(engine_path, "..", "new_engine", "libbattle.so"))
-    client = CppClient(lib_path, engine_path)
+    client = ShowdownClient(engine_path)
     try:
         problem = PokemonProblem(client, formatid=formatid)
         
@@ -81,6 +80,11 @@ def run_simulation(args):
 
 
 def generate_dataset(num_games=1000, processes=None, output_dir="data/games", mcts_iterations=100, use_cheating_mcts=False):
+    try:
+        multiprocessing.set_start_method('spawn', force=True)
+    except RuntimeError:
+        pass
+
     if processes is None:
         processes = max(1, multiprocessing.cpu_count() - 2)
 
