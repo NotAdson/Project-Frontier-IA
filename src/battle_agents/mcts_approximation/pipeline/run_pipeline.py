@@ -100,12 +100,12 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
       games_per_matchup: Number of matches played between each pair of agents during round-robin tournament evaluation.
       max_rollout_depth: The rollout search depth limit for the Blind MCTS agent.
     """
-    print(f"=== AlphaZero Pipeline Training ===")
+    print("=== Pipeline Training ===")
     print(f"Parameters: num_games={num_games}, mcts_iterations={mcts_iterations}, epochs={epochs}")
     print(f"Wipe: {wipe} | games_per_matchup={games_per_matchup} | max_rollout_depth={max_rollout_depth}")
     
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"))
-    model_path = os.path.join(data_dir, "mcts_model.keras")
+    keras_path = os.path.join(data_dir, "mcts_model.keras")
     onnx_path = os.path.join(data_dir, "mcts_model.onnx")
     
     # --- PHASE 0: Clean slate if wipe=True ---
@@ -115,9 +115,9 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             print(f"Removing generation directory: {gen_dir}")
             shutil.rmtree(gen_dir, ignore_errors=True)
             
-        if os.path.exists(model_path):
-            print(f"Removing Keras model: {model_path}")
-            os.remove(model_path)
+        if os.path.exists(keras_path):
+            print(f"Removing Keras model: {keras_path}")
+            os.remove(keras_path)
         if os.path.exists(onnx_path):
             print(f"Removing ONNX model: {onnx_path}")
             os.remove(onnx_path)
@@ -173,16 +173,14 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         next_gen_dir = os.path.join(data_dir, f"gen{gen}")
         os.makedirs(next_gen_dir, exist_ok=True)
         
-        print(f"\n========================================================")
-        print(f" Starting Generation {gen} / {end_gen}")
-        print(f"========================================================")
+        print("=" * 20 + f"\nStarting Generation {gen} / {end_gen}n" + "=" * 20)
         
         # Ensure root model matches the current champion for self-play
         if gen > 1:
             champion_keras = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.keras")
             champion_onnx = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.onnx")
             if os.path.exists(champion_keras):
-                shutil.copy(champion_keras, model_path)
+                shutil.copy(champion_keras, keras_path)
                 print(f"[Self-Play Setup] Copied Champion Gen {champion_gen} model to root for self-play.")
             copy_onnx(champion_onnx, onnx_path)
                 
@@ -207,21 +205,21 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         if model_archived:
             print(f"[Skip Training] Gen {gen} model already exists in archive.")
             # Restore model to root for next generation's self-play
-            shutil.copy(os.path.join(next_gen_dir, "mcts_model.keras"), model_path)
+            shutil.copy(os.path.join(next_gen_dir, "mcts_model.keras"), keras_path)
             copy_onnx(os.path.join(next_gen_dir, "mcts_model.onnx"), onnx_path)
         else:
             # --- PHASE 2: Neural Network Training ---
             print(f"\n--- [Gen {gen}] Phase 2: Training Neural Network ---")
             train(
                 data_dir=data_dir, 
-                model_save_path=model_path, 
+                model_save_path=keras_path, 
                 max_games_buffer=10000, 
                 epochs=epochs
             )
             
             # --- PHASE 3: Archive Model ---
             print(f"\n--- [Gen {gen}] Phase 3: Archiving Model & Logs ---")
-            shutil.copy(model_path, os.path.join(next_gen_dir, "mcts_model.keras"))
+            shutil.copy(keras_path, os.path.join(next_gen_dir, "mcts_model.keras"))
             copy_onnx(onnx_path, os.path.join(next_gen_dir, "mcts_model.onnx"))
             
             # Copy training history log to the generation archive
@@ -247,7 +245,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                     agent_factories[f"Model Gen {gen}"] = lambda prob: MCTSApproximationAgent(
                         prob, 
                         iterations=mcts_iterations, 
-                        model_path=model_path
+                        model_path=onnx_path
                     )
                     agent_factories["Blind MCTS"] = lambda prob: BlindMCTSAgent(
                         prob, 
@@ -260,7 +258,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                     agent_factories[f"Model Gen {gen}"] = lambda prob: MCTSApproximationAgent(
                         prob, 
                         iterations=mcts_iterations, 
-                        model_path=model_path
+                        model_path=onnx_path
                     )
                     champion_model_path = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.keras")
                     agent_factories[f"Model Gen {champion_gen}"] = lambda prob, p=champion_model_path: MCTSApproximationAgent(
@@ -332,14 +330,14 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             champion_keras = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.keras")
             champion_onnx = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.onnx")
             if os.path.exists(champion_keras):
-                shutil.copy(champion_keras, model_path)
+                shutil.copy(champion_keras, keras_path)
             copy_onnx(champion_onnx, onnx_path)
                 
         # --- Early Stopping Evaluation: learning quality check ---
         if gen - champion_gen >= 10:
             print("\n========================================================")
             print(" [Early Stopping] Pipeline Halted Early!")
-            print(f" Reason: The champion has not been updated for the last 3 generations.")
+            print(" Reason: The champion has not been updated for the last 3 generations.")
             print(f" Current Champion: Gen {champion_gen} | Current Generation: {gen}")
             print("========================================================\n")
             break

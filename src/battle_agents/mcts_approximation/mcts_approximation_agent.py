@@ -1,12 +1,10 @@
 import math
-import os
 import random
 
 import numpy as np
 
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
-from battle_agents.mcts_approximation.state_encoder import ACTION_SPACE
-from core.agent import Agent
+from battle_agents.mcts_approximation.evaluator import NeuralStateEvaluator
 
 
 def select_p1_action(node, c_param=1.414):
@@ -68,20 +66,13 @@ class MCTSApproximationAgent(BlindMCTSAgent):
     MCTS Approximation Agent using Decoupled UCT (DUCT) to support simultaneous decision-making.
     Replaces random rollouts with a Neural Network evaluation of the state.
     """
-    def __init__(self, problem, iterations=50, evaluator=None, model_path="data/mcts_model.keras", **kwargs):
+    def __init__(self, problem, iterations=50, model_path=None):
         super().__init__(problem, iterations=iterations, max_rollout_depth=0)
-
-        # Pluggable state evaluator
-        if evaluator is not None:
-            self.evaluator = evaluator
-        else:
-            from battle_agents.mcts_approximation.evaluator import \
-                NeuralStateEvaluator
-            self.evaluator = NeuralStateEvaluator(model_path)
+        self.evaluator = NeuralStateEvaluator(model_path)
 
     # ─── MCTS loop ──────────────────────────────────────────────────────────
 
-    def get_action(self, state, player="p1", return_probs=False, temperature=0.0, **kwargs):
+    def get_action(self, state, player="p1", return_probs=False, temperature=0.0):
         valid_actions = self.problem.actions(state, player)
         if len(valid_actions) <= 1:
             action = valid_actions[0] if valid_actions else "pass"
