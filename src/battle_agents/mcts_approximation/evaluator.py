@@ -35,7 +35,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
     Concrete State Evaluator that uses a Keras or ONNX Neural Network
     to estimate state values and move probabilities.
     """
-    def __init__(self, model_path=None):
+    def __init__(self, model_path):
         """Create a NeuralStateEvaluator.
 
         Args:
@@ -54,49 +54,37 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         self._buf_items = np.zeros((1, NUM_ITEM_INDICES), dtype=np.int32)
         self._buf_abilities = np.zeros((1, NUM_ABILITY_INDICES), dtype=np.int32)
 
-        # Load ONNX model
-        onnx_path = None
-        if model_path:
-            if model_path.endswith(".onnx") and os.path.exists(model_path):
-                onnx_path = model_path
-            else:
-                raise FileNotFoundError(f"ONNX model not found or invalid at '{model_path}'. Expected a .onnx file.")
+        # Load model
+        if not (model_path.endswith(".onnx") and os.path.exists(model_path)):
+            raise FileNotFoundError(f"ONNX model not found or invalid at '{model_path}'. Expected a .onnx file.")
 
-        if onnx_path:
-            try:
-                # By default we use CPUExecutionProvider for batch-size 1 because it is significantly faster.
-                providers = ['CPUExecutionProvider']
+        # By default we use CPUExecutionProvider for batch-size 1 because it is significantly faster.
+        providers = ['CPUExecutionProvider']
 
-                # Configure ONNX Runtime to run single‑threaded (fastest for batch‑size‑1 inference
-                opts = ort.SessionOptions()
-                opts.intra_op_num_threads = 1
-                opts.inter_op_num_threads = 1
-                opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+        # Configure ONNX Runtime to run single‑threaded (fastest for batch‑size‑1 inference
+        opts = ort.SessionOptions()
+        opts.intra_op_num_threads = 1
+        opts.inter_op_num_threads = 1
+        opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
 
-                self.onnx_session = ort.InferenceSession(
-                    onnx_path,
-                    sess_options=opts,
-                    providers=providers,
-                )
-                self.input_names = [inp.name for inp in self.onnx_session.get_inputs()]
-                self.output_names = [out.name for out in self.onnx_session.get_outputs()]
-                active_providers = self.onnx_session.get_providers()
-                provider_str = ", ".join(active_providers)
-                print(f"[NeuralStateEvaluator] Loaded ONNX model from {onnx_path} using onnxruntime ({provider_str})")
-            except Exception as e:
-                print(f"[Warning] Failed to load ONNX model using onnxruntime: {e}.")
-        
+        self.onnx_session = ort.InferenceSession(
+            model_path,
+            sess_options=opts,
+            providers=providers,
+        )
+        self.input_names = [inp.name for inp in self.onnx_session.get_inputs()]
+        self.output_names = [out.name for out in self.onnx_session.get_outputs()]
         
         # Determine expected dense_features dimension from the loaded model/session
-        self.expected_dense_dim = NUM_DENSE_FEATURES
-        if self.onnx_session is not None:
-            try:
-                for inp in self.onnx_session.get_inputs():
-                    if "dense_features" in inp.name:
-                        self.expected_dense_dim = inp.shape[1]
-                        break
-            except Exception as e:
-                print(f"[Warning] Could not inspect ONNX input shape: {e}. Defaulting to {NUM_DENSE_FEATURES}")
+        found = False
+        for inp in self.onnx_session.get_inputs():
+            if "dense_features" in inp.name:
+                self.expected_dense_dim = inp.shape[1]
+                found = True
+                break
+        if not found:
+            raise RuntimeError("ONNX model does not contain a 'dense_features' input")
+
 
         print(f"[NeuralStateEvaluator] Configured expected dense dimension: {self.expected_dense_dim}")
 
