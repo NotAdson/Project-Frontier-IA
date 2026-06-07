@@ -5,8 +5,11 @@ from battle_agents.mcts_approximation.state_encoder import (
 
 import os
 import numpy as np
+import logging
 
 import onnxruntime as ort
+
+logger = logging.getLogger(__name__)
 
 class BaseStateEvaluator:
     """
@@ -94,6 +97,11 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         self.max_item_idx = 200
         self.max_ability_idx = 200
 
+    def _prepare_inputs_base(self, state, player: str) -> dict:
+        """Encode state and build input buffers (without action mask)."""
+        features = encode_state(state, player)
+        return self._build_inputs(features)
+
     def _build_inputs(self, features: np.ndarray) -> dict:
         """
         Split the flat feature vector into the model's inputs.
@@ -109,6 +117,20 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         moves_in = features_embed[OFF_MOVES : OFF_MOVES + NUM_MOVE_INDICES]
         items_in = features_embed[OFF_ITEMS : OFF_ITEMS + NUM_ITEM_INDICES]
         abilities_in = features_embed[OFF_ABILITIES : OFF_ABILITIES + NUM_ABILITY_INDICES]
+
+        # Warn about out-of-range indices (helps detect data issues)
+        def _warn_if_invalid(arr, name, max_idx):
+            invalid = arr[arr >= max_idx]
+            if invalid.size:
+                logger.warning(
+                    "%s contains %d out-of-range indices (>= %d): %s",
+                    name, invalid.size, max_idx, invalid
+                )
+
+        _warn_if_invalid(species_in, "species_indices", self.max_species_idx)
+        _warn_if_invalid(moves_in, "move_indices", self.max_move_idx)
+        _warn_if_invalid(items_in, "item_indices", self.max_item_idx)
+        _warn_if_invalid(abilities_in, "ability_indices", self.max_ability_idx)
 
         # Clip indices exceeding limits to 0 (padding/unknown)
         species_in = np.where(species_in < self.max_species_idx, species_in, 0)
@@ -137,16 +159,14 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         Returns a tuple (opp_stats, opp_types, opp_species, opp_moves). If a particular
         output is not found, the corresponding entry will be ``None``.
         """
-        # Initialise all as None
         opp_stats = opp_types = opp_species = opp_moves = None
-        # Mapping from identifier substring to variable name
         name_map = {
             "aux_opp_stats": "opp_stats",
             "aux_opp_types": "opp_types",
             "aux_opp_species": "opp_species",
             "aux_opp_moves": "opp_moves",
         }
-        # Iterate over output names and assign when a key matches
+
         for idx, name in enumerate(self.output_names):
             for key, var in name_map.items():
                 if key in name:
@@ -160,183 +180,86 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                         opp_moves = ort_outs[idx][0]
         return opp_stats, opp_types, opp_species, opp_moves
 
-        
-
     def evaluate(self, state, player: str, valid_actions: list) -> tuple[float, dict[str, float]]:
-        action_probs = {}
+        # Prepare base inputs
+        inputs = self._prepare_inputs_base(state, player)
         
         # Build binary action mask
         mask_array = np.zeros((1, len(ACTION_SPACE)), dtype=np.float32)
         for a in valid_actions:
             if a in ACTION_SPACE:
                 mask_array[0, ACTION_SPACE.index(a)] = 1.0
+        inputs["action_mask"] = mask_array
+
+        # Run the model (ONNX only)
+        if self.onnx_session is None:
+            raise RuntimeError("ONNX model not loaded. Please provide a valid .onnx file path.")
         
-        if self.onnx_session is not None:
-            features = encode_state(state, player)
-            inputs = self._build_inputs(features)
-            inputs["action_mask"] = mask_array
-            
-            # Map Python dictionary inputs to exact ONNX session input names
-            ort_inputs = {}
-            for name in self.input_names:
-                clean_name = name.split(':')[0]
-                if clean_name in inputs:
-                    ort_inputs[name] = inputs[clean_name]
-                else:
-                    # Fuzzy match fallback
-                    matched = False
-                    for k in inputs:
-                        if k in name or name in k:
-                            ort_inputs[name] = inputs[k]
-                            matched = True
-                            break
-                    if not matched:
-                        pass
+        ort_inputs = {}
+        for name in self.input_names:
+            clean_name = name.split(":")[0]
+            if clean_name not in inputs:
+                raise ValueError(f"Missing ONNX input '{name}' (clean: '{clean_name}')")
+            ort_inputs[name] = inputs[clean_name]
+        ort_outs = self.onnx_session.run(self.output_names, ort_inputs)
+        value_pred, policy_pred = ort_outs[0], ort_outs[1]
 
-            try:
-                ort_outs = self.onnx_session.run(self.output_names, ort_inputs)
-                
-                # Resolve ONNX outputs using explicit name mapping
-                value_pred, policy_pred = ort_outs[0], ort_outs[1]
+        # Process outputs
+        reward = float(value_pred[0][0])
+        policy_probs = policy_pred[0]
 
-                reward = float(value_pred[0][0])
-                policy_probs = policy_pred[0]
+        for a in valid_actions:
+            idx = ACTION_SPACE.index(a) if a in ACTION_SPACE else ACTION_SPACE.index("pass")
+            action_probs[a] = float(policy_probs[idx])
 
-                for a in valid_actions:
-                    idx = ACTION_SPACE.index(a) if a in ACTION_SPACE else ACTION_SPACE.index("pass")
-                    action_probs[a] = float(policy_probs[idx])
-
-                s = sum(action_probs.values())
-                if s > 0:
-                    for a in action_probs: action_probs[a] /= s
-                else:
-                    for a in action_probs: action_probs[a] = 1.0 / len(valid_actions)
-
-            except Exception as e:
-                print(f"[Error] ONNX inference failed: {e}. Falling back to default predictions.")
-                reward = 0.5
-                for a in valid_actions:
-                    action_probs[a] = 1.0 / len(valid_actions)
-
-        elif self.model is not None:
-            features = encode_state(state, player)
-            inputs = self._build_inputs(features)
-            if self.expected_dense_dim == NUM_DENSE_FEATURES or (hasattr(self.model, "input_names") and "action_mask" in self.model.input_names):
-                inputs["action_mask"] = mask_array
-            
-            # Direct model call with training=False
-            pred = self.model(inputs, training=False)
-
-            # pred is a list of tensors starting with: [value (1,1), policy (1, ACTION_SPACE)]
-            if isinstance(pred, (list, tuple)) and len(pred) >= 2:
-                value_pred = pred[0]
-                policy_pred = pred[1]
-                # Move to CPU before numpy conversion (handles CUDA tensors)
-                def _to_np(t):
-                    try:
-                        if hasattr(t, 'cpu'):
-                            return t.cpu().detach().numpy()
-                        return np.array(t)
-                    except Exception:
-                        return np.array(t)
-                reward = float(_to_np(value_pred)[0][0])
-                policy_probs = _to_np(policy_pred)[0]
-
-                for a in valid_actions:
-                    idx = ACTION_SPACE.index(a) if a in ACTION_SPACE else ACTION_SPACE.index("pass")
-                    action_probs[a] = float(policy_probs[idx])
-
-                s = sum(action_probs.values())
-                if s > 0:
-                    for a in action_probs: action_probs[a] /= s
-                else:
-                    for a in action_probs: action_probs[a] = 1.0 / len(valid_actions)
-            else:
-                # Fallback: single-output model (value only)
-                reward = float(np.array(pred)[0][0])
-                for a in valid_actions:
-                    action_probs[a] = 1.0 / len(valid_actions)
+        total = sum(action_probs.values())
+        if total > 0:
+            for a in action_probs:
+                action_probs[a] /= total
         else:
-            reward = 0.5
-            for a in valid_actions:
-                action_probs[a] = 1.0 / len(valid_actions)
-                
+            uniform = 1.0 / len(valid_actions)
+            for a in action_probs:
+                action_probs[a] = uniform
+
         return reward, action_probs
 
     def predict_opponent_active(self, state, player: str = "p1") -> dict:
         """
         Predicts the opponent's active Pokémon using the model's auxiliary heads.
         Returns the closest matching species from the Knowledge Base, including predicted moves.
+        If the model does not provide the required auxiliary outputs, returns None.
         """
         from battle_agents.mcts_approximation.db.knowledge_base import \
             find_closest_species
         from battle_agents.mcts_approximation.db.moves_db import (_load_db,
                                                                   _move_to_idx)
 
+        # Prepare base inputs
+        inputs = self._prepare_inputs_base(state, player)
+        
         # Build action mask (unused but needed for model call shape matching)
         mask_array = np.zeros((1, len(ACTION_SPACE)), dtype=np.float32)
         mask_array[0, ACTION_SPACE.index("pass")] = 1.0
-        
-        features = encode_state(state, player)
-        inputs = self._build_inputs(features)
-        
-        opp_stats = None
-        opp_types = None
-        opp_species = None
-        opp_moves = None
-        
-        if self.onnx_session is not None:
-            if hasattr(self, "input_names") and "action_mask" in self.input_names:
-                inputs["action_mask"] = mask_array
-            else:
-                # Find matching input name for action_mask
-                for name in self.input_names:
-                    if "action_mask" in name:
-                        inputs[name] = mask_array
-                        
-            ort_inputs = {}
-            for name in self.input_names:
-                clean_name = name.split(':')[0]
-                if clean_name in inputs:
-                    ort_inputs[name] = inputs[clean_name]
-                else:
-                    matched = False
-                    for k in inputs:
-                        if k in name or name in k:
-                            ort_inputs[name] = inputs[k]
-                            matched = True
-                            break
-            
-            try:
-                ort_outs = self.onnx_session.run(self.output_names, ort_inputs)
-                
-                # Retrieve opponent auxiliary predictions via helper
-                opp_stats, opp_types, opp_species, opp_moves = self._resolve_onnx_outputs(ort_outs)
-            except Exception as e:
-                print(f"[Warning] ONNX active prediction failed: {e}")
-                
-        elif self.model is not None:
-            if self.expected_dense_dim == NUM_DENSE_FEATURES or (hasattr(self.model, "input_names") and "action_mask" in self.model.input_names):
-                inputs["action_mask"] = mask_array
-                
-            try:
-                pred = self.model(inputs, training=False)
-                # Model returns outputs as list of tensors
-                if isinstance(pred, (list, tuple)):
-                    if len(pred) >= 17:
-                        opp_stats = np.array(pred[10])[0]
-                        opp_types = np.array(pred[12])[0]
-                        opp_species = np.array(pred[14])[0]
-                        opp_moves = np.array(pred[16])[0]
-                    elif len(pred) >= 15:
-                        opp_stats = np.array(pred[10])[0]
-                        opp_types = np.array(pred[12])[0]
-                        opp_species = np.array(pred[14])[0]
-            except Exception as e:
-                print(f"[Warning] Keras active prediction failed: {e}")
-                
+        # Check if the model expects an action_mask input (by substring in the input name)
+        if any("action_mask" in name.split(":")[0] for name in self.input_names):
+            inputs["action_mask"] = mask_array
+
+        if self.onnx_session is None:
+            logger.warning("No ONNX model loaded for opponent active prediction.")
+            return None
+
+        # Build ONNX inputs with exact name matching
+        ort_inputs = {}
+        for name in self.input_names:
+            clean_name = name.split(":")[0]  # "dense_features:index" → "dense_features"
+            if clean_name not in inputs:
+                raise ValueError(f"Missing ONNX input '{name}' (clean: '{clean_name}')")
+            ort_inputs[name] = inputs[clean_name]
+        ort_outs = self.onnx_session.run(self.output_names, ort_inputs)
+        opp_stats, opp_types, opp_species, opp_moves = self._resolve_onnx_outputs(ort_outs)
+
+        # If we have the three core outputs, proceed to find the closest species
         if opp_stats is not None and opp_types is not None and opp_species is not None:
-            # We assign high weight to physical coordinate dimensions (stats & types) to drive matching
             matches = find_closest_species(
                 opp_species, opp_stats, opp_types,
                 weight_species=1.0, weight_stats=5.0, weight_types=5.0,
@@ -358,3 +281,9 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 else:
                     res["predicted_moves"] = []
                 return res
+        else:
+            # Missing one or more of opp_stats, opp_types, opp_species
+            logger.warning(
+                "Opponent auxiliary outputs incomplete: stats=%s, types=%s, species=%s",
+                opp_stats is not None, opp_types is not None, opp_species is not None
+            )
