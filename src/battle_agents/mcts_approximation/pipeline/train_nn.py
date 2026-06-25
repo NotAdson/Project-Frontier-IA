@@ -57,18 +57,6 @@ def _split_features(X: np.ndarray):
     return X_dense, X_species, X_moves, X_items, X_abilities
 
 
-def _convert_features(features):
-    if len(features) == 738:
-        # Old layout has 654 dense features + 84 embedding indices.
-        # First insert 48 zeros at index 654 for PP features to get 786-dim layout.
-        features = features[:654] + [0.0] * 48 + features[654:]
-    if len(features) == 786:
-        # Intermediate layout has 702 dense features + 84 embedding indices.
-        # We expand the 18 field features [636:654] to 60 by appending 42 zeros.
-        return features[:636] + features[636:654] + [0.0] * 42 + features[654:]
-    return features
-
-
 def _parse_steps(game_data):
     X, y_value, y_policy, X_next, action_masks = [], [], [], [], []
     total_len = len(game_data)
@@ -80,7 +68,7 @@ def _parse_steps(game_data):
     # Process P1
     for i in range(N):
         step = game_data[i]
-        X.append(_convert_features(step["features"]))
+        X.append(step["features"])
         y_value.append(step["value"])
         
         policy_dict = step.get("policy", {})
@@ -93,14 +81,14 @@ def _parse_steps(game_data):
         action_masks.append(mask)
         
         if i < N - 1:
-            X_next.append(_convert_features(game_data[i + 1]["features"]))
+            X_next.append(game_data[i + 1]["features"])
         else:
             X_next.append([0.0] * TOTAL_FEATURES)
             
     # Process P2
     for i in range(N, 2 * N):
         step = game_data[i]
-        X.append(_convert_features(step["features"]))
+        X.append(step["features"])
         y_value.append(step["value"])
         
         policy_dict = step.get("policy", {})
@@ -113,7 +101,7 @@ def _parse_steps(game_data):
         action_masks.append(mask)
         
         if i < 2 * N - 1:
-            X_next.append(_convert_features(game_data[i + 1]["features"]))
+            X_next.append(game_data[i + 1]["features"])
         else:
             X_next.append([0.0] * TOTAL_FEATURES)
             
@@ -479,199 +467,8 @@ def export_to_onnx(model, onnx_path):
     except Exception as e_torch:
         print(f"[Warning] torch.onnx.export failed: {e_torch}")
 
-    # 3. Try tensorflow backend specific export if Keras is using tensorflow backend
-    try:
-        import keras
-        if keras.backend.backend() == "tensorflow":
-            print("Keras is using 'tensorflow' backend. Attempting tf2onnx conversion...")
-            import tensorflow as tf
-            import tf2onnx
-            
-            spec = (
-                tf.TensorSpec((None, NUM_DENSE_FEATURES), tf.float32, name="dense_features"),
-                tf.TensorSpec((None, 12), tf.int32, name="species_indices"),
-                tf.TensorSpec((None, 48), tf.int32, name="move_indices"),
-                tf.TensorSpec((None, 12), tf.int32, name="item_indices"),
-                tf.TensorSpec((None, 12), tf.int32, name="ability_indices"),
-                tf.TensorSpec((None, len(ACTION_SPACE)), tf.float32, name="action_mask"),
-            )
-            
-            tf2onnx.convert.from_keras(
-                model,
-                input_signature=spec,
-                opset=14,
-                output_path=str(onnx_path)
-            )
-            print("ONNX export completed successfully using tf2onnx!")
-            return True
-    except Exception as e_tf:
-        print(f"[Warning] tf2onnx export failed: {e_tf}")
-
     print("[Error] All ONNX export methods failed.")
     return False
-
-
-def load_legacy_weights_with_padding(model, legacy_model_path):
-    """
-    Manually copies legacy model weights from model.weights.h5 within the zip archive,
-    zero-padding the first dense trunk layer to fit our new input shape.
-    All other matching weights are loaded natively or mapped.
-    """
-    print(f"Loading legacy weights from {legacy_model_path}...")
-    import io
-    import zipfile
-
-    import h5py
-    
-    name_map = {
-        "embedding": "meta_emb_species",
-        "embedding_1": "meta_emb_items",
-        "embedding_2": "meta_emb_abilities",
-        "embedding_3": "meta_emb_moves",
-        "embedding_4": "emb_species",
-        "embedding_5": "emb_moves",
-        "embedding_6": "emb_items",
-        "embedding_7": "emb_abilities",
-        "dense": "token_score_projection",
-        "dense_1": "dense",
-        "dense_2": "dense_1",
-        "dense_3": "dense_2",
-        "dense_4": "policy_logits",
-        "dense_5": "value",
-        "dense_6": "aux_field",
-        "dense_7": "aux_own_hp",
-        "dense_8": "aux_opp_hp",
-        "dense_9": "aux_own_statuses",
-        "dense_10": "aux_opp_statuses",
-        "dense_11": "aux_own_boosts",
-        "dense_12": "aux_opp_boosts",
-        "dense_13": "aux_own_stats",
-        "dense_14": "aux_opp_stats",
-        "dense_15": "aux_own_types",
-        "dense_16": "aux_opp_types",
-        "dense_17": "aux_own_species",
-        "dense_18": "aux_opp_species",
-        "layer_normalization": "layer_normalization",
-        "batch_normalization": "batch_normalization",
-        "batch_normalization_1": "batch_normalization_1",
-        "batch_normalization_2": "batch_normalization_2"
-    }
-    
-    attn_map = {
-        "multi_head_attention/query_dense": ("meta_attention", "query_dense"),
-        "multi_head_attention/key_dense": ("meta_attention", "key_dense"),
-        "multi_head_attention/value_dense": ("meta_attention", "value_dense"),
-        "multi_head_attention/output_dense": ("meta_attention", "output_dense")
-    }
-    
-    try:
-        with zipfile.ZipFile(legacy_model_path, "r") as z:
-            weights_bytes = z.read("model.weights.h5")
-        
-        with h5py.File(io.BytesIO(weights_bytes), "r") as f:
-            # 1. Load standard layers
-            for saved_name, target_name in name_map.items():
-                group_path = f"layers/{saved_name}"
-                if group_path not in f:
-                    # Try direct name mapping
-                    if f"layers/{target_name}" in f:
-                        group_path = f"layers/{target_name}"
-                    else:
-                        continue
-                
-                datasets = {}
-                def find_datasets(name, obj):
-                    if isinstance(obj, h5py.Dataset):
-                        datasets[name] = obj[:]
-                f[group_path].visititems(find_datasets)
-                
-                if not datasets:
-                    continue
-                    
-                try:
-                    layer = model.get_layer(target_name)
-                except ValueError:
-                    continue
-                    
-                sorted_keys = sorted(datasets.keys(), key=lambda x: int(x.split('/')[-1]))
-                weights = [datasets[k] for k in sorted_keys]
-                
-                target_weights = layer.get_weights()
-                adjusted_weights = []
-                for tw, w in zip(target_weights, weights):
-                    if tw.shape != w.shape:
-                        # Trunk first dense layer padding logic
-                        if target_name == "dense" and len(tw.shape) == 2 and len(w.shape) == 2:
-                            w_shape = w.shape[0]
-                            tw_shape = tw.shape[0]
-                            print(f"  [Trunk Padding] Mapping layer 'dense' shape {w_shape} -> {tw_shape}")
-                            if w_shape == 2958:
-                                adjusted = np.zeros(tw.shape, dtype=tw.dtype)
-                                adjusted[0:636, :] = w[0:636, :]
-                                adjusted[636:654, :] = w[636:654, :]
-                                adjusted[744:3048, :] = w[654:2958, :]
-                                adjusted_weights.append(adjusted)
-                            elif w_shape == 3018:
-                                adjusted = np.zeros(tw.shape, dtype=tw.dtype)
-                                adjusted[0:636, :] = w[0:636, :]
-                                adjusted[636:654, :] = w[636:654, :]
-                                adjusted[696:744, :] = w[654:702, :]
-                                adjusted[744:3048, :] = w[702:3006, :]
-                                adjusted[3048:3060, :] = w[3006:3018, :]
-                                adjusted_weights.append(adjusted)
-                            else:
-                                adjusted = np.zeros(tw.shape, dtype=tw.dtype)
-                                min_rows = min(tw.shape[0], w.shape[0])
-                                min_cols = min(tw.shape[1], w.shape[1])
-                                adjusted[:min_rows, :min_cols] = w[:min_rows, :min_cols]
-                                adjusted_weights.append(adjusted)
-                        # Standard embedding or generic size padding
-                        elif len(tw.shape) == 2 and len(w.shape) == 2:
-                            adjusted = np.zeros(tw.shape, dtype=tw.dtype)
-                            min_rows = min(tw.shape[0], w.shape[0])
-                            min_cols = min(tw.shape[1], w.shape[1])
-                            adjusted[:min_rows, :min_cols] = w[:min_rows, :min_cols]
-                            adjusted_weights.append(adjusted)
-                        elif len(tw.shape) == 1 and len(w.shape) == 1:
-                            adjusted = np.zeros(tw.shape, dtype=tw.dtype)
-                            min_len = min(tw.shape[0], w.shape[0])
-                            adjusted[:min_len] = w[:min_len]
-                            adjusted_weights.append(adjusted)
-                        else:
-                            adjusted_weights.append(tw)
-                    else:
-                        adjusted_weights.append(w)
-                layer.set_weights(adjusted_weights)
-                
-            # 2. Load attention sub-layers
-            for saved_sub, (target_layer_name, sub_attr) in attn_map.items():
-                group_path = f"layers/{saved_sub}"
-                if group_path not in f:
-                    continue
-                    
-                datasets = {}
-                def find_datasets(name, obj):
-                    if isinstance(obj, h5py.Dataset):
-                        datasets[name] = obj[:]
-                f[group_path].visititems(find_datasets)
-                
-                if not datasets:
-                    continue
-                    
-                try:
-                    parent_layer = model.get_layer(target_layer_name)
-                    sub_layer = getattr(parent_layer, sub_attr)
-                except (ValueError, AttributeError):
-                    continue
-                    
-                sorted_keys = sorted(datasets.keys(), key=lambda x: int(x.split('/')[-1]))
-                weights = [datasets[k] for k in sorted_keys]
-                sub_layer.set_weights(weights)
-        print("Legacy weight loading with mapped padding completed successfully.")
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"[Warning] Mapped legacy weight loading failed: {e}")
 
 
 def compute_counterfactual_targets(model, inputs, is_scratch=False, batch_size=256):
@@ -944,11 +741,10 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path}...")
         try:
-            # Try to load directly (if model was already built/saved with action_mask and aux heads and deserialization succeeds)
-            model = keras.models.load_model(model_save_path, compile=False)
+            model = keras.models.load_model(model_save_path, compile=False, safe_mode=False)
             if len(model.outputs) != 18:
                 raise ValueError(f"Architecture mismatch: expected 18 outputs, got {len(model.outputs)}")
-            print("Successfully loaded existing model with matching architecture. Recompiling for fine-tuning...")
+            print("Successfully loaded existing model. Recompiling for fine-tuning...")
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=1e-4),
                 loss=losses,
@@ -956,15 +752,11 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
                 metrics={"value": "mae", "policy": "accuracy"}
             )
         except Exception as e:
-            print(f"Direct model load failed or mismatched architecture: {e}. Building new model with mask and aux heads, loading weights directly...")
+            print(f"Model load failed ({e}). Building fresh model from scratch...")
             model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
-            try:
-                load_legacy_weights_with_padding(model, model_save_path)
-            except Exception as load_err:
-                print(f"Custom legacy weight loading failed: {load_err}. Falling back to default initialization.")
-            print("Successfully loaded weights. Compiling for fine-tuning...")
+            print("Compiling model...")
             model.compile(
-                optimizer=keras.optimizers.Adam(learning_rate=3e-4),
+                optimizer=keras.optimizers.Adam(learning_rate=1e-3),
                 loss=losses,
                 loss_weights=loss_weights,
                 metrics={"value": "mae", "policy": "accuracy"}
