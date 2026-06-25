@@ -8,11 +8,31 @@ The project is split into two main layers:
 1. **Engine Layer (`engine/`)**: A Node.js backend (`bridge.js`) that wraps the official `pokemon-showdown` simulator. It exposes the engine over standard I/O streams using a JSON messaging protocol.
 2. **Python Layer (`src/`)**: A decoupled Object-Oriented AI architecture. It treats the Pokémon battle as a formal Search Problem, allowing you to instantiate and pit different `Agent` classes against each other.
 
-## Quick Start
+## Repository Setup
 
-### Prerequisites
-- Node.js (for the Showdown engine)
-- Python 3.x
+### 1. Python
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install keras torch   # or tensorflow / jax
+```
+
+### 2. Engine (Pokémon Showdown)
+
+The battle simulator is a Node.js project inside `engine/`:
+
+```bash
+cd engine
+npm install
+node build       # compiles TypeScript → dist/
+cd ..
+```
+
+> `node build` is required after `npm install`. The `dist/` folder is the compiled output used by the Python bridge (`bridge.js`).
+
+## Quick Start
 
 ### Running a Simulation
 To run a simulation pitting two agents against each other:
@@ -32,6 +52,41 @@ The framework natively supports a plugin-style architecture for agents. You can 
 
 ### Contributing an Agent
 Want to add Minimax, Expectimax, or a Neural Network? Check out [HOW_TO_ADD_SEARCH_ALGORITHM.md](HOW_TO_ADD_SEARCH_ALGORITHM.md) for a complete tutorial on how to submit a Pull Request!
+
+## Running the Training Pipeline
+
+The AlphaZero-style pipeline cycles through:
+
+1. **Self-Play** — Agents play each other, recording (state, visit-count policy, outcome)
+2. **Training** — Neural network fine-tunes on collected data (value + policy + auxiliary heads)
+3. **Champion Gating** — New model vs previous champion; promoted if win rate ≥ 55%
+4. **Next generation** — repeats with the new champion
+
+All commands run from the **project root**:
+
+```bash
+KERAS_BACKEND=torch python src/battle_agents/mcts_approximation/pipeline/run_pipeline.py
+```
+
+### Customizing
+
+```bash
+KERAS_BACKEND=torch python src/battle_agents/mcts_approximation/pipeline/run_pipeline.py \
+    --num_games 50 --mcts_iterations 100 --epochs 50 --num_generations 5
+```
+
+### Resuming
+
+Auto-resumes from the last incomplete generation. To start fresh, pass `--wipe`.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `ONNX model not found` | Ensure `src/data/mcts_model.onnx` exists or don't use `--wipe` |
+| `Cannot import get_num_species` | Run from project root, not `src/` |
+| `JIT compilation failed` | Use `KERAS_BACKEND=torch` or set `CUDA_VISIBLE_DEVICES=-1` |
+| `node: command not found` | Install Node.js from https://nodejs.org |
 
 ## Backend Configuration (Neural MCTS)
 
@@ -57,7 +112,7 @@ pip install keras "jax[cuda12]"
 
 ```bash
 # Training pipeline
-KERAS_BACKEND=torch python src/battle_agents/mcts_approximation/run_pipeline.py
+KERAS_BACKEND=torch python src/battle_agents/mcts_approximation/pipeline/run_pipeline.py
 
 # One-off training
 KERAS_BACKEND=tensorflow python src/battle_agents/mcts_approximation/train_nn.py
