@@ -9,6 +9,8 @@ import logging
 
 import onnxruntime as ort
 
+from battle_agents.mcts_approximation.db.database import db
+
 logger = logging.getLogger(__name__)
 
 class BaseStateEvaluator:
@@ -91,12 +93,6 @@ class NeuralStateEvaluator(BaseStateEvaluator):
 
         print(f"[NeuralStateEvaluator] Configured expected dense dimension: {self.expected_dense_dim}")
 
-        # Configure embedding limits
-        self.max_move_idx = 357
-        self.max_species_idx = 388
-        self.max_item_idx = 200
-        self.max_ability_idx = 200
-
     def _prepare_inputs_base(self, state, player: str) -> dict:
         """Encode state and build input buffers (without action mask)."""
         features = encode_state(state, player)
@@ -127,16 +123,16 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                     name, invalid.size, max_idx, invalid
                 )
 
-        _warn_if_invalid(species_in, "species_indices", self.max_species_idx)
-        _warn_if_invalid(moves_in, "move_indices", self.max_move_idx)
-        _warn_if_invalid(items_in, "item_indices", self.max_item_idx)
-        _warn_if_invalid(abilities_in, "ability_indices", self.max_ability_idx)
+        _warn_if_invalid(species_in, "species_indices", db.get_num_species())
+        _warn_if_invalid(moves_in, "move_indices", db.get_num_moves())
+        _warn_if_invalid(items_in, "item_indices", db.get_num_items())
+        _warn_if_invalid(abilities_in, "ability_indices", db.get_num_abilities())
 
         # Clip indices exceeding limits to 0 (padding/unknown)
-        species_in = np.where(species_in < self.max_species_idx, species_in, 0)
-        moves_in = np.where(moves_in < self.max_move_idx, moves_in, 0)
-        items_in = np.where(items_in < self.max_item_idx, items_in, 0)
-        abilities_in = np.where(abilities_in < self.max_ability_idx, abilities_in, 0)
+        species_in = np.where(species_in < db.get_num_species(), species_in, 0)
+        moves_in = np.where(moves_in < db.get_num_moves(), moves_in, 0)
+        items_in = np.where(items_in < db.get_num_items(), items_in, 0)
+        abilities_in = np.where(abilities_in < db.get_num_abilities(), abilities_in, 0)
 
         # Populate pre‑allocated buffers
         self._buf_dense[0, :self.expected_dense_dim] = features_dense
@@ -208,6 +204,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         reward = float(value_pred[0][0])
         policy_probs = policy_pred[0]
 
+        action_probs = {}
         for a in valid_actions:
             idx = ACTION_SPACE.index(a) if a in ACTION_SPACE else ACTION_SPACE.index("pass")
             action_probs[a] = float(policy_probs[idx])
@@ -229,10 +226,8 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         Returns the closest matching species from the Knowledge Base, including predicted moves.
         If the model does not provide the required auxiliary outputs, returns None.
         """
-        from battle_agents.mcts_approximation.db.knowledge_base import \
-            find_closest_species
-        from battle_agents.mcts_approximation.db.moves_db import (_load_db,
-                                                                  _move_to_idx)
+        from battle_agents.mcts_approximation.db.knowledge_base import find_closest_species
+        from battle_agents.mcts_approximation.db.database import db
 
         # Prepare base inputs
         inputs = self._prepare_inputs_base(state, player)
@@ -268,8 +263,8 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             if matches:
                 res = dict(matches[0])
                 if opp_moves is not None:
-                    _load_db()
-                    idx_to_move = {idx: mid for mid, idx in _move_to_idx.items()}
+                    db.load_moves()
+                    idx_to_move = {idx: mid for mid, idx in db.move_to_idx.items()}
                     top_move_idxs = np.argsort(opp_moves)[::-1]
                     top_moves = []
                     for idx in top_move_idxs:

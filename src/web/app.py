@@ -8,7 +8,7 @@ from flask import Flask, jsonify, render_template, request
 # Add src to path so we can import core and battle_agents
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from battle_agents.mcts_approximation.db.moves_db import get_move_data
+from battle_agents.mcts_approximation.db.database import db
 from battle_agents.mcts_approximation.mcts_approximation_agent import \
     MCTSApproximationAgent
 from core.client.showdown_client import ShowdownClient
@@ -125,7 +125,7 @@ def get_state():
         if 'active' in req and req['active']:
             for m in req['active'][0].get('moves', []):
                 move_id = m.get('id', '')
-                move_db_data = get_move_data(move_id)
+                move_db_data = db.get_move_data(move_id)
                 p1_moves.append({
                     "id": move_id,
                     "move": m.get('move', ''),

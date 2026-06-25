@@ -5,7 +5,7 @@ to query and match the closest real Pokémon in the database.
 """
 import numpy as np
 
-from battle_agents.mcts_approximation.db import species_db
+from battle_agents.mcts_approximation.db.database import db
 from battle_agents.mcts_approximation.state_encoder import TYPES, _encode_types
 
 # Cache variables to avoid redundant parsing/calculations during search
@@ -19,8 +19,8 @@ def _init_cache():
     if _db_loaded:
         return
     
-    species_db._load_species()
-    num_species = len(species_db._species_to_idx) + 1
+    db._load_species()
+    num_species = len(db._species_to_idx) + 1
     
     # Pre-allocate numpy matrices
     # Columns for stats: [atk, def, spa, spd, spe]
@@ -29,9 +29,9 @@ def _init_cache():
     
     _species_ids_by_idx = {0: "unknown"}
     
-    for sid, idx in species_db._species_to_idx.items():
+    for sid, idx in db._species_to_idx.items():
         _species_ids_by_idx[idx] = sid
-        data = species_db._species_db[sid]
+        data = db._species_db[sid]
         
         # Stats normalized by dividing by 500.0 (same as state_encoder)
         base_stats = data.get("baseStats", {})
@@ -101,7 +101,7 @@ def find_closest_species(
     results = []
     for idx in top_indices:
         sid = _species_ids_by_idx[idx]
-        data = species_db._species_db[sid]
+        data = db._species_db[sid]
         
         results.append({
             "species_id": sid,

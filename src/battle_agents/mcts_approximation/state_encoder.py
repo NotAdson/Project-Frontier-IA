@@ -28,12 +28,7 @@ used (revealed) in battle, maintaining strict compliance with fog-of-war rules.
 
 import numpy as np
 
-from battle_agents.mcts_approximation.db.moves_db import (get_move_data,
-                                                          get_move_idx)
-from battle_agents.mcts_approximation.db.species_db import (get_ability_idx,
-                                                            get_item_idx,
-                                                            get_species_data,
-                                                            get_species_idx)
+from battle_agents.mcts_approximation.db.database import db
 
 STATUSES = ["tox", "brn", "par", "slp", "frz"]
 BOOST_STATS = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
@@ -148,7 +143,7 @@ def _encode_own_team(state_dict: dict, player: str):
                 details = p.get("details", "")
                 species_id = _species_id_from_details(details) if details else ""
 
-            species_data = get_species_data(species_id)
+            species_data = db.get_species_data(species_id)
             species_types = species_data.get("types", [])
             types_encoded = _encode_types(species_types)
 
@@ -159,7 +154,7 @@ def _encode_own_team(state_dict: dict, player: str):
                 if j < len(move_slots):
                     m = move_slots[j]
                     move_id = m.get("id", "")
-                    db_move = get_move_data(move_id)
+                    db_move = db.get_move_data(move_id)
                     power = db_move.get("basePower", 0) / 150.0
                     accuracy = db_move.get("accuracy", 100) / 100.0
                     cat = db_move.get("category", "Status")
@@ -175,14 +170,14 @@ def _encode_own_team(state_dict: dict, player: str):
 
             dense.extend([hp_ratio, fainted] + statuses + [is_active, level, atk, def_, spa, spd, spe] + types_encoded + moves_dense)
 
-            species_idxs.append(get_species_idx(species_id))
-            item_idxs.append(get_item_idx(p.get("item", "")))
-            ability_idxs.append(get_ability_idx(p.get("ability", p.get("baseAbility", ""))))
+            species_idxs.append(db.get_species_idx(species_id))
+            item_idxs.append(db.get_item_idx(p.get("item", "")))
+            ability_idxs.append(db.get_ability_idx(p.get("ability", p.get("baseAbility", ""))))
 
             # Moves from moveSlots (available for all bench Pokémon in state_dict)
             for j in range(NUM_MOVES):
                 if j < len(move_slots):
-                    bench_move_idxs.append(get_move_idx(move_slots[j].get("id", "")))
+                    bench_move_idxs.append(db.get_move_idx(move_slots[j].get("id", "")))
                 else:
                     bench_move_idxs.append(0)
         else:
@@ -347,7 +342,7 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
                     details = p.get("details", "")
                     species_id = _species_id_from_details(details) if details else ""
 
-                species_data = get_species_data(species_id)
+                species_data = db.get_species_data(species_id)
                 species_types = species_data.get("types", [])
                 types_encoded = _encode_types(species_types)
 
@@ -365,7 +360,7 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
                 for j in range(NUM_MOVES):
                     if j < len(move_slots) and move_slots[j].get("used", False):
                         move_id = move_slots[j].get("id", "")
-                        db_move = get_move_data(move_id)
+                        db_move = db.get_move_data(move_id)
                         power = db_move.get("basePower", 0) / 150.0
                         accuracy = db_move.get("accuracy", 100) / 100.0
                         cat = db_move.get("category", "Status")
@@ -380,14 +375,14 @@ def _encode_opp_team_revealed(state_dict: dict, player: str):
                         moves_dense.extend([0.0] * 5)
 
                 dense.extend([hp_ratio, fainted] + _status_onehot(status) + [is_active, level, atk, def_, spa, spd, spe] + types_encoded + moves_dense)
-                opp_species_idxs.append(get_species_idx(species_id))
-                opp_item_idxs.append(get_item_idx(p.get("item", "")))
-                opp_ability_idxs.append(get_ability_idx(p.get("ability", p.get("baseAbility", ""))))
+                opp_species_idxs.append(db.get_species_idx(species_id))
+                opp_item_idxs.append(db.get_item_idx(p.get("item", "")))
+                opp_ability_idxs.append(db.get_ability_idx(p.get("ability", p.get("baseAbility", ""))))
 
                 # Only include moves that have been used (revealed through battle)
                 for j in range(NUM_MOVES):
                     if j < len(move_slots) and move_slots[j].get("used", False):
-                        opp_move_idxs.append(get_move_idx(move_slots[j].get("id", "")))
+                        opp_move_idxs.append(db.get_move_idx(move_slots[j].get("id", "")))
                     else:
                         opp_move_idxs.append(0)  # Not yet revealed
             else:

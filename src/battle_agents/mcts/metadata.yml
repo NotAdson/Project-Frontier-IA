@@ -1,5 +1,0 @@
-name: "Monte Carlo Tree Search (MCTS)"
-variant: "Expectimax / Random Opponent Rollouts"
-cheat: True
-author: "Base Implementation"
-description: "A statistical search algorithm that simulates random future games to determine the highest confidence action."

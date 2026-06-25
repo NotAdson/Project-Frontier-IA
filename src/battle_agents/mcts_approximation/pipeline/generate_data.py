@@ -72,11 +72,14 @@ def run_simulation(args):
         client.close()
 
 
-def generate_dataset(num_games=1000, processes=None, output_dir="data/games", mcts_iterations=100, use_cheating_mcts=False, model_path="data/mcts_model.onnx"):
+def generate_dataset(num_games=1000, processes=None, output_dir="data/games", mcts_iterations=100, use_cheating_mcts=False, model_path=None):
     try:
         multiprocessing.set_start_method('spawn', force=True)
     except RuntimeError:
         pass
+
+    if model_path is None:
+        model_path = str(Path(__file__).resolve().parent.parent.parent.parent / "data" / "mcts_model.onnx")
 
     if processes is None:
         processes = max(1, multiprocessing.cpu_count() - 2)

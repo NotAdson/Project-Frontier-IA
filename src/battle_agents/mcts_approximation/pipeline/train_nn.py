@@ -39,10 +39,7 @@ class PrimaryLossCallback(keras.callbacks.Callback):
         logs["primary_loss"] = float(train_policy * 5.0 + train_value * 1.0)
 
 
-from battle_agents.mcts_approximation.db.moves_db import get_num_moves
-from battle_agents.mcts_approximation.db.species_db import (get_num_abilities,
-                                                            get_num_items,
-                                                            get_num_species)
+from battle_agents.mcts_approximation.db.database import db
 from battle_agents.mcts_approximation.state_encoder import (
     ACTION_SPACE, NUM_ABILITY_INDICES, NUM_DENSE_FEATURES,
     NUM_EMBEDDING_INDICES, NUM_FIELD_FEATURES, NUM_ITEM_INDICES,
@@ -856,10 +853,10 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     splits_train = _split_features(X_train)
     X_dense_train, X_species_train, X_moves_train, X_items_train, X_abilities_train = splits_train
 
-    num_moves     = get_num_moves()
-    num_species   = get_num_species()
-    num_items     = get_num_items()
-    num_abilities = get_num_abilities()
+    num_moves     = db.get_num_moves()
+    num_species   = db.get_num_species()
+    num_items     = db.get_num_items()
+    num_abilities = db.get_num_abilities()
 
     # Extract auxiliary targets
     aux_targets_train = extract_aux_targets_batch(X_next_train, num_species, num_moves)

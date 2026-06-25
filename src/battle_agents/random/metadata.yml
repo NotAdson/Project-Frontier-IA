@@ -1,5 +1,0 @@
-name: "Random Agent"
-variant: "Uniform Distribution"
-cheat: False
-author: "Base Implementation"
-description: "A naive baseline agent that selects random actions from the available valid choices."

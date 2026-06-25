@@ -197,7 +197,8 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 processes=processes, 
                 output_dir=next_gen_dir, 
                 mcts_iterations=mcts_iterations,
-                use_cheating_mcts=(gen == 1)
+                use_cheating_mcts=(gen == 1),
+                model_path=onnx_path
             )
             
         # Check if this generation is already trained and archived
