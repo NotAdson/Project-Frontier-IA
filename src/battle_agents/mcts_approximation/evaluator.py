@@ -184,6 +184,9 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         return opp_stats, opp_types, opp_species, opp_moves
 
     def evaluate(self, state, player: str, valid_actions: list) -> tuple[float, dict[str, float]]:
+        if not valid_actions:
+            return 0.5, {}
+
         # Prepare base inputs
         inputs = self._prepare_inputs_base(state, player)
         
