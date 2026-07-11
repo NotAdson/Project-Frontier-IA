@@ -137,6 +137,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             champion_gen = 1
     else:
         champion_gen = 1
+        os.makedirs(os.path.dirname(champion_json_path), exist_ok=True)
         with open(champion_json_path, "w") as f:
             json.dump({"champion_gen": champion_gen}, f)
     print(f"[Champion Info] Current Active Champion is Gen {champion_gen}.")
@@ -323,6 +324,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             print(f"\n[PROMOTION] Model Gen {gen} outperformed/tied the Champion Gen {champion_gen}. Crowned new Champion!")
             champion_gen = gen
             # Save new champion info
+            os.makedirs(os.path.dirname(champion_json_path), exist_ok=True)
             with open(champion_json_path, "w") as f:
                 json.dump({"champion_gen": champion_gen}, f)
         else:
