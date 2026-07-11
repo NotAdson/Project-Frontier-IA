@@ -39,6 +39,69 @@ class PrimaryLossCallback(keras.callbacks.Callback):
         logs["primary_loss"] = float(train_policy * 5.0 + train_value * 1.0)
 
 
+class SliceLayer(keras.layers.Layer):
+    """Extracts a slice from a 2-D input tensor along axis 1.
+
+    Uses ``keras.ops.slice`` instead of Python bracket slicing so that the
+    operation compiles to static ONNX nodes and survives TorchScript tracing.
+    The slice size is derived from ``keras.ops.shape`` so it works on all
+    backends (the torch backend does not handle ``-1`` in the shape argument).
+    """
+
+    def __init__(self, start, end=None, **kwargs):
+        super().__init__(**kwargs)
+        self.start = start
+        self.end = end
+
+    def call(self, x):
+        shape = keras.ops.shape(x)
+        if self.end is not None:
+            return keras.ops.slice(x, [0, self.start], [shape[0], self.end - self.start])
+        return keras.ops.slice(x, [0, self.start], [shape[0], shape[1] - self.start])
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"start": self.start, "end": self.end})
+        return config
+
+
+class ConstantLayer(keras.layers.Layer):
+    """Outputs a constant scalar value broadcast to match the batch size.
+
+    Uses ``keras.ops.slice`` internally instead of bracket slicing so the
+    operation is ONNX-export-compatible on all backends.
+    """
+
+    def __init__(self, value=0.0, **kwargs):
+        super().__init__(**kwargs)
+        self.value = float(value)
+
+    def call(self, x):
+        shape = keras.ops.shape(x)
+        sliced = keras.ops.slice(x, [0, 0], [shape[0], 1])
+        return sliced * 0.0 + self.value
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"value": self.value})
+        return config
+
+
+class ApplyMaskLayer(keras.layers.Layer):
+    """Applies a -inf mask to invalid action logits.
+
+    Replaces ``Lambda(lambda inputs: inputs[0] + (1.0 - inputs[1]) * -1e9)``.
+    Accepts a list of two tensors [logits, mask].
+    """
+
+    def call(self, inputs):
+        logits, mask = inputs
+        return logits + (1.0 - mask) * -1e9
+
+    def get_config(self):
+        return super().get_config()
+
+
 from battle_agents.mcts_approximation.db.database import db
 from battle_agents.mcts_approximation.state_encoder import (
     ACTION_SPACE, NUM_ABILITY_INDICES, NUM_DENSE_FEATURES,
@@ -272,7 +335,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     emb_abilities_layer = keras.layers.Embedding(num_abilities, 8, name="meta_emb_abilities")
 
     # Slice out 60 field conditions (weather, hazards, volatiles) at the end of original dense features [636:696]
-    field_conds = keras.layers.Lambda(lambda x: x[:, 636:696], name="field_conditions")(inp_dense)
+    field_conds = SliceLayer(636, 696, name="field_conditions")(inp_dense)
 
     tokens = []
     for i in range(12):
@@ -284,17 +347,17 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
             owner_val = 0.0
         
         # 1. Dense features for Pokémon i
-        p_dense = keras.layers.Lambda(lambda x, idx=start_idx: x[:, idx : idx + 52], name=f"p{i}_dense")(inp_dense)
+        p_dense = SliceLayer(start_idx, start_idx + 52, name=f"p{i}_dense")(inp_dense)
         # 2. Extract PP features from the appended block [696:744]
-        p_pp    = keras.layers.Lambda(lambda x, idx=696 + i * 4: x[:, idx : idx + 4], name=f"p{i}_pp")(inp_dense)
+        p_pp    = SliceLayer(696 + i * 4, 696 + i * 4 + 4, name=f"p{i}_pp")(inp_dense)
         # 3. Categorical embeddings
-        p_spec = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_species")(inp_species)
-        p_item = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_item")(inp_items)
-        p_abil = keras.layers.Lambda(lambda x, idx=i: x[:, idx:idx+1], name=f"p{i}_ability")(inp_abilities)
-        
+        p_spec = SliceLayer(i, i + 1, name=f"p{i}_species")(inp_species)
+        p_item = SliceLayer(i, i + 1, name=f"p{i}_item")(inp_items)
+        p_abil = SliceLayer(i, i + 1, name=f"p{i}_ability")(inp_abilities)
+
         # 4 moves per Pokémon
         m_start = i * 4 if i < 6 else 24 + (i - 6) * 4
-        p_moves = keras.layers.Lambda(lambda x, idx=m_start: x[:, idx : idx + 4], name=f"p{i}_moves")(inp_moves)
+        p_moves = SliceLayer(m_start, m_start + 4, name=f"p{i}_moves")(inp_moves)
 
         spec_emb = keras.layers.Flatten()(emb_species_layer(p_spec))
         item_emb = keras.layers.Flatten()(emb_items_layer(p_item))
@@ -302,7 +365,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         moves_emb = keras.layers.Flatten()(emb_moves_layer(p_moves))
 
         # Owner flag
-        owner_flag = keras.layers.Lambda(lambda x, val=owner_val: x[:, :1] * 0.0 + val, name=f"p{i}_owner")(inp_dense)
+        owner_flag = ConstantLayer(owner_val, name=f"p{i}_owner")(inp_dense)
 
         # Concatenate features to form a 181-dimensional Pokémon representation token (52 + 4 + 16 + 8 + 8 + 32 + 1 + 60 = 181)
         token = keras.layers.Concatenate(name=f"p{i}_token")([
@@ -328,8 +391,8 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     scores = keras.layers.Reshape((12,), name="token_scores")(scores)
 
     # Separate own (P1) vs opponent (P2) scores
-    own_scores = keras.layers.Lambda(lambda x: x[:, :6], name="own_scores")(scores)
-    opp_scores = keras.layers.Lambda(lambda x: x[:, 6:], name="opp_scores")(scores)
+    own_scores = SliceLayer(0, 6, name="own_scores")(scores)
+    opp_scores = SliceLayer(6, name="opp_scores")(scores)
 
     # Activation scaling: Softmax for own win-conditions, Sigmoid for opponent threat evaluation
     own_weights = keras.layers.Activation("softmax", name="meta_own_weights")(own_scores)
@@ -373,10 +436,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     
     # Policy head with Action-Masked Softmax
     logits = keras.layers.Dense(len(ACTION_SPACE), name="policy_logits")(x)
-    masked_logits = keras.layers.Lambda(
-        lambda inputs: inputs[0] + (1.0 - inputs[1]) * -1e9,
-        name="masked_logits"
-    )([logits, inp_mask])
+    masked_logits = ApplyMaskLayer(name="masked_logits")([logits, inp_mask])
     out_policy = keras.layers.Activation("softmax", name="policy")(masked_logits)
 
     # Auxiliary dynamics outputs
@@ -415,8 +475,24 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
 
 def export_to_onnx(model, onnx_path):
     print(f"Exporting model to ONNX format at {onnx_path}...")
-    
-    # 1. Try Keras 3 direct model.export
+
+    # Warm up the model with a dummy forward pass (required by model.export / torch tracing)
+    dummy = {
+        "dense_features": np.zeros((1, NUM_DENSE_FEATURES), dtype=np.float32),
+        "species_indices": np.zeros((1, 12), dtype=np.int32),
+        "move_indices": np.zeros((1, 48), dtype=np.int32),
+        "item_indices": np.zeros((1, 12), dtype=np.int32),
+        "ability_indices": np.zeros((1, 12), dtype=np.int32),
+        "action_mask": np.ones((1, len(ACTION_SPACE)), dtype=np.float32),
+    }
+    try:
+        model(dummy, training=False)
+    except Exception:
+        pass
+
+    backend = keras.backend.backend()
+
+    # 1. Try Keras 3 direct model.export (backend-agnostic)
     try:
         model.export(str(onnx_path), format="onnx")
         print("ONNX export completed successfully using model.export!")
@@ -424,48 +500,59 @@ def export_to_onnx(model, onnx_path):
     except Exception as e:
         print(f"[Warning] Direct model.export to ONNX failed: {e}")
 
-    # 2. Try torch backend specific export if Keras is using torch backend
-    try:
-        import keras
-        if keras.backend.backend() == "torch":
-            print("Keras is using 'torch' backend. Attempting torch.onnx.export...")
+    # 2. Backend-specific fallback
+    if backend == "torch":
+        try:
             import torch
-
-            # Pack inputs as a list inside a tuple ( [inputs...], ) to match Keras call signature
-            dummy_inputs = (
-                [
-                    torch.zeros((1, NUM_DENSE_FEATURES), dtype=torch.float32),  # dense_features
-                    torch.zeros((1, 12), dtype=torch.int32),    # species_indices
-                    torch.zeros((1, 48), dtype=torch.int32),    # move_indices
-                    torch.zeros((1, 12), dtype=torch.int32),    # item_indices
-                    torch.zeros((1, 12), dtype=torch.int32),    # ability_indices
-                    torch.zeros((1, len(ACTION_SPACE)), dtype=torch.float32),  # action_mask
-                ],
-            )
-            
-            # Put model in eval mode for export
+            input_names = ["dense_features", "species_indices", "move_indices",
+                           "item_indices", "ability_indices", "action_mask"]
+            output_names = ["value", "policy", "aux_field", "aux_own_hp", "aux_opp_hp",
+                            "aux_own_statuses", "aux_opp_statuses", "aux_own_boosts",
+                            "aux_opp_boosts", "aux_own_stats", "aux_opp_stats",
+                            "aux_own_types", "aux_opp_types", "aux_own_species",
+                            "aux_opp_species", "aux_own_moves", "aux_opp_moves",
+                            "meta_plan"]
             if hasattr(model, "eval"):
                 model.eval()
-                
+            torch_dummy = tuple(
+                torch.from_numpy(dummy[k])
+                for k in ["dense_features", "species_indices", "move_indices",
+                           "item_indices", "ability_indices", "action_mask"]
+            )
             torch.onnx.export(
                 model,
-                dummy_inputs,
+                (torch_dummy,),
                 str(onnx_path),
-                input_names=[
-                    "dense_features", "species_indices", "move_indices", "item_indices", "ability_indices", "action_mask"
-                ],
-                output_names=[
-                    "value", "policy", "aux_field", "aux_own_hp", "aux_opp_hp", "aux_own_statuses", "aux_opp_statuses",
-                    "aux_own_boosts", "aux_opp_boosts", "aux_own_stats", "aux_opp_stats", "aux_own_types", "aux_opp_types",
-                    "aux_own_species", "aux_opp_species", "meta_plan"
-                ],
+                input_names=input_names,
+                output_names=output_names,
                 opset_version=18,
+                dynamo=False,
                 verbose=False,
             )
             print("ONNX export completed successfully using torch.onnx.export!")
             return True
-    except Exception as e_torch:
-        print(f"[Warning] torch.onnx.export failed: {e_torch}")
+        except Exception as e_torch:
+            print(f"[Warning] torch.onnx.export failed: {e_torch}")
+
+    if backend == "tensorflow":
+        try:
+            import tf2onnx
+            import tensorflow as tf
+            input_spec = [
+                tf.TensorSpec((None, NUM_DENSE_FEATURES), tf.float32, name="dense_features"),
+                tf.TensorSpec((None, 12), tf.int32, name="species_indices"),
+                tf.TensorSpec((None, 48), tf.int32, name="move_indices"),
+                tf.TensorSpec((None, 12), tf.int32, name="item_indices"),
+                tf.TensorSpec((None, 12), tf.int32, name="ability_indices"),
+                tf.TensorSpec((None, len(ACTION_SPACE)), tf.float32, name="action_mask"),
+            ]
+            onnx_model, _ = tf2onnx.convert.from_keras(model, input_signature=input_spec, opset=18)
+            import onnx
+            onnx.save(onnx_model, str(onnx_path))
+            print("ONNX export completed successfully using tf2onnx!")
+            return True
+        except Exception as e_tf:
+            print(f"[Warning] tf2onnx export failed: {e_tf}")
 
     print("[Error] All ONNX export methods failed.")
     return False
@@ -741,7 +828,12 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path}...")
         try:
-            model = keras.models.load_model(model_save_path, compile=False, safe_mode=False)
+            model = keras.models.load_model(
+                model_save_path,
+                compile=False,
+                safe_mode=False,
+                custom_objects={"SliceLayer": SliceLayer, "ConstantLayer": ConstantLayer, "ApplyMaskLayer": ApplyMaskLayer},
+            )
             if len(model.outputs) != 18:
                 raise ValueError(f"Architecture mismatch: expected 18 outputs, got {len(model.outputs)}")
             print("Successfully loaded existing model. Recompiling for fine-tuning...")
