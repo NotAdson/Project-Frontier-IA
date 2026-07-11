@@ -30,7 +30,7 @@ class GameController:
             
         engine_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "engine"))
         data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
-        model_path = os.path.join(data_dir, "mcts_model.keras")
+        model_path = os.path.join(data_dir, "mcts_model.onnx")
         
         self.client = ShowdownClient(engine_path)
         self.problem = PokemonProblem(self.client, formatid="gen3randombattle")
