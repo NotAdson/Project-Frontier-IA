@@ -60,8 +60,15 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         self._buf_abilities = np.zeros((1, NUM_ABILITY_INDICES), dtype=np.int32)
 
         # Load model
-        if not (model_path.endswith(".onnx") and os.path.exists(model_path)):
-            raise FileNotFoundError(f"ONNX model not found or invalid at '{model_path}'. Expected a .onnx file.")
+        if model_path is None or not (model_path.endswith(".onnx") and os.path.exists(model_path)):
+            if model_path is not None:
+                raise FileNotFoundError(f"ONNX model not found or invalid at '{model_path}'. Expected a .onnx file.")
+            # No model provided – evaluator will return neutral defaults
+            self.expected_dense_dim = NUM_DENSE_FEATURES
+            self.input_names = []
+            self.output_names = []
+            print(f"[NeuralStateEvaluator] No model loaded – using neutral defaults.")
+            return
 
         # By default we use CPUExecutionProvider for batch-size 1 because it is significantly faster.
         providers = ['CPUExecutionProvider']
@@ -189,7 +196,9 @@ class NeuralStateEvaluator(BaseStateEvaluator):
 
         # Run the model (ONNX only)
         if self.onnx_session is None:
-            raise RuntimeError("ONNX model not loaded. Please provide a valid .onnx file path.")
+            uniform = 1.0 / len(valid_actions)
+            action_probs = {a: uniform for a in valid_actions}
+            return 0.5, action_probs
         
         ort_inputs = {}
         for name in self.input_names:
