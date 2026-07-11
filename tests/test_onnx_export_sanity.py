@@ -4,17 +4,16 @@ import numpy as np
 import onnxruntime as ort
 
 from battle_agents.mcts_approximation.pipeline.train_nn import build_model, export_to_onnx
-from battle_agents.mcts_approximation.state_encoder import NUM_DENSE_FEATURES, ACTION_SPACE
-from battle_agents.mcts_approximation.db.python.database import db
+from battle_agents.mcts_approximation.state_encoder import ACTION_SPACE, NUM_ACTIVE, NUM_DENSE_FEATURES, NUM_MOVES
 
 
 def _make_dummy_inputs():
     return {
         "dense_features": np.zeros((1, NUM_DENSE_FEATURES), dtype=np.float32),
-        "species_indices": np.zeros((1, 12), dtype=np.int32),
-        "move_indices": np.zeros((1, 48), dtype=np.int32),
-        "item_indices": np.zeros((1, 12), dtype=np.int32),
-        "ability_indices": np.zeros((1, 12), dtype=np.int32),
+        "species_indices": np.zeros((1, NUM_ACTIVE), dtype=np.int32),
+        "move_indices": np.zeros((1, NUM_ACTIVE * NUM_MOVES), dtype=np.int32),
+        "item_indices": np.zeros((1, NUM_ACTIVE), dtype=np.int32),
+        "ability_indices": np.zeros((1, NUM_ACTIVE), dtype=np.int32),
         "action_mask": np.ones((1, len(ACTION_SPACE)), dtype=np.float32),
     }
 
