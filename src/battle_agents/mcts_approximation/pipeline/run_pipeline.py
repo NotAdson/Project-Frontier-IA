@@ -349,13 +349,4 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
 
 
 if __name__ == "__main__":
-    run_pipeline(
-        num_games=8, 
-        num_generations=10, 
-        mcts_iterations=16, 
-        epochs=100, 
-        wipe=False,
-        games_per_matchup=2,
-        max_rollout_depth=5,
-        processes=None
-    )
+    run_pipeline()
