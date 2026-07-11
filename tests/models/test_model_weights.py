@@ -2,6 +2,8 @@ import os
 import tempfile
 import numpy as np
 
+from battle_agents.mcts_approximation.state_encoder import NUM_DENSE_FEATURES
+
 
 def test_model_weights_loading():
     import keras
@@ -15,7 +17,7 @@ def test_model_weights_loading():
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         model = build_model(
-            num_dense=744,
+            num_dense=NUM_DENSE_FEATURES,
             num_moves=num_moves,
             num_species=num_species,
             num_items=num_items,
