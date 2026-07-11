@@ -39,6 +39,7 @@ class PrimaryLossCallback(keras.callbacks.Callback):
         logs["primary_loss"] = float(train_policy * 5.0 + train_value * 1.0)
 
 
+@keras.saving.register_keras_serializable()
 class SliceLayer(keras.layers.Layer):
     """Extracts a slice from a 2-D input tensor along axis 1.
 
@@ -65,6 +66,7 @@ class SliceLayer(keras.layers.Layer):
         return config
 
 
+@keras.saving.register_keras_serializable()
 class ConstantLayer(keras.layers.Layer):
     """Outputs a constant scalar value broadcast to match the batch size.
 
@@ -87,6 +89,7 @@ class ConstantLayer(keras.layers.Layer):
         return config
 
 
+@keras.saving.register_keras_serializable()
 class ApplyMaskLayer(keras.layers.Layer):
     """Applies a -inf mask to invalid action logits.
 
