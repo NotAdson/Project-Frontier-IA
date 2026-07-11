@@ -110,7 +110,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         Split the flat feature vector into the model's inputs.
         Uses the pre‑allocated buffers for zero‑allocation slicing.
         """
-        # Dense features – always the full NUM_DENSE_FEATURES (744)
+        # Dense features – always the full NUM_DENSE_FEATURES (758)
         features_dense = features[:NUM_DENSE_FEATURES]
         # Embedding part follows the dense block
         features_embed = features[NUM_DENSE_FEATURES:]
