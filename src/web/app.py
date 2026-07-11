@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -9,8 +8,8 @@ from flask import Flask, jsonify, render_template, request
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from battle_agents.mcts_approximation.db.database import db
-from battle_agents.mcts_approximation.mcts_approximation_agent import \
-    MCTSApproximationAgent
+from battle_agents.mcts_approximation.mcts_approximation_agent import MCTSApproximationAgent
+from battle_agents.mcts.mcts_agent import MCTSAgent
 from core.client.showdown_client import ShowdownClient
 from core.problem.pokemon_problem import PokemonProblem
 
@@ -35,11 +34,16 @@ class GameController:
         
         self.client = ShowdownClient(engine_path)
         self.problem = PokemonProblem(self.client, formatid="gen3randombattle")
-        self.agent = MCTSApproximationAgent(self.problem, iterations=400, max_rollout_depth=0, model_path=model_path)
         self.current_state = self.problem.initial
         self.precomputed_p2_action = None
         self.is_thinking = False
         
+        try:
+            self.agent = MCTSApproximationAgent(self.problem, iterations=400, model_path=model_path)
+        except Exception as e:
+            print(f"Error loading MCTSApproximationAgent: {e}. Falling back to MCTSAgent.")
+            self.agent = MCTSAgent(self.problem, iterations=400)
+
         # Start precomputing the very first turn of the game in background
         self.start_precompute()
 
