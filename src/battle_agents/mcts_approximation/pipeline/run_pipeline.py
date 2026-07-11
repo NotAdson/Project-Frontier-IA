@@ -174,7 +174,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         next_gen_dir = os.path.join(data_dir, f"gen{gen}")
         os.makedirs(next_gen_dir, exist_ok=True)
         
-        print("=" * 20 + f"\nStarting Generation {gen} / {end_gen}n" + "=" * 20)
+        print("=" * 20 + f"\nStarting Generation {gen} / {end_gen}\n" + "=" * 20)
         
         # Ensure root model matches the current champion for self-play
         if gen > 1:
