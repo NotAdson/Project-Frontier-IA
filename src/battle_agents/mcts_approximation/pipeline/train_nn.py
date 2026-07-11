@@ -102,7 +102,7 @@ class ApplyMaskLayer(keras.layers.Layer):
         return super().get_config()
 
 
-from battle_agents.mcts_approximation.db.database import db
+from battle_agents.mcts_approximation.db.python.database import db
 from battle_agents.mcts_approximation.state_encoder import (
     ACTION_SPACE, NUM_ABILITY_INDICES, NUM_DENSE_FEATURES,
     NUM_EMBEDDING_INDICES, NUM_FIELD_FEATURES, NUM_ITEM_INDICES,

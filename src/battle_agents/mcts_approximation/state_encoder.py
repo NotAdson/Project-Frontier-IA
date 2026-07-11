@@ -28,7 +28,7 @@ used (revealed) in battle, maintaining strict compliance with fog-of-war rules.
 
 import numpy as np
 
-from battle_agents.mcts_approximation.db.database import db
+from battle_agents.mcts_approximation.db.python.database import db
 
 STATUSES = ["tox", "brn", "par", "slp", "frz"]
 BOOST_STATS = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]

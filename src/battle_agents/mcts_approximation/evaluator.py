@@ -9,7 +9,7 @@ import logging
 
 import onnxruntime as ort
 
-from battle_agents.mcts_approximation.db.database import db
+from battle_agents.mcts_approximation.db.python.database import db
 
 logger = logging.getLogger(__name__)
 
@@ -226,8 +226,8 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         Returns the closest matching species from the Knowledge Base, including predicted moves.
         If the model does not provide the required auxiliary outputs, returns None.
         """
-        from battle_agents.mcts_approximation.db.knowledge_base import find_closest_species
-        from battle_agents.mcts_approximation.db.database import db
+        from battle_agents.mcts_approximation.db.python.knowledge_base import find_closest_species
+        from battle_agents.mcts_approximation.db.python.database import db
 
         # Prepare base inputs
         inputs = self._prepare_inputs_base(state, player)
