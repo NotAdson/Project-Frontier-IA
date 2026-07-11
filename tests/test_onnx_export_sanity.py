@@ -5,7 +5,7 @@ import onnxruntime as ort
 
 from battle_agents.mcts_approximation.pipeline.train_nn import build_model, export_to_onnx
 from battle_agents.mcts_approximation.state_encoder import ACTION_SPACE, NUM_ACTIVE, NUM_DENSE_FEATURES, NUM_MOVES
-
+from battle_agents.mcts_approximation.db.python.database import db
 
 def _make_dummy_inputs():
     return {
