@@ -5,7 +5,7 @@ to query and match the closest real Pokémon in the database.
 """
 import numpy as np
 
-from battle_agents.mcts_approximation.db.database import db
+from battle_agents.mcts_approximation.db.python.database import db
 from battle_agents.mcts_approximation.state_encoder import TYPES, _encode_types
 
 # Cache variables to avoid redundant parsing/calculations during search

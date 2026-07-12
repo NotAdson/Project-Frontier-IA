@@ -31,7 +31,7 @@ def agents_factories():
         "Random": lambda prob: RandomAgent(prob),
         "BlindMCTS": lambda prob: BlindMCTSAgent(prob, iterations=2, max_rollout_depth=2),
         "MCTS": lambda prob: MCTSAgent(prob, iterations=2, max_rollout_depth=2),
-        "MCTS_Approx": lambda prob: MCTSApproximationAgent(prob, iterations=2, max_rollout_depth=2, model_path=MODEL_PATH)
+        "MCTS_Approx": lambda prob: MCTSApproximationAgent(prob, iterations=2, model_path=None)
     }
 
 def test_round_robin_benchmark(client, agents_factories):

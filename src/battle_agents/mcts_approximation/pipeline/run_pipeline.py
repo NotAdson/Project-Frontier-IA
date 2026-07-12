@@ -137,6 +137,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             champion_gen = 1
     else:
         champion_gen = 1
+        os.makedirs(os.path.dirname(champion_json_path), exist_ok=True)
         with open(champion_json_path, "w") as f:
             json.dump({"champion_gen": champion_gen}, f)
     print(f"[Champion Info] Current Active Champion is Gen {champion_gen}.")
@@ -173,7 +174,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         next_gen_dir = os.path.join(data_dir, f"gen{gen}")
         os.makedirs(next_gen_dir, exist_ok=True)
         
-        print("=" * 20 + f"\nStarting Generation {gen} / {end_gen}n" + "=" * 20)
+        print("=" * 20 + f"\nStarting Generation {gen} / {end_gen}\n" + "=" * 20)
         
         # Ensure root model matches the current champion for self-play
         if gen > 1:
@@ -323,6 +324,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             print(f"\n[PROMOTION] Model Gen {gen} outperformed/tied the Champion Gen {champion_gen}. Crowned new Champion!")
             champion_gen = gen
             # Save new champion info
+            os.makedirs(os.path.dirname(champion_json_path), exist_ok=True)
             with open(champion_json_path, "w") as f:
                 json.dump({"champion_gen": champion_gen}, f)
         else:
@@ -347,13 +349,4 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
 
 
 if __name__ == "__main__":
-    run_pipeline(
-        num_games=300, 
-        num_generations=30, 
-        mcts_iterations=100, 
-        epochs=100, 
-        wipe=False,
-        games_per_matchup=10,
-        max_rollout_depth=30,
-        processes=None
-    )
+    run_pipeline()

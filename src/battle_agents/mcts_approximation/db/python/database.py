@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-_BASEDIR = Path(__file__).resolve().parent
+_BASEDIR = Path(__file__).resolve().parents[1] / "data"
 
 
 class PokémonDatabase:

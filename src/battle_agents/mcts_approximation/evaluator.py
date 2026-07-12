@@ -9,7 +9,7 @@ import logging
 
 import onnxruntime as ort
 
-from battle_agents.mcts_approximation.db.database import db
+from battle_agents.mcts_approximation.db.python.database import db
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +60,15 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         self._buf_abilities = np.zeros((1, NUM_ABILITY_INDICES), dtype=np.int32)
 
         # Load model
-        if not (model_path.endswith(".onnx") and os.path.exists(model_path)):
-            raise FileNotFoundError(f"ONNX model not found or invalid at '{model_path}'. Expected a .onnx file.")
+        if model_path is None or not (model_path.endswith(".onnx") and os.path.exists(model_path)):
+            if model_path is not None:
+                raise FileNotFoundError(f"ONNX model not found or invalid at '{model_path}'. Expected a .onnx file.")
+            # No model provided – evaluator will return neutral defaults
+            self.expected_dense_dim = NUM_DENSE_FEATURES
+            self.input_names = []
+            self.output_names = []
+            print(f"[NeuralStateEvaluator] No model loaded – using neutral defaults.")
+            return
 
         # By default we use CPUExecutionProvider for batch-size 1 because it is significantly faster.
         providers = ['CPUExecutionProvider']
@@ -103,7 +110,7 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         Split the flat feature vector into the model's inputs.
         Uses the pre‑allocated buffers for zero‑allocation slicing.
         """
-        # Dense features – always the full NUM_DENSE_FEATURES (744)
+        # Dense features – always the full NUM_DENSE_FEATURES (758)
         features_dense = features[:NUM_DENSE_FEATURES]
         # Embedding part follows the dense block
         features_embed = features[NUM_DENSE_FEATURES:]
@@ -177,6 +184,9 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         return opp_stats, opp_types, opp_species, opp_moves
 
     def evaluate(self, state, player: str, valid_actions: list) -> tuple[float, dict[str, float]]:
+        if not valid_actions:
+            return 0.5, {}
+
         # Prepare base inputs
         inputs = self._prepare_inputs_base(state, player)
         
@@ -189,7 +199,9 @@ class NeuralStateEvaluator(BaseStateEvaluator):
 
         # Run the model (ONNX only)
         if self.onnx_session is None:
-            raise RuntimeError("ONNX model not loaded. Please provide a valid .onnx file path.")
+            uniform = 1.0 / len(valid_actions)
+            action_probs = {a: uniform for a in valid_actions}
+            return 0.5, action_probs
         
         ort_inputs = {}
         for name in self.input_names:
@@ -226,8 +238,8 @@ class NeuralStateEvaluator(BaseStateEvaluator):
         Returns the closest matching species from the Knowledge Base, including predicted moves.
         If the model does not provide the required auxiliary outputs, returns None.
         """
-        from battle_agents.mcts_approximation.db.knowledge_base import find_closest_species
-        from battle_agents.mcts_approximation.db.database import db
+        from battle_agents.mcts_approximation.db.python.knowledge_base import find_closest_species
+        from battle_agents.mcts_approximation.db.python.database import db
 
         # Prepare base inputs
         inputs = self._prepare_inputs_base(state, player)
