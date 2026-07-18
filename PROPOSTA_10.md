@@ -15,8 +15,10 @@ auditoria posterior (seção 7) descobriu que v3 e v4 tinham, na prática, o
 — corrigido, retreinado como v5, e reavaliado. **v5 é o resultado final desta
 fase**: estritamente melhor que v4 nos dois critérios de MSE, com arquitetura
 tecnicamente correta. Não haverá mais rodadas de teste de dimensão/arquitetura
-depois de v5 — a próxima etapa é a integração (revisão de opções na seção 8,
-pendência ainda não iniciada na seção 10).
+depois de v5. A integração do encoder em `build_model()` já está feita e
+validada (revisão de opções na seção 8, implementação na seção 9); o que
+falta é destravar a exportação ONNX, bloqueada por um bug pré-existente e
+não relacionado (seção 9.1, pendência na seção 11).
 
 ---
 
@@ -579,7 +581,7 @@ isoladamente — `0,033497` ainda está `~3,3×` acima do threshold de `0,01`,
 mesmo com a queda de `21,24%` para `18,30%` de RMSE ao longo de toda a série
 (v1→v4). Dado o tempo disponível até o prazo de 20/07, a decisão tomada foi
 aceitar v4 como resultado final desta fase e seguir para a integração (seção
-"Pendências", então seção 8, hoje seção 10) — o critério de dense isolado
+"Pendências", então seção 8, depois seção 10, hoje seção 11) — o critério de dense isolado
 fica como métrica a revisitar se a validação de desempenho real mostrar que
 a qualidade de jogo foi comprometida.
 
@@ -793,7 +795,7 @@ não devem fechá-lo.
 **ENCERRADA DE FORMA DEFINITIVA** com v5 como resultado final. Não haverá
 mais rodadas de teste de dimensão/arquitetura depois desta — qualquer
 trabalho futuro sobre o bloco dense (se houver) deveria mirar os próprios
-dados/features, não o gargalo latente (ver seção 10, "Pendência futura").
+dados/features, não o gargalo latente (ver seção 11, "Pendência futura").
 
 ---
 
@@ -868,10 +870,11 @@ das 4 camadas `Linear` (`encoder.0`, `encoder.2`, `encoder.4`, `encoder.6`).
 
 ### 8.3 O que muda na prática (não estrutural, mas vale registrar)
 
-- **Congelamento**: a seção 10 (pendências) já previa carregar o encoder
+- **Congelamento**: a seção 11 (pendências) já previa carregar o encoder
   **congelado** — isso não muda, e como as larguras mudaram, o tensor que
   sai do encoder para dentro de `train_nn.py` também muda: `Dense(512)`
-  (`train_nn.py:432`) passaria a receber um vetor de **256** dims (o
+  (linha original antes da integração da seção 9) passaria a receber um
+  vetor de **256** dims (o
   `latent_dim` de v5), não mais 64 (o `latent_dim` original de v1/v2) nem
   128 (v3). Isso já era esperado — a análise anterior de integração foi
   feita quando v4 (`latent_dim=256`) já era o candidato, então o tamanho de
@@ -882,23 +885,70 @@ das 4 camadas `Linear` (`encoder.0`, `encoder.2`, `encoder.4`, `encoder.6`).
   `checkpoints_v5_fixed256/fused_autoencoder_best.pt` (seção 7.6) — mesmo
   `latent_dim=256`, mesmo shape de saída, arquitetura interna diferente e
   tecnicamente correta.
-- **[CONFIRMAR]**: a análise completa de opções feita anteriormente
-  (alternativas à Opção A, se houver, e os critérios usados para descartá-
-  las) não está registrada em nenhum arquivo deste repositório — só existe
-  no histórico da conversa. Esta seção confirma que a conclusão (Opção A)
-  continua de pé com a arquitetura nova, mas não tem como reproduzir aqui,
-  de forma verificável, o conteúdo integral do levantamento original das
-  demais opções. Se precisar dessas alternativas documentadas por escrito,
-  marcar como próximo passo.
+- As três alternativas à Opção A que avaliei e descartei estão registradas
+  na seção 8.4, com o motivo de cada descarte.
 - Confirmado por leitura de `evaluator.py`/`train_nn.py` (`export_to_onnx()`,
-  `train_nn.py:489-568`): o modelo principal é Keras, exportado a ONNX via
+  `train_nn.py:529-613`): o modelo principal é Keras, exportado a ONNX via
   `model.export(...)` (Keras 3 nativo) ou `tf2onnx` como fallback, e
   `evaluator.py` carrega só esse único grafo ONNX via `onnxruntime`
   (`evaluator.py:82`) — reforça por que a Opção A (encoder como camadas
   Keras nativas, dentro do mesmo `keras.Model`) é a rota que evita ter dois
   grafos de inferência separados (um ONNX do `train_nn.py`, outro `.pt`
   solto do autoencoder), que era o problema original citado na pendência de
-  "mesmo grafo ONNX" (seção 10).
+  integração em `evaluator.py` (seção 11).
+
+### 8.4 Opções descartadas (registro completo)
+
+Além da Opção A, avaliei três alternativas antes de fechar a recomendação.
+Nenhuma foi implementada, ficam aqui só como registro do que descartei e
+por quê.
+
+**Opção B, ONNX separado fundido via `onnx.compose`.** Exportar o encoder
+PyTorch para ONNX isoladamente (`torch.onnx.export()` só sobre o encoder) e
+depois fundir esse grafo com o ONNX do resto da rede usando
+`onnx.compose.merge_models()`. Confirmei agora que essa função existe no
+ambiente (`onnx==1.22.0`, já instalado, sem dependência nova).
+
+Descartei porque essa opção resolve só o caminho de inferência. O encoder
+precisa participar do `model.fit()` da rede principal via backprop, mesmo
+congelado, e um grafo ONNX carregado via ONNX Runtime não sustenta isso: é
+um artefato de inferência, sem gradiente. Tem outro problema em cima disso.
+A composição via `onnx.compose` exigiria que `fused_features`
+(`train_nn.py:429`) apareça como um nó nomeado e estável no grafo ONNX
+exportado do `train_nn.py`, e hoje isso não é garantido. É uma camada
+intermediária do Keras, não necessariamente materializada como saída do
+grafo exportado.
+
+**Opção C1, retreinar o encoder do zero em Keras.** Construir a mesma
+arquitetura nativamente em `keras.Sequential`, treinar de novo sobre o
+dataset sintético, descartar o checkpoint PyTorch de v5. Elimina qualquer
+necessidade de transposição de pesos entre frameworks.
+
+Mas descarta junto as dezenas de horas de treino e toda a investigação já
+concluída e documentada nas seções 4 a 7: os 8 smoke tests, os treinos
+completos v1 a v3, a descoberta do bug do gargalo fixo, o retreino v5.
+Descartei essa opção por desproporção. Retreinar tudo de novo só para
+evitar uma transposição de matriz, que é bem mais barata de fazer
+corretamente do que replicar semanas de investigação, não compensa.
+
+**Opção C2, encoder como pré-processador externo, fora do grafo Keras.**
+Rodar o encoder ONNX separadamente dentro de `evaluator.py`, antes de
+montar os inputs da rede principal.
+
+Tem o mesmo problema de fundo da Opção B, não resolve o treino.
+`fused_features` só existe depois que o Meta-Planner processa os 12 tokens
+dentro do grafo Keras (`train_nn.py:349-429`), e é esse mesmo grafo que é
+treinado de ponta a ponta. Pré-computar isso fora do loop de treino exigiria
+reimplementar a lógica do Meta-Planner em Python puro, fora do Keras. Isso
+duplica lógica que já existe em `train_nn.py` e cria risco real de as duas
+implementações divergirem com o tempo.
+
+Nenhuma das três alternativas cumpre o requisito central: o encoder precisa
+estar dentro do mesmo grafo Keras que é treinado e depois exportado, tanto
+para participar do treino da rede principal quanto para acabar num único
+grafo ONNX em produção (pendência de integração em `evaluator.py`, seção 11). A Opção A
+é a única que resolve isso sem duplicar lógica nem descartar trabalho já
+feito, e é essa a recomendação que mantenho.
 
 **Nada disso foi implementado** — `train_nn.py`, `evaluator.py` e
 `state_encoder.py` continuam exatamente como estavam antes desta issue,
@@ -906,7 +956,140 @@ como já registrado na seção "Arquivos criados".
 
 ---
 
-## 9. Infraestrutura de suporte a retomada de treino
+## 9. Integração do encoder v5 em `build_model()` (Keras nativo)
+
+Implementei a Opção A dentro de `train_nn.py::build_model()`
+(`train_nn.py:453-472`). O encoder v5 recriado via `build_keras_encoder()`
+(`export_encoder_to_keras.py`, seção 8) entra logo depois de
+`fused_features` (`train_nn.py:451`), substituindo o `Dense(512)` original.
+Carrego o checkpoint (`data/autoencoder_bootstrap/checkpoints_v5_fixed256/
+fused_autoencoder_best.pt` por padrão, parametrizável via
+`encoder_checkpoint_path`) direto dentro de `build_model()`, sem passo
+manual externo.
+
+Revisei uma decisão de arquitetura antes de implementar, em vez de decidir
+sozinho: mantive `BatchNormalization` e `Dropout(0.3)` logo depois do
+encoder, mas removi o `Activation("relu")` que existia nessa posição. O
+código latente do encoder termina sem ativação por design, pode ser
+negativo, e um ReLU ali zeraria metade de uma representação já treinada e
+congelada. Os dois blocos seguintes do tronco (`dense_1`, `dense_2`)
+continuam com ReLU normal, intocados.
+
+Validei tudo via forward pass único, sem `model.fit()`:
+
+- O grafo constrói sem erro de shape em nenhum dos 18 outputs (`value`,
+  `policy`, os 15 heads auxiliares, `meta_plan`), testado com batch=4.
+- O encoder fica de fato congelado. 8 tensores de peso (4 camadas Dense,
+  kernel+bias cada), 0 aparecem em `model.trainable_weights`, apesar do
+  container `Sequential` `fused_encoder_v5` reportar `trainable=True` nele
+  mesmo. O `trainable=False` de cada camada interna prevalece.
+- `test_model_weights_loading` (`tests/models/test_model_weights.py`, já
+  existente) passou com o encoder integrado: monta o modelo, salva como
+  `.keras`, recarrega, roda forward pass no modelo recarregado. Confirma que
+  a integração sobrevive um ciclo completo de save/load do Keras, não só a
+  montagem em memória.
+- Suíte completa (`pytest tests/`, `KERAS_BACKEND=torch`): 11 passed, 1
+  failed. O único teste que falha é
+  `tests/test_onnx_export_sanity.py::test_onnx_export_matches_keras`, ver
+  seção 9.1.
+
+### 9.1 Validação numérica contra ONNX: bloqueada por um bug pré-existente e não relacionado
+
+Não completei a comparação numérica Keras vs. ONNX exportado. `export_to_onnx()`
+(`train_nn.py`, já existente, não modificado) falha nos dois métodos que
+tenta, mesmo sem o encoder:
+
+1. `model.export(..., format="onnx")` (exportador nativo Keras 3, via
+   `torch.export`): falhava de início por falta do pacote `onnxscript`.
+   Instalei `onnxscript==0.7.1` no ambiente local (`python3 -m pip install
+   onnxscript`, sem precisar de `--break-system-packages`, o pip `22.0.2`
+   deste ambiente é anterior a essa flag). O caminho avançou, mas quebrou
+   num ponto mais profundo: `torch.export.export` levanta
+   `torch.fx.experimental.symbolic_shapes.GuardOnDataDependentSymNode`.
+2. `torch.onnx.export` (fallback legado): falha num `onnx::Gather` dinâmico
+   dentro de `keras/src/ops/nn.py:2949`, com a mensagem "Please try to make
+   things (e.g. kernel sizes) static if possible".
+
+Confirmei duas vezes, isolando `train_nn.py` de volta pro código original
+via `git stash` (uma vez antes de instalar `onnxscript`, outra depois), que
+os dois erros são idênticos com e sem a minha mudança. Não é o encoder
+causando isso. Investiguei a causa raiz num round separado, ver seção 9.2.
+
+`onnxscript>=0.7.0` já está declarado em `requirements.txt` desde o commit
+`a384f170` (ancestral desta branch, confirmado via `git branch --contains`),
+o que faltava era o ambiente local ter instalado essa dependência já
+declarada, não uma lacuna no arquivo.
+
+Não tentei consertar o bug do `torch.export`, por instrução explícita.
+Fica registrado como pendência separada da issue #10 (seção 11), não como
+falha da integração do encoder, que está completa e validada por todos os
+outros meios disponíveis: forward pass, congelamento confirmado, ciclo de
+save/load.
+
+### 9.2 Causa raiz confirmada, e uma correção candidata testada (não aplicada)
+
+Fiz uma rodada extra de investigação sobre o bloqueio da seção 9.1, ainda
+sem tocar em `export_to_onnx()` nem aplicar nada em definitivo.
+
+**Causa raiz do primeiro erro** (`GuardOnDataDependentSymNode`, caminho
+`model.export(..., format="onnx")`): confirmei via traceback completo que
+nasce em `SliceLayer.call()`, `train_nn.py:69`
+(`return keras.ops.slice(x, [0, self.start], [shape[0], self.end - self.start])`).
+`shape[0]`, a dimensão de batch obtida via `keras.ops.shape(x)`, vira um
+`SymInt` simbólico durante o `torch.export.export()`, e usar esse valor
+como tamanho de um `keras.ops.slice` faz o tracer recusar a guarda por não
+conseguir provar o valor de forma estática. `ConstantLayer.call()`
+(`train_nn.py:92`) usa exatamente o mesmo padrão e está sujeita ao mesmo
+problema.
+
+**Correção candidata testada**: troquei `keras.ops.slice(x, [0, self.start],
+[shape[0], ...])` por `keras.ops.take(x, keras.ops.arange(self.start, end),
+axis=1)` nas duas camadas, eliminando a necessidade de `shape[0]` no
+tamanho do slice (`start`/`end` já são inteiros Python conhecidos em tempo
+de construção do grafo, não valores derivados de tensor). Apliquei isso
+**só de forma temporária e isolada**: editei `train_nn.py` diretamente,
+rodei os testes, e restaurei o arquivo a partir de uma cópia de backup
+salva antes da edição (não usei `git checkout`, porque isso reverteria
+também a integração do encoder v5, que ainda não está commitada). Nunca
+cheguei a dar `git add` nem `commit` nessa versão.
+
+Resultado: a correção eliminou o `GuardOnDataDependentSymNode` de fato, e
+`model.export(...)` conseguiu gerar um arquivo `.onnx` pela primeira vez em
+toda essa investigação (`ONNX export completed successfully using
+model.export!`). Mas o arquivo resultante falha ao carregar no
+`onnxruntime`:
+
+```
+onnxruntime.capi.onnxruntime_pybind11_state.Fail: [ONNXRuntimeError] : 1 : FAIL :
+Load model from .../model.onnx failed:Node (node_squeeze_51) Op (Squeeze)
+[ShapeInferenceError] Dimension of input 1 must be 1 instead of 62
+```
+
+O `62` bate com `NUM_FIELD_FEATURES`, a fatia que
+`field_conds = SliceLayer(FIELD_START, FIELD_START + NUM_FIELD_FEATURES, ...)`
+extrai (`train_nn.py:346`). A troca por `keras.ops.take` resolve o
+`SymNode` simbólico, mas produz um grafo ONNX com um nó `Squeeze` cuja
+dimensão esperada não bate com o `field_conds` reconstruído.
+
+**Status**: pista concreta, não problema resolvido. A direção (tirar o
+`shape[0]` simbólico de `SliceLayer`/`ConstantLayer`) está certa, mas falta
+uma etapa de trabalho para entender por que o `Squeeze` espera uma
+dimensão diferente do `field_conds` e fechar isso de ponta a ponta. Fica
+fora do escopo e do prazo atual desta issue, registrado como pista pra
+quem pegar essa frente depois, não repetir a investigação do zero.
+
+**Estado do repositório ao final desta rodada**: confirmei `git diff
+--stat` de `train_nn.py` batendo exatamente com o estado de antes do
+teste (`45 insertions(+), 5 deletions(-)`, o mesmo da seção 9) e o hash
+MD5 do arquivo restaurado idêntico ao backup salvo antes da edição.
+Nenhuma versão da correção candidata (`SliceLayer`/`ConstantLayer` via
+`keras.ops.take`) ficou aplicada. O único diff real em `train_nn.py`
+continua sendo a integração do encoder v5 da seção 9, sem relação com este
+bloqueio.
+
+---
+
+## 10. Infraestrutura de suporte a retomada de treino
 
 Adicionado em `train_autoencoder.py` (não testado em execução real — só
 sintaxe validada via `py_compile`, por instrução explícita de não rodar
@@ -940,7 +1123,7 @@ o treino de 50 épocas além de onde parou.
 
 ---
 
-## 10. Pendências
+## 11. Pendências
 
 ### Encerrado nesta fase
 
@@ -953,23 +1136,30 @@ o treino de 50 épocas além de onde parou.
   v5 o substitui em definitivo, por ser estritamente melhor nos dois
   critérios de MSE e por corrigir o bug de arquitetura documentado na seção
   7. Não haverá mais rodadas de teste de dimensão/arquitetura depois de v5.
+- **Integração em `train_nn.py`**: **FEITA E VALIDADA** (seção 9). O
+  `Dense(512)` original foi substituído pelo encoder v5, carregado e
+  congelado automaticamente dentro de `build_model()`. Validado via forward
+  pass, congelamento confirmado em `model.trainable_weights`, e ciclo
+  completo de save/load (`test_model_weights_loading`). A validação
+  numérica específica contra o formato ONNX exportado não foi possível,
+  ver o item separado abaixo.
 
 ### Ainda não implementado
 
-- **Integração em `train_nn.py`**: substituir a primeira camada
-  `Dense(512)` do tronco principal (`train_nn.py:432`) pelo encoder do
-  **v5** treinado e **congelado** (pesos não atualizados durante o treino da
-  rede principal) — atualizado de v4 para v5 (seção 7.6/8.3). Não iniciado —
-  **próxima etapa ativa**.
-- **Integração em `evaluator.py` / exportação ONNX**: o encoder precisa
-  fazer parte do **mesmo grafo ONNX** que o MCTS carrega em produção
-  (`NeuralStateEvaluator`, `evaluator.py`), não ser um arquivo `.pt` separado
-  carregado à parte. Não iniciado — envolve converter/fundir um módulo
-  PyTorch treinado num grafo Keras/ONNX, o que não é trivial dado que o resto
-  do pipeline (`train_nn.py`) é Keras 3, não PyTorch. A recomendação de
-  abordagem (Opção A — recriar como `keras.layers.Dense` + `set_weights()`,
-  seção 8) foi revisada contra a arquitetura de v5 e continua válida
-  estruturalmente; a implementação em si ainda não começou.
+- **Bug pré-existente no pipeline de exportação ONNX** (`torch.export.export`
+  levanta `GuardOnDataDependentSymNode`; o fallback `torch.onnx.export`
+  falha num `onnx::Gather` dinâmico): confirmado como **não relacionado à
+  integração do encoder** (seção 9.1, isolado duas vezes via `git stash`,
+  antes e depois de instalar `onnxscript`). Fica como pendência própria,
+  fora do escopo da issue #10. Enquanto não for resolvido, não há como
+  gerar o `.onnx` com o encoder embutido nem comparar numericamente a saída
+  Keras contra a saída ONNX.
+- **Integração em `evaluator.py`**: o encoder já faz parte do mesmo grafo
+  Keras que `train_nn.py` treina e tentaria exportar (não é mais um arquivo
+  `.pt` separado carregado à parte, isso já foi resolvido pela seção 9).
+  O que falta é a exportação ONNX em si funcionar, bloqueada pelo item
+  acima, e depois `evaluator.py` carregar esse `.onnx` normalmente, como já
+  faz hoje com o modelo sem o encoder.
 - **Validação de desempenho real** (rede principal jogando COM vs. SEM o
   autoencoder, via `RoundRobinBenchmark`/`TournamentBenchmark` ou
   equivalente) foi **conscientemente adiada** para depois do prazo de
@@ -1001,6 +1191,7 @@ o treino de 50 épocas além de onde parou.
 | `src/battle_agents/mcts_approximation/pipeline/autoencoder/model.py` | 180 | arquitetura `FusedFeaturesAutoencoder` + máscara binária/loss segmentada (seção 6.3) + `encoder_dims()`/`decoder_dims()` escalando com `latent_dim` (correção do bug do gargalo fixo, seção 7.3) |
 | `src/battle_agents/mcts_approximation/pipeline/autoencoder/train_autoencoder.py` | 462 | treino, loss ponderada por peça, `SegmentedPieceLoss` (seção 6.3), resume |
 | `src/battle_agents/mcts_approximation/pipeline/autoencoder/test_reconstruction.py` | 209 | teste de aceitação (MSE agregado + por peça) |
+| `src/battle_agents/mcts_approximation/pipeline/autoencoder/export_encoder_to_keras.py` | 155 | recria o encoder v5 como camadas Keras nativas via `set_weights()` (Opção A, seção 8), com validação numérica embutida contra o PyTorch original |
 
 Contagens de linha acima reconfirmadas por `wc -l` nesta sessão (a versão
 anterior deste documento listava `model.py`=51 e `train_autoencoder.py`=386 —
@@ -1010,9 +1201,11 @@ seção 7.3).
 
 Também modificado nesta sessão (fora da pasta `autoencoder/`):
 `src/battle_agents/mcts_approximation/pipeline/generate_data.py` (parâmetro
-`agent_type`, retrocompatível — seção 2.1). **Nenhum outro arquivo do projeto
-foi alterado** — `train_nn.py`, `evaluator.py` e `state_encoder.py` continuam
-exatamente como estavam antes desta issue.
+`agent_type`, retrocompatível — seção 2.1) e, mais recentemente,
+`src/battle_agents/mcts_approximation/pipeline/train_nn.py` (45 linhas
+adicionadas, 5 removidas — integração do encoder v5 em `build_model()`,
+seção 9). **`evaluator.py` e `state_encoder.py` continuam exatamente como
+estavam antes desta issue.**
 
 Artefatos gerados em `data/` (não versionados, regeneráveis — ver
 `CLAUDE.md`): `data/genrandom_bootstrap/` (49.999 jogos, ~49GB),
