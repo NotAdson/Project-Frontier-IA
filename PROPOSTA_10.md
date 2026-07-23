@@ -35,6 +35,8 @@ principal (`train_nn.py`):
   hipótese de design, e chegou a gerar um artefato (`data/autoencoder_bootstrap/dense_pokemon_slices.npy`,
   111.196.104 linhas × 53 colunas, 23,57GB) via `prepare_data.py`. Esse arquivo foi
   **apagado a pedido explícito do usuário** por não servir mais ao design atual.
+  O próprio `prepare_data.py` também não existe mais no repositório: removi ele
+  depois, numa resposta de revisão no PR1, já que não tinha uso no pipeline ativo.
 - **(B) Comprimir o `fused_features` inteiro**, já depois do Meta-Planner ter
   processado os tokens e produzido seus pesos de atenção — ou seja, comprimir o
   vetor de entrada do tronco tático principal (`train_nn.py:432`,
@@ -98,7 +100,9 @@ Confirmado nesta sessão: **49.999 arquivos** `game_*.json` em
 `data/genrandom_bootstrap/`, somando **9.266.342 steps** no total (número
 obtido de forma independente duas vezes — uma vez rodando `prepare_data.py`,
 outra rodando `generate_synthetic_dataset.py` — com resultado idêntico nos
-dois, o que é uma checagem cruzada de consistência).
+dois, o que é uma checagem cruzada de consistência. `prepare_data.py` foi
+removido do repositório depois dessa checagem, numa resposta de revisão no
+PR1, por não ter uso no pipeline ativo).
 
 O tempo real dessa geração não ficou logado em lugar nenhum, então recuperei
 um valor a partir dos timestamps dos próprios arquivos (`find
@@ -1199,7 +1203,6 @@ o treino de 50 épocas além de onde parou.
 | arquivo | linhas | função |
 |---|---|---|
 | `src/battle_agents/mcts_approximation/pipeline/autoencoder/__init__.py` | 1 | inicialização do subpacote |
-| `src/battle_agents/mcts_approximation/pipeline/autoencoder/prepare_data.py` | 158 | extração por-Pokémon (design **descartado**, seção 1) |
 | `src/battle_agents/mcts_approximation/pipeline/autoencoder/generate_synthetic_dataset.py` | 274 | geração do dataset sintético de 2M exemplos |
 | `src/battle_agents/mcts_approximation/pipeline/autoencoder/model.py` | 180 | arquitetura `FusedFeaturesAutoencoder` + máscara binária/loss segmentada (seção 6.3) + `encoder_dims()`/`decoder_dims()` escalando com `latent_dim` (correção do bug do gargalo fixo, seção 7.3) |
 | `src/battle_agents/mcts_approximation/pipeline/autoencoder/train_autoencoder.py` | 462 | treino, loss ponderada por peça, `SegmentedPieceLoss` (seção 6.3), resume |
