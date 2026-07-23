@@ -100,6 +100,19 @@ obtido de forma independente duas vezes — uma vez rodando `prepare_data.py`,
 outra rodando `generate_synthetic_dataset.py` — com resultado idêntico nos
 dois, o que é uma checagem cruzada de consistência).
 
+O tempo real dessa geração não ficou logado em lugar nenhum, então recuperei
+um valor a partir dos timestamps dos próprios arquivos (`find
+data/genrandom_bootstrap -name "game_*.json" -printf "%T@ %p\n"`). O primeiro
+`game_*.json` tem mtime `2026-07-11 23:18:38,93` e o último `2026-07-12
+03:42:08,99`. A diferença é `15.810,06s`, **4h23min30s**, média de `0,316s`
+por jogo. Verifiquei os gaps entre mtimes consecutivos ordenados: o maior é
+`3,70s`, então essa janela corresponde a uma execução contínua, não à soma de
+sessões separadas por uma pausa. Rodou com `processes=None`
+(`generate_dataset`, que resolve para `max(1, cpu_count()-2)`); na máquina
+onde recuperei esse número, `nproc=12` dá 10 processos paralelos. Esse tempo
+é específico a esse hardware e a esse grau de paralelismo, não uma constante
+do algoritmo, mas é o único número real disponível hoje para essa etapa.
+
 ### 2.2. `data/autoencoder_bootstrap/fused_features_synthetic.npy`
 
 Dataset sintético de **2.000.000 exemplos × 3074 dims**, `float32`, 24,59GB

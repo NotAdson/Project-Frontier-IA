@@ -724,7 +724,13 @@ def compute_counterfactual_targets(model, inputs, is_scratch=False, batch_size=2
     return meta_targets
 
 
-def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500, epochs: int = 15):
+def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500,
+          epochs: int = 15, encoder_checkpoint_path: str = None):
+    """encoder_checkpoint_path: forwarded to build_model() when building a fresh model.
+    Left as None to keep build_model()'s own DEFAULT_ENCODER_CHECKPOINT (relative to cwd --
+    only safe when this runs from the project root, per CLAUDE.md). Callers that can't
+    guarantee the cwd (e.g. run_pipeline.py, which already resolves data_dir absolutely)
+    should pass an absolute path here instead."""
     print(f"[Keras backend: {keras.backend.backend()}]")
     print(f"Locating game files in {data_dir}/gen*...")
     all_files = list(Path(data_dir).glob("gen*/game_*.json"))
@@ -878,6 +884,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "meta_plan": 0.5
     }
 
+    build_model_kwargs = {} if encoder_checkpoint_path is None else {"encoder_checkpoint_path": encoder_checkpoint_path}
+
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path}...")
         try:
@@ -898,7 +906,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             )
         except Exception as e:
             print(f"Model load failed ({e}). Building fresh model from scratch...")
-            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
+            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities, **build_model_kwargs)
             print("Compiling model...")
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=1e-3),
@@ -908,7 +916,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             )
     else:
         print("Building new model from scratch...")
-        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
+        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities, **build_model_kwargs)
         print("Compiling model...")
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=1e-3),
