@@ -3,7 +3,7 @@ from core.benchmark import BaseBenchmark
 
 class RoundRobinBenchmark(BaseBenchmark):
     """ Benchmark that matches a dictionary of agents against every other agent in a full tournament format. """
-    def __init__(self, client, agent_factories, games_per_matchup=5, formatid="gen3randombattle"):
+    def __init__(self, client, agent_factories, games_per_matchup=5, formatid="gen3ou"):
         super().__init__(client, formatid)
         self.agent_factories = agent_factories # Dict: name -> factory
         self.games_per_matchup = games_per_matchup

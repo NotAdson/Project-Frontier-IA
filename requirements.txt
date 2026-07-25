@@ -20,6 +20,9 @@ onnx>=1.15.0
 onnxruntime>=1.16.0
 onnxscript>=0.7.0
 
+# Hugging Face Dataset Download
+huggingface-hub>=0.16.0
+
 # CLI & Web
 tqdm>=4.64.0
 flask>=3.0.0

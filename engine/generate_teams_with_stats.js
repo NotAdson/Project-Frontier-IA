@@ -48,7 +48,7 @@ function generateTeamWithStats(format) {
 }
 
 if (require.main === module) {
-    const format = process.argv[2] || 'gen3randombattle';
+    const format = process.argv[2] || 'gen3ou';
     const p1 = generateTeamWithStats(format);
     const p2 = generateTeamWithStats(format);
     console.log(JSON.stringify({ p1, p2 }));

@@ -33,7 +33,16 @@ class GameController:
         model_path = os.path.join(data_dir, "mcts_model.onnx")
         
         self.client = ShowdownClient(engine_path)
-        self.problem = PokemonProblem(self.client, formatid="gen3randombattle")
+        # Try to load prebuilt OU teams (packed format) and pass them to the engine.
+        try:
+            from battle_agents.mcts_approximation.db import teams as teams_db
+            p1_pack = teams_db.get_random_team('gen3ou')
+            p2_pack = teams_db.get_random_team('gen3ou')
+        except Exception:
+            p1_pack = None
+            p2_pack = None
+
+        self.problem = PokemonProblem(self.client, formatid="gen3ou", p1_team=p1_pack, p2_team=p2_pack)
         self.current_state = self.problem.initial
         self.precomputed_p2_action = None
         self.is_thinking = False

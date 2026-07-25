@@ -38,7 +38,7 @@ class ShowdownClient(BaseClient):
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Failed to parse JSON from node bridge: {line}") from e
 
-    def init_battle(self, formatid='gen3randombattle', p1_team=None, p2_team=None):
+    def init_battle(self, formatid='gen3ou', p1_team=None, p2_team=None):
         req = {
             "type": "init",
             "formatid": formatid

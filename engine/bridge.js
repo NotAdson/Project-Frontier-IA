@@ -76,7 +76,7 @@ rl.on('line', (line) => {
     try {
         const request = JSON.parse(line);
         if (request.type === 'init') {
-            const format = request.formatid || 'gen3randombattle';
+            const format = request.formatid || 'gen3ou';
             // Use random teams if none provided
             const p1_team = request.p1_team || Teams.pack(Teams.generate(format));
             const p2_team = request.p2_team || Teams.pack(Teams.generate(format));

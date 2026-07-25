@@ -122,7 +122,7 @@ def generate_dataset(num_games=1000, processes=None, output_dir="data/games", mc
 
     engine_path = str(Path(__file__).resolve().parents[4] / "engine")
 
-    args = [(engine_path, "gen3randombattle", mcts_iterations, use_cheating_mcts, model_path, agent_type) for _ in range(remaining_games)]
+    args = [(engine_path, "gen3ou", mcts_iterations, use_cheating_mcts, model_path, agent_type) for _ in range(remaining_games)]
 
     print(f"Starting {remaining_games} simulations using {processes} processes...")
 
