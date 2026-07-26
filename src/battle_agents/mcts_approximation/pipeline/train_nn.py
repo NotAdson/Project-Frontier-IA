@@ -108,8 +108,7 @@ class ApplyMaskLayer(keras.layers.Layer):
 from battle_agents.mcts_approximation.db.python.database import db
 from battle_agents.mcts_approximation.state_encoder import (
     ACTION_SPACE, FIELD_START, MAIN_EMB_ABILITY_DIM, MAIN_EMB_ITEMS_DIM,
-    MAIN_EMB_MOVES_DIM, MAIN_EMB_SPECIES_DIM, META_EMB_ABILITY_DIM,
-    META_EMB_ITEMS_DIM, META_EMB_MOVES_DIM, META_EMB_SPECIES_DIM,
+    MAIN_EMB_MOVES_DIM, MAIN_EMB_SPECIES_DIM,
     NUM_ABILITY_INDICES, NUM_ACTIVE, NUM_BENCH, NUM_BOOSTS, NUM_DENSE_FEATURES,
     NUM_EMBEDDING_INDICES, NUM_FIELD_FEATURES, NUM_ITEM_INDICES,
     NUM_MOVE_INDICES, NUM_MOVES, NUM_SPECIES_INDICES, NUM_STATUS, NUM_STATS,
@@ -324,19 +323,8 @@ def extract_aux_targets_batch(X_next, num_species, num_moves):
 
 
 def build_model(num_dense: int, num_moves: int, num_species: int,
-                num_items: int, num_abilities: int,
-                use_meta_planner: bool = True) -> keras.Model:
-    """Builds the multi-input value+policy network with action masking.
-
-    use_meta_planner: When True (default), the Meta-Planner Transformer
-        sub-network (per-mon self-attention -> 12-dim importance weights) is
-        built and its output is concatenated into `fused_features` and exposed
-        as an auxiliary output head trained against counterfactual fainting
-        targets. When False, the entire Meta-Planner is skipped -- `fused_features`
-        is just `concat_main` (no 12-dim concatenation, no meta_plan output, no
-        counterfactual supervision). Used for the ablation experiment that
-        decides whether the Meta-Planner is worth keeping.
-    """
+                num_items: int, num_abilities: int) -> keras.Model:
+    """Builds the multi-input value+policy network with action masking."""
 
     # Category Inputs
     inp_dense     = keras.layers.Input(shape=(num_dense,), name="dense_features")
@@ -345,95 +333,6 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     inp_items     = keras.layers.Input(shape=(NUM_ACTIVE,), name="item_indices",    dtype="int32")
     inp_abilities = keras.layers.Input(shape=(NUM_ACTIVE,), name="ability_indices", dtype="int32")
     inp_mask      = keras.layers.Input(shape=(len(ACTION_SPACE),), name="action_mask")
-
-    # --- META-PLANNER TRANSFORMER SUB-NETWORK ---
-    # Built only when use_meta_planner=True. When False, `meta_plan` stays None
-    # and is excluded from fused_features and the model outputs (see below).
-    meta_plan = None
-    if use_meta_planner:
-        # Shared Embeddings for Token Construction
-        emb_species_layer = keras.layers.Embedding(num_species, META_EMB_SPECIES_DIM, name="meta_emb_species")
-        emb_moves_layer   = keras.layers.Embedding(num_moves, META_EMB_MOVES_DIM, name="meta_emb_moves")
-        emb_items_layer   = keras.layers.Embedding(num_items, META_EMB_ITEMS_DIM, name="meta_emb_items")
-        emb_abilities_layer = keras.layers.Embedding(num_abilities, META_EMB_ABILITY_DIM, name="meta_emb_abilities")
-
-        # NOTE: field conditions (weather, side conditions, active volatiles) live in
-        # the dense block at [FIELD_START:FIELD_START+NUM_FIELD_FEATURES] and are
-        # already part of `inp_dense` -- they get concatenated into `fused_features`
-        # via `concat_main` below. They are NOT included in the per-mon tokens
-        # because they are team-level (identical across all 12 mons) and would
-        # contribute zero discriminative signal to the self-attention dot products
-        # (33% of every token's vector would be identical across tokens).
-        tokens = []
-        for i in range(NUM_ACTIVE):
-            if i < NUM_BENCH:
-                start_idx = i * PER_MON_DENSE
-                owner_val = 1.0
-            else:
-                start_idx = OPP_TEAM_START + (i - NUM_BENCH) * PER_MON_DENSE
-                owner_val = 0.0
-
-            # 1. Dense features for Pokemon i
-            p_dense = SliceLayer(start_idx, start_idx + PER_MON_DENSE, name=f"p{i}_dense")(inp_dense)
-            # 2. Extract PP features from the appended block
-            p_pp    = SliceLayer(PP_START + i * NUM_MOVES, PP_START + i * NUM_MOVES + NUM_MOVES, name=f"p{i}_pp")(inp_dense)
-            # 3. Categorical embeddings
-            p_spec = SliceLayer(i, i + 1, name=f"p{i}_species")(inp_species)
-            p_item = SliceLayer(i, i + 1, name=f"p{i}_item")(inp_items)
-            p_abil = SliceLayer(i, i + 1, name=f"p{i}_ability")(inp_abilities)
-
-            # NUM_MOVES moves per Pokémon
-            m_start = i * NUM_MOVES if i < NUM_BENCH else (NUM_BENCH * NUM_MOVES) + (i - NUM_BENCH) * NUM_MOVES
-            p_moves = SliceLayer(m_start, m_start + NUM_MOVES, name=f"p{i}_moves")(inp_moves)
-
-            spec_emb = keras.layers.Flatten()(emb_species_layer(p_spec))
-            item_emb = keras.layers.Flatten()(emb_items_layer(p_item))
-            abil_emb = keras.layers.Flatten()(emb_abilities_layer(p_abil))
-            moves_emb = keras.layers.Flatten()(emb_moves_layer(p_moves))
-
-            # Owner flag
-            owner_flag = ConstantLayer(owner_val, name=f"p{i}_owner")(inp_dense)
-
-            # Concatenate features to form a Pokemon representation token
-            # (PER_MON_DENSE + NUM_MOVES + META_EMB_SPECIES_DIM + META_EMB_ITEMS_DIM
-            #  + META_EMB_ABILITY_DIM + NUM_MOVES * META_EMB_MOVES_DIM + 1)
-            # NOTE: field conditions are intentionally excluded from the token --
-            # see the comment above the tokens loop for why.
-            token = keras.layers.Concatenate(name=f"p{i}_token")([
-                p_dense, p_pp, spec_emb, item_emb, abil_emb, moves_emb, owner_flag
-            ])
-
-            # Expand token to shape (None, 1, token_dim) for sequence format
-            token_dim = (PER_MON_DENSE + NUM_MOVES + META_EMB_SPECIES_DIM
-                         + META_EMB_ITEMS_DIM + META_EMB_ABILITY_DIM
-                         + NUM_MOVES * META_EMB_MOVES_DIM + 1)
-            token_expanded = keras.layers.Reshape((1, token_dim), name=f"p{i}_token_expanded")(token)
-            tokens.append(token_expanded)
-
-        # Sequence of NUM_ACTIVE tokens: shape (None, NUM_ACTIVE, token_dim)
-        token_seq = keras.layers.Concatenate(axis=1, name="token_sequence")(tokens)
-
-        # Cross-Attention comparison layer
-        attn_out = keras.layers.MultiHeadAttention(num_heads=4, key_dim=32, name="meta_attention")(
-            query=token_seq, value=token_seq
-        )
-        attn_out = keras.layers.Add()([token_seq, attn_out])
-        attn_out = keras.layers.LayerNormalization()(attn_out)
-
-        # Project token final states to importance scores: shape (None, NUM_ACTIVE)
-        scores = keras.layers.Dense(1, name="token_score_projection")(attn_out)
-        scores = keras.layers.Reshape((NUM_ACTIVE,), name="token_scores")(scores)
-
-        # Separate own vs opponent scores
-        own_scores = SliceLayer(0, NUM_BENCH, name="own_scores")(scores)
-        opp_scores = SliceLayer(NUM_BENCH, name="opp_scores")(scores)
-
-        # Activation scaling: Softmax for own win-conditions, Sigmoid for opponent threat evaluation
-        own_weights = keras.layers.Activation("softmax", name="meta_own_weights")(own_scores)
-        opp_weights = keras.layers.Activation("sigmoid", name="meta_opp_weights")(opp_scores)
-
-        # Final NUM_ACTIVE-dimensional Meta-Plan weights
-        meta_plan = keras.layers.Concatenate(name="meta_plan")([own_weights, opp_weights])
 
     # --- MAIN TACTICAL NETWORK ---
     # Shared Embeddings for the Main network trunk
@@ -446,15 +345,7 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         [inp_dense, emb_species_main, emb_moves_main, emb_items_main, emb_abilities_main]
     )
 
-    # Fuse the NUM_ACTIVE-dimensional Meta-Plan directly into the main inputs
-    # before the dense trunk -- but only when the Meta-Planner is enabled. When
-    # use_meta_planner=False, fused_features is just concat_main (no 12-dim
-    # meta_plan concatenation), so the trunk's input width drops by NUM_ACTIVE.
-    if meta_plan is not None:
-        fused_features = keras.layers.Concatenate(name="fused_features")([concat_main, meta_plan])
-    else:
-        # Identity-rename so downstream layer names stay stable across variants.
-        fused_features = keras.layers.Concatenate(name="fused_features")([concat_main])
+    fused_features = keras.layers.Concatenate(name="fused_features")([concat_main])
 
     # Trunk (Explicitly named for legacy weight matching)
     x = keras.layers.Dense(512, name="dense")(fused_features)
@@ -497,10 +388,6 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     out_own_moves = keras.layers.Dense(num_moves, activation="sigmoid", name="aux_own_moves")(x)
     out_opp_moves = keras.layers.Dense(num_moves, activation="sigmoid", name="aux_opp_moves")(x)
 
-    # Build the model's output list. meta_plan is only included when the
-    # Meta-Planner is enabled -- otherwise the model has 17 outputs (no
-    # meta_plan head) and the trunk is trained without counterfactual
-    # supervision (see train()).
     outputs = [
         out_value, out_policy,
         out_field, out_own_hp, out_opp_hp,
@@ -511,8 +398,6 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
         out_own_species, out_opp_species,
         out_own_moves, out_opp_moves,
     ]
-    if meta_plan is not None:
-        outputs.append(meta_plan)
 
     model = keras.Model(
         inputs=[inp_dense, inp_species, inp_moves, inp_items, inp_abilities, inp_mask],
@@ -558,8 +443,7 @@ def export_to_onnx(model, onnx_path):
                             "aux_own_statuses", "aux_opp_statuses", "aux_own_boosts",
                             "aux_opp_boosts", "aux_own_stats", "aux_opp_stats",
                             "aux_own_types", "aux_opp_types", "aux_own_species",
-                            "aux_opp_species", "aux_own_moves", "aux_opp_moves",
-                            "meta_plan"]
+                            "aux_opp_species", "aux_own_moves", "aux_opp_moves"]
             if hasattr(model, "eval"):
                 model.eval()
             torch_dummy = tuple(
@@ -606,129 +490,10 @@ def export_to_onnx(model, onnx_path):
     return False
 
 
-def compute_counterfactual_targets(model, inputs, is_scratch=False, batch_size=256):
-    """
-    Computes Counterfactual Value Drop targets for the Meta-Planner attention weights.
-    For each sample, sets each Pokémon's HP to 0 and fainted to 1, and measures
-    the resulting drop/increase in predicted win probability.
-    """
-    import numpy as np
-    dense = inputs["dense_features"]
-    N = len(dense)
-    
-    own_targets = np.zeros((N, 6), dtype=np.float32)
-    opp_targets = np.zeros((N, 6), dtype=np.float32)
-    
-    if is_scratch:
-        # Fallback to current HP-based targets
-        print("Model is uninitialized/scratch. Generating HP-based fallback targets.")
-        for i in range(6):
-            own_targets[:, i] = dense[:, i * PER_MON_DENSE + OFF_HP]
-        # Normalize own_targets
-        for i in range(N):
-            s = np.sum(own_targets[i])
-            if s > 1e-5:
-                own_targets[i] /= s
-            else:
-                own_targets[i] = np.ones(6, dtype=np.float32) / 6.0
-                
-        for j in range(6):
-            opp_targets[:, j] = dense[:, OPP_TEAM_START + j * PER_MON_DENSE + OFF_HP]
-            
-        meta_targets = np.concatenate([own_targets, opp_targets], axis=1)
-        return meta_targets
-
-    print("Computing Counterfactual Value Drop targets for Meta-Planner...")
-    
-    for start in range(0, N, batch_size):
-        end = min(start + batch_size, N)
-        sub_n = end - start
-        
-        # Build parallel batch
-        sub_dense = dense[start:end]
-        sub_species = inputs["species_indices"][start:end]
-        sub_moves = inputs["move_indices"][start:end]
-        sub_items = inputs["item_indices"][start:end]
-        sub_abilities = inputs["ability_indices"][start:end]
-        sub_mask = inputs["action_mask"][start:end]
-        
-        # We need a total of 13 * sub_n states
-        parallel_dense = np.tile(sub_dense, (13, 1))
-        
-        # Modify the tiled dense features for counterfactuals
-        # Block 0: base (0 to sub_n) -> no changes
-        # Block 1..6: own fainted (1 to 6)
-        for i in range(6):
-            block_start = (1 + i) * sub_n
-            block_end = (2 + i) * sub_n
-            parallel_dense[block_start:block_end, i * PER_MON_DENSE + OFF_HP] = 0.0
-            parallel_dense[block_start:block_end, i * PER_MON_DENSE + OFF_FAINTED] = 1.0
-
-        # Block 7..12: opp fainted (7 to 12)
-        for j in range(6):
-            block_start = (7 + j) * sub_n
-            block_end = (8 + j) * sub_n
-            parallel_dense[block_start:block_end, OPP_TEAM_START + j * PER_MON_DENSE + OFF_HP] = 0.0
-            parallel_dense[block_start:block_end, OPP_TEAM_START + j * PER_MON_DENSE + OFF_FAINTED] = 1.0
-            
-        # Tile categorical inputs to match parallel_dense shape
-        parallel_species = np.tile(sub_species, (13, 1))
-        parallel_moves = np.tile(sub_moves, (13, 1))
-        parallel_items = np.tile(sub_items, (13, 1))
-        parallel_abilities = np.tile(sub_abilities, (13, 1))
-        parallel_mask = np.tile(sub_mask, (13, 1))
-        
-        # Call model directly
-        preds = model(
-            [parallel_dense, parallel_species, parallel_moves, parallel_items, parallel_abilities, parallel_mask],
-            training=False
-        )
-        
-        # First output is value
-        if isinstance(preds, (list, tuple)):
-            val_tensor = preds[0]
-        else:
-            val_tensor = preds
-            
-        values = keras.ops.convert_to_numpy(val_tensor)
-        values = values.reshape((13, sub_n))
-        
-        # base values
-        v_base = values[0]
-        
-        # Own drop: v_base - v_own_fainted
-        for i in range(6):
-            v_fainted = values[1 + i]
-            own_targets[start:end, i] = np.maximum(0.0, v_base - v_fainted)
-            
-        # Opp drop: v_opp_fainted - v_base
-        for j in range(6):
-            v_fainted = values[7 + j]
-            opp_targets[start:end, j] = np.maximum(0.0, v_fainted - v_base)
-            
-    # Normalize own targets
-    for i in range(N):
-        s = np.sum(own_targets[i])
-        if s > 1e-5:
-            own_targets[i] /= s
-        else:
-            own_targets[i] = np.ones(6, dtype=np.float32) / 6.0
-            
-    opp_targets = np.clip(opp_targets, 0.0, 1.0)
-    meta_targets = np.concatenate([own_targets, opp_targets], axis=1)
-    return meta_targets
-
-
 def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras",
-          max_games_buffer: int = 2500, epochs: int = 15,
-          use_meta_planner: bool = True):
-    """Trains the value+policy network. When use_meta_planner=False the
-    Meta-Planner sub-network is skipped (see build_model) and the
-    counterfactual-targets computation is skipped entirely -- the model has
-    17 outputs instead of 18 and `meta_plan` is removed from the losses dict.
-    Used for the ablation experiment."""
+          max_games_buffer: int = 2500, epochs: int = 15):
+    """Trains the value+policy network."""
     print(f"[Keras backend: {keras.backend.backend()}]")
-    print(f"[Meta-Planner: {'enabled' if use_meta_planner else 'DISABLED (ablation variant)'}]")
     print(f"Locating game files in {data_dir}/gen*...")
     all_files = list(Path(data_dir).glob("gen*/game_*.json"))
     if len(all_files) == 0:
@@ -858,8 +623,6 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "aux_own_moves": "binary_crossentropy",
         "aux_opp_moves": "binary_crossentropy",
     }
-    if use_meta_planner:
-        losses["meta_plan"] = "mse"
 
     loss_weights = {
         "value": 1.0,
@@ -880,12 +643,8 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "aux_own_moves": 0.5,
         "aux_opp_moves": 0.5,
     }
-    if use_meta_planner:
-        loss_weights["meta_plan"] = 0.5
 
-    # Expected output count depends on whether the Meta-Planner (and its
-    # meta_plan aux head) is part of the architecture: 18 with, 17 without.
-    expected_outputs = 18 if use_meta_planner else 17
+    expected_outputs = 17
 
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path}...")
@@ -907,8 +666,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             )
         except Exception as e:
             print(f"Model load failed ({e}). Building fresh model from scratch...")
-            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities,
-                                use_meta_planner=use_meta_planner)
+            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
             print("Compiling model...")
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=1e-3),
@@ -918,8 +676,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             )
     else:
         print("Building new model from scratch...")
-        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities,
-                            use_meta_planner=use_meta_planner)
+        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
         print("Compiling model...")
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=1e-3),
@@ -927,19 +684,6 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             loss_weights=loss_weights,
             metrics={"value": "mae", "policy": "accuracy"}
         )
-
-    # 3. Compute Counterfactual targets for the Meta-Planner attention heads.
-    # Skipped entirely when use_meta_planner=False -- the model has no meta_plan
-    # output to supervise, and counterfactual evaluation is a 13x forward-pass
-    # cost (~650K extra evaluations per epoch) we don't want to pay for the
-    # ablation's no-meta variant.
-    if use_meta_planner:
-        is_scratch = not os.path.exists(model_save_path)
-        train_outputs["meta_plan"] = compute_counterfactual_targets(model, train_inputs, is_scratch=is_scratch)
-        if val_data is not None:
-            val_inputs, val_outputs = val_data
-            val_outputs["meta_plan"] = compute_counterfactual_targets(model, val_inputs, is_scratch=is_scratch)
-            val_data = (val_inputs, val_outputs)
 
     model.summary()
 

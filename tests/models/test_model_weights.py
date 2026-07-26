@@ -38,4 +38,4 @@ def test_model_weights_loading():
             dummy_input[name] = np.zeros(shape, dtype=dtype)
 
         preds = loaded(dummy_input, training=False)
-        assert len(preds) in (2, 18), f"Expected 2 or 18 outputs, got {len(preds)}"
+        assert len(preds) in (2, 17), f"Expected 2 or 17 outputs, got {len(preds)}"
