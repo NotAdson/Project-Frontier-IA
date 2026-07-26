@@ -17,6 +17,22 @@ from battle_agents.mcts_approximation.state_encoder import (
     PER_MON_DENSE, PP_START, TOTAL_FEATURES
 )
 
+from battle_agents.mcts_approximation.db.python.knowledge_base import (
+    get_species_reference_data,
+)
+from battle_agents.mcts_approximation.pipeline.differentiable_matching import (
+    DifferentiableSpeciesMatching,
+)
+
+BASE_WEIGHT_SPECIES = 1.0
+BASE_WEIGHT_STATS = 5.0
+BASE_WEIGHT_TYPE = 5.0
+
+TOTAL_BASE_WEIGHT = (
+    BASE_WEIGHT_SPECIES
+    + BASE_WEIGHT_STATS
+    + BASE_WEIGHT_TYPE
+)
 
 class PrimaryLossCallback(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
@@ -77,8 +93,8 @@ class ApplyMaskLayer(keras.layers.Layer):
         return super().get_config()
 
 
-def build_model(num_dense: int, num_moves: int, num_species: int,
-                num_items: int, num_abilities: int) -> keras.Model:
+def build_models(num_dense: int, num_moves: int, num_species: int,
+                num_items: int, num_abilities: int) -> tuple[keras.Model, keras.Model]:
     # (function body copied from original train_nn.py)
     inp_dense     = keras.layers.Input(shape=(num_dense,), name="dense_features")
     inp_species   = keras.layers.Input(shape=(NUM_ACTIVE,), name="species_indices", dtype="int32")
@@ -174,6 +190,47 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     x = keras.layers.Activation("relu", name="activation_2")(x)
     x = keras.layers.Dropout(0.1, name="dropout_2")(x)
 
+    weight_species_logit = keras.layers.Dense(
+        1,
+        activation=None,
+        kernel_initializer="zeros",
+        bias_initializer=keras.initializers.Constant(
+            np.log(BASE_WEIGHT_SPECIES)
+        ),
+        name="weight_species_logit",
+    )(x)
+
+    weight_stats_logit = keras.layers.Dense(
+        1,
+        activation=None,
+        kernel_initializer="zeros",
+        bias_initializer=keras.initializers.Constant(
+            np.log(BASE_WEIGHT_STATS)
+        ),
+        name="weight_stats_logit",
+    )(x)
+
+    weight_type_logit = keras.layers.Dense(
+        1,
+        activation=None,
+        kernel_initializer="zeros",
+        bias_initializer=keras.initializers.Constant(
+            np.log(BASE_WEIGHT_TYPE)
+        ),
+        name="weight_type_logit",
+    )(x)
+
+    weight_logits = keras.layers.Concatenate(name="weight_logits")([
+        weight_species_logit,
+        weight_stats_logit,
+        weight_type_logit,
+    ])
+    weight_proportions = keras.layers.Activation("softmax", name="weight_proportions")(weight_logits)
+    effective_weights = keras.layers.Rescaling(scale=TOTAL_BASE_WEIGHT, name="effective_weights")(weight_proportions)
+    pred_weight_species = SliceLayer(0, 1, name="pred_weight_species",)(effective_weights)
+    pred_weight_stats = SliceLayer(1, 2, name="pred_weight_stats")(effective_weights)
+    pred_weight_type = SliceLayer(2, 3, name="pred_weight_type")(effective_weights)
+
     out_value  = keras.layers.Dense(1, activation="sigmoid", name="value")(x)
     
     logits = keras.layers.Dense(len(ACTION_SPACE), name="policy_logits")(x)
@@ -196,21 +253,128 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
     out_own_moves = keras.layers.Dense(num_moves, activation="sigmoid", name="aux_own_moves")(x)
     out_opp_moves = keras.layers.Dense(num_moves, activation="sigmoid", name="aux_opp_moves")(x)
 
-    model = keras.Model(
-        inputs=[inp_dense, inp_species, inp_moves, inp_items, inp_abilities, inp_mask],
+    (
+        real_stats_matrix,
+        real_types_matrix,
+        valid_species_mask,
+    ) = get_species_reference_data()
+
+    zero_weight = ConstantLayer(
+        0.0,
+        name="zero_matching_weight",
+    )(pred_weight_species)
+
+    weight_species_output = DifferentiableSpeciesMatching(
+        real_stats_matrix=real_stats_matrix,
+        real_types_matrix=real_types_matrix,
+        valid_species_mask=valid_species_mask,
+        temperature=1.0,
+        name="weight_species",
+    )([
+        out_opp_species,
+        out_opp_stats,
+        out_opp_types,
+        pred_weight_species,
+        zero_weight,
+        zero_weight,
+    ])
+
+    weight_stats_output = DifferentiableSpeciesMatching(
+        real_stats_matrix=real_stats_matrix,
+        real_types_matrix=real_types_matrix,
+        valid_species_mask=valid_species_mask,
+        temperature=1.0,
+        name="weight_stats",
+    )([
+        out_opp_species,
+        out_opp_stats,
+        out_opp_types,
+        zero_weight,
+        pred_weight_stats,
+        zero_weight,
+    ])
+
+    weight_type_output = DifferentiableSpeciesMatching(
+        real_stats_matrix=real_stats_matrix,
+        real_types_matrix=real_types_matrix,
+        valid_species_mask=valid_species_mask,
+        temperature=1.0,
+        name="weight_type",
+    )([
+        out_opp_species,
+        out_opp_stats,
+        out_opp_types,
+        zero_weight,
+        zero_weight,
+        pred_weight_type,
+    ])
+
+    dynamic_matching_output = DifferentiableSpeciesMatching(
+        real_stats_matrix=real_stats_matrix,
+        real_types_matrix=real_types_matrix,
+        valid_species_mask=valid_species_mask,
+        temperature=1.0,
+        name="dynamic_matching",
+    )([
+        out_opp_species,
+        out_opp_stats,
+        out_opp_types,
+        pred_weight_species,
+        pred_weight_stats,
+        pred_weight_type,
+    ])
+
+    model_inputs = [inp_dense, inp_species, inp_moves, inp_items, inp_abilities, inp_mask]
+
+    base_outputs = [
+        out_value,
+        out_policy,
+        out_field,
+        out_own_hp,
+        out_opp_hp,
+        out_own_statuses,
+        out_opp_statuses,
+        out_own_boosts,
+        out_opp_boosts,
+        out_own_stats,
+        out_opp_stats,
+        out_own_types,
+        out_opp_types,
+        out_own_species,
+        out_opp_species,
+        out_own_moves,
+        out_opp_moves,
+        meta_plan,
+    ]
+
+    # Model that will be saved and used by the agent
+    inference_model = keras.Model(
+        inputs=model_inputs,
         outputs=[
-            out_value, out_policy,
-            out_field, out_own_hp, out_opp_hp,
-            out_own_statuses, out_opp_statuses,
-            out_own_boosts, out_opp_boosts,
-            out_own_stats, out_opp_stats,
-            out_own_types, out_opp_types,
-            out_own_species, out_opp_species,
-            out_own_moves, out_opp_moves,
-            meta_plan
+            *base_outputs,
+
+            pred_weight_species,
+            pred_weight_stats,
+            pred_weight_type,
         ],
+        name="frontier_inference_model",
     )
-    return model
+
+    # Model used only during model.fit()
+    training_model = keras.Model(
+        inputs=model_inputs,
+        outputs=[
+            *base_outputs,
+
+            weight_species_output,
+            weight_stats_output,
+            weight_type_output,
+            dynamic_matching_output,
+        ],
+        name="frontier_training_model",
+    )
+
+    return inference_model, training_model
 
 
 def export_to_onnx(model, onnx_path):
@@ -248,7 +412,8 @@ def export_to_onnx(model, onnx_path):
                             "aux_opp_boosts", "aux_own_stats", "aux_opp_stats",
                             "aux_own_types", "aux_opp_types", "aux_own_species",
                             "aux_opp_species", "aux_own_moves", "aux_opp_moves",
-                            "meta_plan"]
+                            "meta_plan", "pred_weight_species", "pred_weight_stats",
+                            "pred_weight_type"]
             if hasattr(model, "eval"):
                 model.eval()
             torch_dummy = tuple(
@@ -313,9 +478,17 @@ LOSSES = {
     "aux_opp_species": "categorical_crossentropy",
     "aux_own_moves": "binary_crossentropy",
     "aux_opp_moves": "binary_crossentropy",
-    "meta_plan": "mse"
+    "meta_plan": "mse",
 }
 
+TRAINING_LOSSES = {
+    **LOSSES,
+
+    "weight_species": "categorical_crossentropy",
+    "weight_stats": "categorical_crossentropy",
+    "weight_type": "categorical_crossentropy",
+    "dynamic_matching": "categorical_crossentropy",
+}
 
 LOSS_WEIGHTS = {
     "value": 1.0,
@@ -335,9 +508,17 @@ LOSS_WEIGHTS = {
     "aux_opp_species": 0.5,
     "aux_own_moves": 0.5,
     "aux_opp_moves": 0.5,
-    "meta_plan": 0.5
+    "meta_plan": 0.5,
 }
 
+TRAINING_LOSS_WEIGHTS = {
+    **LOSS_WEIGHTS,
+
+    "weight_species": 0.1,
+    "weight_stats": 0.1,
+    "weight_type": 0.1,
+    "dynamic_matching": 0.1,
+}
 
 def get_custom_objects():
     return {"SliceLayer": SliceLayer, "ConstantLayer": ConstantLayer, "ApplyMaskLayer": ApplyMaskLayer}
