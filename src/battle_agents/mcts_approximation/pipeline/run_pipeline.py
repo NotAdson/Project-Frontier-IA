@@ -86,7 +86,8 @@ def check_generation_won(gen_dir, gen_idx, champion_idx):
         return False
 
 
-def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, wipe=False, games_per_matchup=5, max_rollout_depth=20, processes=None):
+def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, wipe=False, games_per_matchup=5, max_rollout_depth=20, processes=None,
+                 use_meta_planner: bool = True):
     """
     Runs the AlphaZero-style training pipeline end-to-end.
     
@@ -99,14 +100,24 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             If False, resumes seamlessly from where the last completed generation folder left off.
       games_per_matchup: Number of matches played between each pair of agents during round-robin tournament evaluation.
       max_rollout_depth: The rollout search depth limit for the Blind MCTS agent.
+      use_meta_planner: When True (default), trains the full model with the Meta-Planner
+            Transformer sub-network. When False, trains the ablation variant that skips
+            the Meta-Planner entirely (no per-mon self-attention, no meta_plan output,
+            no counterfactual supervision). Model artifacts are stored under variant-
+            specific filenames so the two variants don't clobber each other.
     """
     print("=== Pipeline Training ===")
     print(f"Parameters: num_games={num_games}, mcts_iterations={mcts_iterations}, epochs={epochs}")
     print(f"Wipe: {wipe} | games_per_matchup={games_per_matchup} | max_rollout_depth={max_rollout_depth}")
+    print(f"Meta-Planner: {'enabled' if use_meta_planner else 'DISABLED (ablation variant)'}")
     
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"))
-    keras_path = os.path.join(data_dir, "mcts_model.keras")
-    onnx_path = os.path.join(data_dir, "mcts_model.onnx")
+    # Variant-specific model filenames so the with-meta and no-meta variants can
+    # coexist on disk and be benchmarked against each other without overwriting.
+    model_suffix = "" if use_meta_planner else "_no_meta"
+    keras_path = os.path.join(data_dir, f"mcts_model{model_suffix}.keras")
+    onnx_path = os.path.join(data_dir, f"mcts_model{model_suffix}.onnx")
+    champion_json_path = os.path.join(data_dir, f"champion{model_suffix}.json")
     
     # --- PHASE 0: Clean slate if wipe=True ---
     if wipe:
@@ -121,14 +132,12 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         if os.path.exists(onnx_path):
             print(f"Removing ONNX model: {onnx_path}")
             os.remove(onnx_path)
-        champion_json_path = os.path.join(data_dir, "champion.json")
         if os.path.exists(champion_json_path):
             os.remove(champion_json_path)
             
     engine_path = str(Path(__file__).resolve().parents[4] / "engine")
     
     # Load champion tracking metadata
-    champion_json_path = os.path.join(data_dir, "champion.json")
     if os.path.exists(champion_json_path):
         try:
             with open(champion_json_path, "r") as f:
@@ -216,7 +225,8 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 data_dir=data_dir, 
                 model_save_path=keras_path, 
                 max_games_buffer=10000, 
-                epochs=epochs
+                epochs=epochs,
+                use_meta_planner=use_meta_planner,
             )
             
             # --- PHASE 3: Archive Model ---
@@ -349,4 +359,19 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="AlphaZero-style training pipeline.")
+    parser.add_argument("--no-meta-planner", action="store_true",
+                        help="Train the ablation variant that skips the Meta-Planner "
+                             "sub-network (no per-mon self-attention, no meta_plan "
+                             "output, no counterfactual supervision). Model artifacts "
+                             "are saved to mcts_model_no_meta.{keras,onnx} so they "
+                             "don't clobber the default with-meta variant.")
+    args = parser.parse_args()
+
+    # Also support env var USE_META_PLANNER=0 for non-interactive runs / CI.
+    env_disabled = os.environ.get("USE_META_PLANNER", "1") == "0"
+    use_meta_planner = not (args.no_meta_planner or env_disabled)
+
+    run_pipeline(use_meta_planner=use_meta_planner)
