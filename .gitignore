@@ -1,6 +1,37 @@
-.vscode
+# Editors and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Python caches and local environments
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Node dependencies and generated engine build
+node_modules/
+/engine/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Pipeline-generated datasets, models, reports, and plots
+/data/
+/src/data/
+
+# Accidental npm metadata outside the Node project
+/src/package-lock.json
+
+# Local runtime files
 history/
+*.log
+*.tmp
