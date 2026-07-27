@@ -275,7 +275,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                         iterations=mcts_iterations, 
                         model_path=onnx_path
                     )
-                    champion_model_path = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.keras")
+                    champion_model_path = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.onnx")
                     agent_factories[f"Model Gen {champion_gen}"] = lambda prob, p=champion_model_path: MCTSApproximationAgent(
                         prob, 
                         iterations=mcts_iterations, 
@@ -325,6 +325,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 
             except Exception as e:
                 print(f"[Warning] Tournament benchmark failed: {e}")
+                return
             finally:
                 client.close()
                 
