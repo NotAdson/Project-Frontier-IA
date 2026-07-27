@@ -37,13 +37,34 @@ def _team_cache_dir():
     return os.path.join(_repo_root(), 'data', 'teams_cache')
 
 
+def _convert_to_multiline(pack):
+    """Convert a Showdown team pack from single-line compressed format
+    (fields separated by '   / ') to multi-line format that Teams.import
+    accepts (newlines between fields, blank line between Pokémon).
+
+    The single-line format was produced by download_metamon_teams.py
+    replacing every '\\n' with ' / ', which makes Teams.unpack fail and
+    Teams.import only see the first Pokémon.
+    """
+    # Separator between Pokémon: "   /  " (3 spaces + / + 2 spaces)
+    # Separator between fields: "   / " (3 spaces + / + 1 space)
+    # Order matters: replace Pokémon separator first (it's more specific).
+    pack = pack.replace("   /  ", "\n\n")
+    pack = pack.replace("   / ", "\n")
+    # After conversion, the 2nd+ Pokémon start with "/ " left over from the
+    # original " /  / " separator — strip that leading "/ " from each line.
+    lines = pack.split("\n")
+    cleaned = [line[2:] if line.startswith("/ ") else line for line in lines]
+    return "\n".join(cleaned).strip()
+
+
 def _load_packs_from_file(path):
     packs = []
     with open(path, 'r', encoding='utf-8') as fh:
         for line in fh:
             s = line.strip()
             if s:
-                packs.append(s)
+                packs.append(_convert_to_multiline(s))
     return packs
 
 
