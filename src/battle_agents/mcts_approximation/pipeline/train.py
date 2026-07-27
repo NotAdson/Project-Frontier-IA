@@ -9,7 +9,7 @@ from battle_agents.mcts_approximation.state_encoder import TOTAL_FEATURES
 
 from .data import load_data_from_files, split_features
 from .aux_targets import extract_aux_targets_batch, compute_counterfactual_targets
-from .model import build_model, export_to_onnx, PrimaryLossCallback, LOSSES, LOSS_WEIGHTS, get_custom_objects
+from .model import build_models, export_to_onnx, PrimaryLossCallback, TRAINING_LOSSES, TRAINING_LOSS_WEIGHTS, get_custom_objects
 
 
 def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500, epochs: int = 15):
@@ -64,6 +64,41 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         idx = np.random.permutation(len(X))
         return X[idx], yv[idx], yp[idx], xn[idx], am[idx]
 
+    def create_sample_weights(outputs, species_targets):
+        """
+        Creates one sample weight for each example of each output.
+
+        All existing outputs receive a weight of 1.
+
+        The four matching outputs receive:
+        - weight 1 when the target species is known;
+        - weight 0 when the target species is unknown.
+        """
+
+        num_samples = species_targets.shape[0]
+
+        # Initially, every example contributes to every loss.
+        sample_weights = {
+            output_name: np.ones(num_samples, dtype=np.float32)
+            for output_name in outputs
+        }
+
+        valid_matching_samples = (
+            1.0 - species_targets[:, 0]
+        ).astype(np.float32)
+
+        matching_outputs = (
+            "weight_species",
+            "weight_stats",
+            "weight_type",
+            "dynamic_matching",
+        )
+
+        for output_name in matching_outputs:
+            sample_weights[output_name] = valid_matching_samples
+
+        return sample_weights
+
     X_train, y_value_train, y_policy_train, X_next_train, action_masks_train = _shuffle(
         X_train, y_value_train, y_policy_train, X_next_train, action_masks_train
     )
@@ -94,6 +129,16 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         "policy": y_policy_train,
     }
     train_outputs.update(aux_targets_train)
+    # The opponent's true species will be used as the target
+    # for the four differentiable matching outputs.
+    species_target_train = aux_targets_train["aux_opp_species"]
+
+    train_outputs.update({
+        "weight_species": species_target_train,
+        "weight_stats": species_target_train,
+        "weight_type": species_target_train,
+        "dynamic_matching": species_target_train,
+    })
 
     val_data = None
     if len(X_val) > 0:
@@ -113,6 +158,14 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             "policy": y_policy_val,
         }
         val_outputs.update(aux_targets_val)
+        species_target_val = aux_targets_val["aux_opp_species"]
+
+        val_outputs.update({
+            "weight_species": species_target_val,
+            "weight_stats": species_target_val,
+            "weight_type": species_target_val,
+            "dynamic_matching": species_target_val,
+        })
         val_data = (val_inputs, val_outputs)
 
     print(
@@ -120,59 +173,100 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         f"Items: {num_items}  |  Abilities: {num_abilities}  |  Moves: {num_moves}"
     )
 
+    # Both models are built together and share
+    # the same layers and trainable parameters
+    inference_model, training_model = build_models(
+        X_dense_train.shape[1],
+        num_moves,
+        num_species,
+        num_items,
+        num_abilities,
+    )
+
+    is_scratch = True
+    learning_rate = 1e-3
+
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path}...")
         try:
-            model = keras.models.load_model(
+            loaded_model = keras.models.load_model(
                 model_save_path,
                 compile=False,
                 safe_mode=False,
                 custom_objects=get_custom_objects(),
             )
-            if len(model.outputs) != 18:
-                raise ValueError(f"Architecture mismatch: expected 18 outputs, got {len(model.outputs)}")
-            print("Successfully loaded existing model. Recompiling for fine-tuning...")
-            model.compile(
-                optimizer=keras.optimizers.Adam(learning_rate=1e-4),
-                loss=LOSSES,
-                loss_weights=LOSS_WEIGHTS,
-                metrics={"value": "mae", "policy": "accuracy"}
-            )
-        except Exception as e:
-            print(f"Model load failed ({e}). Building fresh model from scratch...")
-            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
-            print("Compiling model...")
-            model.compile(
-                optimizer=keras.optimizers.Adam(learning_rate=1e-3),
-                loss=LOSSES,
-                loss_weights=LOSS_WEIGHTS,
-                metrics={"value": "mae", "policy": "accuracy"}
-            )
-    else:
-        print("Building new model from scratch...")
-        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
-        print("Compiling model...")
-        model.compile(
-            optimizer=keras.optimizers.Adam(learning_rate=1e-3),
-            loss=LOSSES,
-            loss_weights=LOSS_WEIGHTS,
-            metrics={"value": "mae", "policy": "accuracy"}
-        )
 
-    is_scratch = not os.path.exists(model_save_path)
-    train_outputs["meta_plan"] = compute_counterfactual_targets(model, train_inputs, is_scratch=is_scratch)
+            if len(loaded_model.outputs) != 21:
+                raise ValueError(
+                    "Architecture mismatch: expected 21 outputs, "
+                    f"got {len(loaded_model.outputs)}"
+                )
+
+            inference_model.set_weights(loaded_model.get_weights())
+
+            is_scratch = False
+            learning_rate = 1e-4
+
+            print("Successfully loaded existing model. Continuing training...")
+
+        except Exception as e:
+            print(f"Model load failed ({e}). Training from scratch...")
+
+    print("Compiling training model...")
+
+    training_model.compile(
+        optimizer=keras.optimizers.Adam(
+            learning_rate=learning_rate
+        ),
+        loss=TRAINING_LOSSES,
+        loss_weights=TRAINING_LOSS_WEIGHTS,
+        metrics={
+            "value": "mae",
+            "policy": "accuracy",
+            "dynamic_matching": "categorical_accuracy",
+        },
+    )
+    meta_plan_model = keras.Model(
+        inputs=inference_model.inputs,
+        outputs=inference_model.get_layer(
+            "meta_plan"
+        ).output,
+    )
+
+    train_outputs["meta_plan"] = (
+        compute_counterfactual_targets(
+            meta_plan_model,
+            train_inputs,
+            is_scratch=is_scratch,
+        )
+    )
+
+    train_sample_weights = create_sample_weights(
+        train_outputs,
+        species_target_train,
+    )
+
     if val_data is not None:
         val_inputs, val_outputs = val_data
-        val_outputs["meta_plan"] = compute_counterfactual_targets(model, val_inputs, is_scratch=is_scratch)
-        val_data = (val_inputs, val_outputs)
+        val_outputs["meta_plan"] = compute_counterfactual_targets(meta_plan_model, val_inputs, is_scratch=is_scratch)
+        val_sample_weights = create_sample_weights(
+            val_outputs,
+            species_target_val,
+        )
 
-    model.summary()
+        val_data = (val_inputs, val_outputs, val_sample_weights)
+
+    print("\nTraining model:")
+    training_model.summary()
+
+    print("\nInference model:")
+    inference_model.summary()
 
     callbacks = [PrimaryLossCallback()]
     save_path = Path(model_save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
     csv_log_path = save_path.parent / "training_log.csv"
-    callbacks.append(keras.callbacks.CSVLogger(str(csv_log_path), append=True))
+    callbacks.append(keras.callbacks.CSVLogger(str(csv_log_path), append=not is_scratch))
     
     if val_data is not None:
         callbacks.append(keras.callbacks.EarlyStopping(
@@ -183,9 +277,10 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             mode="min",
         ))
 
-    model.fit(
+    training_model.fit(
         train_inputs,
         train_outputs,
+        sample_weight=train_sample_weights,
         epochs=epochs,
         batch_size=512,
         validation_data=val_data,
@@ -194,11 +289,11 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
 
     save_path = Path(model_save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
-    model.save(str(save_path))
+    inference_model.save(str(save_path))
     print(f"Model saved to {model_save_path}")
 
     onnx_path = save_path.with_suffix(".onnx")
-    export_to_onnx(model, onnx_path)
+    export_to_onnx(inference_model, onnx_path)
 
 
 if __name__ == "__main__":
