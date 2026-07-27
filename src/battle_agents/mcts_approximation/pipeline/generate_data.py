@@ -12,6 +12,7 @@ from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 from battle_agents.mcts.mcts_agent import MCTSAgent
 from battle_agents.mcts_approximation.mcts_approximation_agent import \
     MCTSApproximationAgent
+from battle_agents.mcts_approximation.db import teams as teams_db
 from battle_agents.mcts_approximation.state_encoder import encode_state
 from battle_agents.random.random_agent import RandomAgent
 from core.client.showdown_client import ShowdownClient
@@ -25,12 +26,16 @@ def run_simulation(args):
     no model needed), or the legacy behavior (MCTSAgent if use_cheating_mcts else
     MCTSApproximationAgent, which requires model_path to point at an existing .onnx).
     Returns a list of tuples (encoded_state_list, p1_win)
+
+    Team strings (multi-line format, consumed by Teams.import in the engine) are
+    pre-selected in the parent process and passed as args so that each simulation
+    uses proper competitive Gen 3 OU teams instead of engine-generated random teams.
     """
-    engine_path, formatid, mcts_iterations, use_cheating_mcts, model_path, agent_type = args
+    engine_path, formatid, mcts_iterations, use_cheating_mcts, model_path, agent_type, p1_team, p2_team = args
 
     client = ShowdownClient(engine_path)
     try:
-        problem = PokemonProblem(client, formatid=formatid)
+        problem = PokemonProblem(client, formatid=formatid, p1_team=p1_team, p2_team=p2_team)
 
         if agent_type == "random":
             agent_p1 = RandomAgent(problem)
@@ -122,7 +127,16 @@ def generate_dataset(num_games=1000, processes=None, output_dir="data/games", mc
 
     engine_path = str(Path(__file__).resolve().parents[4] / "engine")
 
-    args = [(engine_path, "gen3ou", mcts_iterations, use_cheating_mcts, model_path, agent_type) for _ in range(remaining_games)]
+    # Pre‑select competitive Gen 3 OU teams for every simulation, so the engine
+    # uses real Metamon teams instead of generating random Pokémon.
+    team_pairs = [
+        (teams_db.get_random_team("gen3ou"), teams_db.get_random_team("gen3ou"))
+        for _ in range(remaining_games)
+    ]
+    args = [
+        (engine_path, "gen3ou", mcts_iterations, use_cheating_mcts, model_path, agent_type, p1, p2)
+        for p1, p2 in team_pairs
+    ]
 
     print(f"Starting {remaining_games} simulations using {processes} processes...")
 
