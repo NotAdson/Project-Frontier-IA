@@ -245,6 +245,11 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         train_outputs,
         species_target_train,
     )
+    output_names = training_model.output_names
+    train_outputs = [train_outputs[name] for name in output_names]
+    train_sample_weights = [
+        train_sample_weights[name] for name in output_names
+    ]
 
     if val_data is not None:
         val_inputs, val_outputs = val_data
@@ -254,7 +259,11 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             species_target_val,
         )
 
-        val_data = (val_inputs, val_outputs, val_sample_weights)
+        val_data = (
+            val_inputs,
+            [val_outputs[name] for name in output_names],
+            [val_sample_weights[name] for name in output_names],
+        )
 
     print("\nTraining model:")
     training_model.summary()
