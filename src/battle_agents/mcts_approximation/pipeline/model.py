@@ -377,6 +377,25 @@ def build_models(num_dense: int, num_moves: int, num_species: int,
     return inference_model, training_model
 
 
+def _set_onnx_output_names(onnx_path, output_names):
+    import onnx
+    from onnx import helper
+
+    onnx_model = onnx.load(onnx_path)
+    if len(onnx_model.graph.output) != len(output_names):
+        raise ValueError("ONNX output count does not match the Keras model")
+
+    for output, name in zip(onnx_model.graph.output, output_names):
+        if output.name != name:
+            onnx_model.graph.node.append(
+                helper.make_node("Identity", [output.name], [name])
+            )
+            output.name = name
+
+    onnx.checker.check_model(onnx_model)
+    onnx.save(onnx_model, onnx_path)
+
+
 def export_to_onnx(model, onnx_path):
     print(f"Exporting model to ONNX format at {onnx_path}...")
 
@@ -397,6 +416,7 @@ def export_to_onnx(model, onnx_path):
 
     try:
         model.export(str(onnx_path), format="onnx")
+        _set_onnx_output_names(onnx_path, model.output_names)
         print("ONNX export completed successfully using model.export!")
         return True
     except Exception as e:
@@ -431,6 +451,7 @@ def export_to_onnx(model, onnx_path):
                 dynamo=False,
                 verbose=False,
             )
+            _set_onnx_output_names(onnx_path, model.output_names)
             print("ONNX export completed successfully using torch.onnx.export!")
             return True
         except Exception as e_torch:
@@ -451,6 +472,7 @@ def export_to_onnx(model, onnx_path):
             onnx_model, _ = tf2onnx.convert.from_keras(model, input_signature=input_spec, opset=18)
             import onnx
             onnx.save(onnx_model, str(onnx_path))
+            _set_onnx_output_names(onnx_path, model.output_names)
             print("ONNX export completed successfully using tf2onnx!")
             return True
         except Exception as e_tf:

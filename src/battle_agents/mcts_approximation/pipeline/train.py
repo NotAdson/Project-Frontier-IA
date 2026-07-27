@@ -226,16 +226,16 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             "dynamic_matching": "categorical_accuracy",
         },
     )
-    meta_plan_model = keras.Model(
+    value_model = keras.Model(
         inputs=inference_model.inputs,
         outputs=inference_model.get_layer(
-            "meta_plan"
+            "value"
         ).output,
     )
 
     train_outputs["meta_plan"] = (
         compute_counterfactual_targets(
-            meta_plan_model,
+            value_model,
             train_inputs,
             is_scratch=is_scratch,
         )
@@ -253,7 +253,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
 
     if val_data is not None:
         val_inputs, val_outputs = val_data
-        val_outputs["meta_plan"] = compute_counterfactual_targets(meta_plan_model, val_inputs, is_scratch=is_scratch)
+        val_outputs["meta_plan"] = compute_counterfactual_targets(value_model, val_inputs, is_scratch=is_scratch)
         val_sample_weights = create_sample_weights(
             val_outputs,
             species_target_val,

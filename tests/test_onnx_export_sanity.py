@@ -50,6 +50,7 @@ def test_onnx_export_matches_keras(tmp_path):
 
     # 5. ONNX inference.
     session = ort.InferenceSession(str(onnx_file), providers=["CPUExecutionProvider"])
+    assert [output.name for output in session.get_outputs()] == list(inference_model.output_names)
 
     ort_inputs = {
         input_info.name: dummy_inputs[input_info.name]
