@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 from collections import defaultdict
+import argparse
 from pathlib import Path
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
@@ -201,6 +202,13 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 use_cheating_mcts=(gen == 1),
                 model_path=onnx_path
             )
+
+            generated_games = len(glob.glob(os.path.join(next_gen_dir,"game_*.json")))
+
+            if generated_games < num_games:
+                print(f"\n[Error] Data generation failed: expected {num_games} games, but only {generated_games} were generated.")
+                print(f"\n[Error] Training and archiving were cancelled because there is not enough data.")
+                return
             
         # Check if this generation is already trained and archived
         model_archived = os.path.exists(os.path.join(next_gen_dir, "mcts_model.keras"))
@@ -218,6 +226,11 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 max_games_buffer=10000, 
                 epochs=epochs
             )
+
+            if not os.path.isfile(keras_path):
+                print(f"\n[Error] Training did not create the expected model: {keras_path}")
+                print("Model archiving was cancelled.")
+                return
             
             # --- PHASE 3: Archive Model ---
             print(f"\n--- [Gen {gen}] Phase 3: Archiving Model & Logs ---")
@@ -348,5 +361,86 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         print(f"\n=== Generation {gen} Completed Successfully! ===")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run the MCTS approximation training pipeline.")
+
+    parser.add_argument(
+        "--num-games",
+        "--num_games",
+        dest="num_games",
+        type=int,
+        default=5,
+        help="Number of self-play games per generation.",
+    )
+
+    parser.add_argument(
+        "--num-generations",
+        "--num_generations",
+        dest="num_generations",
+        type=int,
+        default=3,
+        help="Number of generations to run.",
+    )
+
+    parser.add_argument(
+        "--mcts-iterations",
+        "--mcts_iterations",
+        dest="mcts_iterations",
+        type=int,
+        default=15,
+        help="Number of MCTS iterations per move.",
+    )
+
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=2,
+        help="Number of training epochs per generation.",
+    )
+
+    parser.add_argument(
+        "--games-per-matchup",
+        "--games_per_matchup",
+        dest="games_per_matchup",
+        type=int,
+        default=5,
+        help="Number of benchmark games per agent matchup.",
+    )
+
+    parser.add_argument(
+        "--max-rollout-depth",
+        "--max_rollout_depth",
+        dest="max_rollout_depth",
+        type=int,
+        default=20,
+        help="Maximum rollout depth for Blind MCTS.",
+    )
+
+    parser.add_argument(
+        "--processes",
+        type=int,
+        default=2,
+        help="Number of parallel self-play processes.",
+    )
+
+    parser.add_argument(
+        "--wipe",
+        action="store_true",
+        help="Delete previous generations and models before running.",
+    )
+
+    return parser.parse_args()
+
 if __name__ == "__main__":
-    run_pipeline()
+    args = parse_args()
+
+    run_pipeline(
+        num_games=args.num_games,
+        num_generations=args.num_generations,
+        mcts_iterations=args.mcts_iterations,
+        epochs=args.epochs,
+        wipe=args.wipe,
+        games_per_matchup=args.games_per_matchup,
+        max_rollout_depth=args.max_rollout_depth,
+        processes=args.processes,
+    )
