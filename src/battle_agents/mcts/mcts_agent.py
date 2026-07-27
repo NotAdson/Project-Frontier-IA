@@ -96,7 +96,7 @@ class MCTSAgent(Agent):
                 node = node.parent
                 
         # Clear engine cache after MCTS search finishes to free memory
-        self.problem.client.clear_cache()
+        self.problem.client.clear_cache(state.state_id)
 
         if not root.children:
             actions = self.problem.actions(state, player)

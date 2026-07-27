@@ -353,7 +353,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         if gen - champion_gen >= 10:
             print("\n========================================================")
             print(" [Early Stopping] Pipeline Halted Early!")
-            print(" Reason: The champion has not been updated for the last 3 generations.")
+            print(" Reason: The champion has not been updated for the last 10 generations.")
             print(f" Current Champion: Gen {champion_gen} | Current Generation: {gen}")
             print("========================================================\n")
             break
