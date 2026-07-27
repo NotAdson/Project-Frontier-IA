@@ -155,8 +155,9 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             "item_indices":     self._buf_items,
             "ability_indices":  self._buf_abilities,
         }
-    
-    def _scalar_weight(self, value, default: float) -> float:
+
+    @staticmethod
+    def _scalar_weight(value, default: float) -> float:
         if value is None:
             return default
 
@@ -323,9 +324,13 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             )
             
             matches = find_closest_species(
-                opp_species, opp_stats, opp_types, 
-                weight_species, weight_stats, weight_type,
-                top_k=1
+                opp_species,
+                opp_stats,
+                opp_types,
+                weight_species=weight_species,
+                weight_stats=weight_stats,
+                weight_types=weight_type,
+                top_k=1,
             )
             if matches:
                 res = dict(matches[0])
