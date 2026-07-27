@@ -25,6 +25,15 @@ if os.environ.get("KERAS_BACKEND") == "torch":
 import keras
 import numpy as np
 
+# torch is required unconditionally from here on, regardless of KERAS_BACKEND --
+# build_model() loads the frozen fused_features encoder (issue #10) from a PyTorch
+# checkpoint (data/autoencoder_bootstrap/checkpoints_v5_fixed256/), so this is no
+# longer just the torch-backend codepath's own dependency. Re-importing torch here
+# is a no-op if the KERAS_BACKEND=="torch" branch above already imported it.
+import torch
+from battle_agents.mcts_approximation.pipeline.autoencoder.export_encoder_to_keras import \
+    build_keras_encoder
+
 
 class PrimaryLossCallback(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
@@ -322,9 +331,22 @@ def extract_aux_targets_batch(X_next, num_species, num_moves):
     }
 
 
+DEFAULT_ENCODER_CHECKPOINT = ("data/autoencoder_bootstrap/checkpoints_v5_fixed256/"
+                               "fused_autoencoder_best.pt")
+
+
 def build_model(num_dense: int, num_moves: int, num_species: int,
-                num_items: int, num_abilities: int) -> keras.Model:
-    """Builds the multi-input value+policy network with action masking."""
+                num_items: int, num_abilities: int,
+                encoder_checkpoint_path: str = DEFAULT_ENCODER_CHECKPOINT) -> keras.Model:
+    """Builds the multi-input value+policy network with action masking.
+
+    encoder_checkpoint_path: PyTorch checkpoint (train_autoencoder.py, issue #10) whose
+    encoder gets recreated as frozen Keras layers and spliced in right after fused_features,
+    replacing the trunk's original trainable Dense(512) (see PROPOSTA_10.md section 8/9).
+    Resolved relative to the current working directory -- same convention as this file's
+    other path arguments (data_dir, model_save_path), so this must run from the project
+    root, per CLAUDE.md.
+    """
 
     # Category Inputs
     inp_dense     = keras.layers.Input(shape=(num_dense,), name="dense_features")
@@ -347,10 +369,28 @@ def build_model(num_dense: int, num_moves: int, num_species: int,
 
     fused_features = keras.layers.Concatenate(name="fused_features")([concat_main])
 
-    # Trunk (Explicitly named for legacy weight matching)
-    x = keras.layers.Dense(512, name="dense")(fused_features)
+    # Fused-features encoder (issue #10, PROPOSTA_10.md sections 7-8): recreates the
+    # trained v5 PyTorch encoder as frozen Keras Dense layers, replacing the trunk's
+    # original trainable Dense(512) -- Option A (recreate + set_weights()), reviewed
+    # against the corrected v5 architecture in PROPOSTA_10.md section 8.
+    encoder_ckpt = torch.load(encoder_checkpoint_path, map_location="cpu")
+    encoder_state = {k: v for k, v in encoder_ckpt["model_state_dict"].items() if k.startswith("encoder.")}
+    encoder_fused_dim = encoder_ckpt["fused_dim"]
+    encoder_latent_dim = encoder_ckpt["latent_dim"]
+    assert fused_features.shape[-1] == encoder_fused_dim, (
+        f"fused_features width {fused_features.shape[-1]} doesn't match the encoder "
+        f"checkpoint's fused_dim {encoder_fused_dim} ({encoder_checkpoint_path})"
+    )
+    fused_encoder = build_keras_encoder(encoder_fused_dim, encoder_latent_dim, encoder_state)
+
+    # Trunk (Explicitly named for legacy weight matching where the layer still exists)
+    x = fused_encoder(fused_features)
+    # No Activation("relu") here on purpose: the encoder's latent code ends without an
+    # activation by design (it can be, and often is, negative -- model.py's docstring
+    # and PROPOSTA_10.md section 3), and a ReLU right after it would zero out that half
+    # of a frozen, already-trained representation. BatchNormalization + Dropout(0.3) are
+    # kept, matching every other trunk block.
     x = keras.layers.BatchNormalization(name="batch_normalization")(x)
-    x = keras.layers.Activation("relu", name="activation")(x)
     x = keras.layers.Dropout(0.3, name="dropout")(x)
 
     x = keras.layers.Dense(256, name="dense_1")(x)
@@ -490,9 +530,13 @@ def export_to_onnx(model, onnx_path):
     return False
 
 
-def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras",
-          max_games_buffer: int = 2500, epochs: int = 15):
-    """Trains the value+policy network."""
+def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500,
+          epochs: int = 15, encoder_checkpoint_path: str = None):
+    """encoder_checkpoint_path: forwarded to build_model() when building a fresh model.
+    Left as None to keep build_model()'s own DEFAULT_ENCODER_CHECKPOINT (relative to cwd --
+    only safe when this runs from the project root, per CLAUDE.md). Callers that can't
+    guarantee the cwd (e.g. run_pipeline.py, which already resolves data_dir absolutely)
+    should pass an absolute path here instead."""
     print(f"[Keras backend: {keras.backend.backend()}]")
     print(f"Locating game files in {data_dir}/gen*...")
     all_files = list(Path(data_dir).glob("gen*/game_*.json"))
@@ -645,6 +689,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
     }
 
     expected_outputs = 17
+    build_model_kwargs = {} if encoder_checkpoint_path is None else {"encoder_checkpoint_path": encoder_checkpoint_path}
 
     if os.path.exists(model_save_path):
         print(f"Loading existing model from {model_save_path}...")
@@ -666,7 +711,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             )
         except Exception as e:
             print(f"Model load failed ({e}). Building fresh model from scratch...")
-            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
+            model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities, **build_model_kwargs)
             print("Compiling model...")
             model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=1e-3),
@@ -676,7 +721,7 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             )
     else:
         print("Building new model from scratch...")
-        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities)
+        model = build_model(X_dense_train.shape[1], num_moves, num_species, num_items, num_abilities, **build_model_kwargs)
         print("Compiling model...")
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=1e-3),
