@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../data/mods/gen3colosseum/scripts.ts"],
+  "sourcesContent": ["export const Scripts: ModdedBattleScriptsData = {\n\tinherit: 'gen3',\n\tgen: 3,\n\n\tcheckWin(faintData?: Battle['faintQueue'][0]) {\n\t\tif (this.sides.every(side => !side.pokemonLeft)) {\n\t\t\tthis.win(faintData ? faintData.target.side : null);\n\t\t\treturn true;\n\t\t}\n\t\tfor (const side of this.sides) {\n\t\t\tif (!side.foePokemonLeft()) {\n\t\t\t\tthis.win(side);\n\t\t\t\treturn true;\n\t\t\t}\n\t\t}\n\t},\n};\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAO,MAAM,UAAmC;AAAA,EAC/C,SAAS;AAAA,EACT,KAAK;AAAA,EAEL,SAAS,WAAqC;AAC7C,QAAI,KAAK,MAAM,MAAM,UAAQ,CAAC,KAAK,WAAW,GAAG;AAChD,WAAK,IAAI,YAAY,UAAU,OAAO,OAAO,IAAI;AACjD,aAAO;AAAA,IACR;AACA,eAAW,QAAQ,KAAK,OAAO;AAC9B,UAAI,CAAC,KAAK,eAAe,GAAG;AAC3B,aAAK,IAAI,IAAI;AACb,eAAO;AAAA,MACR;AAAA,IACD;AAAA,EACD;AACD;",
+  "names": []
+}
