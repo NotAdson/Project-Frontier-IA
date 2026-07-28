@@ -12,6 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 from battle_agents.mcts_approximation.mcts_approximation_agent import \
     MCTSApproximationAgent
+from battle_agents.mcts_approximation.pipeline.autoencoder.pipeline_bootstrap import \
+    ensure_autoencoder_ready
 from battle_agents.mcts_approximation.pipeline.generate_data import \
     generate_dataset
 from battle_agents.mcts_approximation.pipeline.train_nn import train
@@ -108,7 +110,15 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"))
     keras_path = os.path.join(data_dir, "mcts_model.keras")
     onnx_path = os.path.join(data_dir, "mcts_model.onnx")
-    
+    encoder_checkpoint_path = os.path.join(
+        data_dir, "autoencoder_bootstrap", "checkpoints_v5_fixed256", "fused_autoencoder_best.pt"
+    )
+
+    # --- PHASE -1: Bootstrap the frozen fused_features autoencoder (issue #10), once ---
+    # build_model() (train_nn.py) requires this checkpoint on every generation's training
+    # phase, so it must exist before self-play/training starts. No-op if already present.
+    ensure_autoencoder_ready(checkpoint_path=encoder_checkpoint_path)
+
     # --- PHASE 0: Clean slate if wipe=True ---
     if wipe:
         print("\n[Wiping Prior Data] Deleting existing generation data and models as requested...")
@@ -221,10 +231,11 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             # --- PHASE 2: Neural Network Training ---
             print(f"\n--- [Gen {gen}] Phase 2: Training Neural Network ---")
             train(
-                data_dir=data_dir, 
-                model_save_path=keras_path, 
-                max_games_buffer=10000, 
-                epochs=epochs
+                data_dir=data_dir,
+                model_save_path=keras_path,
+                max_games_buffer=10000,
+                epochs=epochs,
+                encoder_checkpoint_path=encoder_checkpoint_path
             )
 
             if not os.path.isfile(keras_path):
