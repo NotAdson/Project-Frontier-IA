@@ -12,8 +12,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 from battle_agents.mcts_approximation.mcts_approximation_agent import \
     MCTSApproximationAgent
-from battle_agents.mcts_approximation.pipeline.autoencoder.pipeline_bootstrap import \
-    ensure_autoencoder_ready
 from battle_agents.mcts_approximation.pipeline.generate_data import \
     generate_dataset
 from battle_agents.mcts_approximation.pipeline.train_nn import train
@@ -110,14 +108,6 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"))
     keras_path = os.path.join(data_dir, "mcts_model.keras")
     onnx_path = os.path.join(data_dir, "mcts_model.onnx")
-    encoder_checkpoint_path = os.path.join(
-        data_dir, "autoencoder_bootstrap", "checkpoints_v5_fixed256", "fused_autoencoder_best.pt"
-    )
-
-    # --- PHASE -1: Bootstrap the frozen fused_features autoencoder (issue #10), once ---
-    # build_model() (train_nn.py) requires this checkpoint on every generation's training
-    # phase, so it must exist before self-play/training starts. No-op if already present.
-    ensure_autoencoder_ready(checkpoint_path=encoder_checkpoint_path)
 
     # --- PHASE 0: Clean slate if wipe=True ---
     if wipe:
@@ -168,9 +158,16 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             latest_gen = max(gen_nums)
             latest_gen_dir = os.path.join(data_dir, f"gen{latest_gen}")
             existing_games = len(glob.glob(os.path.join(latest_gen_dir, "game_*.json")))
-            model_archived = os.path.exists(os.path.join(latest_gen_dir, "mcts_model.keras"))
+            model_archived = all(
+                os.path.exists(os.path.join(latest_gen_dir, name))
+                for name in ("mcts_model.keras", "mcts_model.onnx")
+            )
+            benchmark_completed = all(
+                os.path.exists(os.path.join(latest_gen_dir, name))
+                for name in ("benchmark_report.json", "benchmark_report.txt")
+            )
             
-            if existing_games >= num_games and model_archived:
+            if existing_games >= num_games and model_archived and benchmark_completed:
                 # The latest folder is fully completed. Start next generation.
                 start_gen = latest_gen + 1
                 print(f"\n[Resume] Latest Gen {latest_gen} is fully complete. Starting on Gen {start_gen}.")
@@ -221,7 +218,10 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 return
             
         # Check if this generation is already trained and archived
-        model_archived = os.path.exists(os.path.join(next_gen_dir, "mcts_model.keras"))
+        model_archived = all(
+            os.path.exists(os.path.join(next_gen_dir, name))
+            for name in ("mcts_model.keras", "mcts_model.onnx")
+        )
         if model_archived:
             print(f"[Skip Training] Gen {gen} model already exists in archive.")
             # Restore model to root for next generation's self-play
@@ -234,8 +234,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 data_dir=data_dir,
                 model_save_path=keras_path,
                 max_games_buffer=10000,
-                epochs=epochs,
-                encoder_checkpoint_path=encoder_checkpoint_path
+                epochs=epochs
             )
 
             if not os.path.isfile(keras_path):
