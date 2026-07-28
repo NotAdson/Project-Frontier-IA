@@ -1,9 +1,8 @@
 """
 Generates a synthetic training dataset for the fused_features autoencoder (issue #10).
 
-The autoencoder trains standalone, without running the real Meta-Planner. Each
-training example is a synthetic stand-in for "fused_features" from
-train_nn.py:429 (3074-dim), assembled as:
+The autoencoder trains standalone. Each training example is a synthetic
+stand-in for the model's 3062-dimensional ``fused_features`` tensor:
 
   1. inp_dense (NUM_DENSE_FEATURES=758) + the 4 blocks of categorical indices
      (species/moves/items/abilities, NUM_EMBEDDING_INDICES=84 total) come from
@@ -24,13 +23,9 @@ train_nn.py:429 (3074-dim), assembled as:
      normal distribution. We implement exactly the numeric spec given
      (Normal(0, 0.05)), not the literal Keras default, and flag the
      discrepancy here for the record.
-  3. meta_plan (12) is sampled independently per example: 6 values via
-     np.random.dirichlet (own weights, sum to 1), 6 via np.random.uniform(0, 1)
-     (opponent weights) — matching the own/opp split documented in
-     train_nn.py's meta_plan (softmax own_weights + sigmoid opp_weights).
-  4. Concatenated in the exact order of train_nn.py:424-429:
+  3. Concatenated in the exact order used by the tactical model:
      [inp_dense, emb_species_main, emb_moves_main, emb_items_main,
-      emb_abilities_main, meta_plan] -> 3074 dims.
+      emb_abilities_main] -> 3062 dims.
 
 Only 2,000,000 of the ~9.26M available steps are used (~24-25GB on disk
 instead of ~115GB for the full set), chosen via reservoir sampling
@@ -68,10 +63,9 @@ DEFAULT_DATA_DIR = PROJECT_ROOT / "data" / "genrandom_bootstrap"
 DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "autoencoder_bootstrap" / "fused_features_synthetic.npy"
 
 N_SAMPLES = 2_000_000
-SEED = 42  # fixed seed, documented: derives 3 independent RNGs below, one per random stage
+SEED = 42  # fixed seed: derives independent RNGs for sampling and embeddings
 SEED_RESERVOIR = SEED       # which steps get sampled (Algorithm R)
 SEED_EMBEDDINGS = SEED + 1  # untrained embedding table weights
-SEED_META_PLAN = SEED + 2   # per-example meta_plan draws
 EMBEDDING_STD = 0.05
 
 CHUNK_ROWS = 100_000  # rows per batch during the in-RAM assembly/write phase
@@ -83,15 +77,14 @@ PIECES = [
     ("emb_moves", NUM_MOVE_INDICES * MAIN_EMB_MOVES_DIM),
     ("emb_items", NUM_ITEM_INDICES * MAIN_EMB_ITEMS_DIM),
     ("emb_abilities", NUM_ABILITY_INDICES * MAIN_EMB_ABILITY_DIM),
-    ("meta_plan", 12),
 ]
 FUSED_DIM = sum(dim for _, dim in PIECES)
-assert FUSED_DIM == 3074, FUSED_DIM
+assert FUSED_DIM == 3062, FUSED_DIM
 
 
 def piece_offsets():
     """[(name, start, end), ...] over the FUSED_DIM axis, from PIECES (dense,
-    emb_species, emb_moves, emb_items, emb_abilities, meta_plan) in order.
+    emb_species, emb_moves, emb_items, emb_abilities) in order.
     Single source of truth — shared by train_autoencoder.py (weighted loss)
     and test_reconstruction.py (per-piece MSE report), so both always slice
     fused_features the same way."""
@@ -191,13 +184,12 @@ def main():
         files = files[:args.max_games]
 
     print(f"Fixed seeds — reservoir sampling: {SEED_RESERVOIR}, "
-          f"embedding init: {SEED_EMBEDDINGS}, meta_plan draws: {SEED_META_PLAN}")
+          f"embedding init: {SEED_EMBEDDINGS}")
     print(f"Target samples: {args.n_samples:,}  |  fused_features dim: {FUSED_DIM}")
     print(f"Scanning {len(files)} game files from {args.data_dir} ...")
 
     reservoir = reservoir_sample_raw_features(files, args.n_samples, SEED_RESERVOIR)
     tables = build_embedding_tables(SEED_EMBEDDINGS)
-    meta_rng = np.random.default_rng(SEED_META_PLAN)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     print(f"\nAssembling and writing {args.output} (shape ({args.n_samples:,}, {FUSED_DIM})) ...")
@@ -229,18 +221,14 @@ def main():
         emb_items = embed_lookup(*tables["items"], items_idx).reshape(n, -1)
         emb_abilities = embed_lookup(*tables["abilities"], abilities_idx).reshape(n, -1)
 
-        own_weights = meta_rng.dirichlet(np.ones(6), size=n)
-        opp_weights = meta_rng.uniform(0.0, 1.0, size=(n, 6))
-        meta_plan = np.concatenate([own_weights, opp_weights], axis=1).astype(np.float32)
-
         row = np.concatenate(
-            [dense, emb_species, emb_moves, emb_items, emb_abilities, meta_plan], axis=1
+            [dense, emb_species, emb_moves, emb_items, emb_abilities], axis=1
         ).astype(np.float32)
         final[start:end] = row
 
         for name, piece in [
             ("dense", dense), ("emb_species", emb_species), ("emb_moves", emb_moves),
-            ("emb_items", emb_items), ("emb_abilities", emb_abilities), ("meta_plan", meta_plan),
+            ("emb_items", emb_items), ("emb_abilities", emb_abilities),
         ]:
             sums[name] += piece.sum(dtype=np.float64)
             sumsqs[name] += np.square(piece, dtype=np.float64).sum()

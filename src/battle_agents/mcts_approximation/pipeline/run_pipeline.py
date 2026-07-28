@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 from collections import defaultdict
+import argparse
 from pathlib import Path
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
@@ -110,16 +111,15 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
     keras_path = os.path.join(data_dir, "mcts_model.keras")
     onnx_path = os.path.join(data_dir, "mcts_model.onnx")
     champion_json_path = os.path.join(data_dir, "champion.json")
-    
     encoder_checkpoint_path = os.path.join(
-        data_dir, "autoencoder_bootstrap", "checkpoints_v5_fixed256", "fused_autoencoder_best.pt"
+        data_dir,
+        "autoencoder_bootstrap",
+        "checkpoints_v5_fixed256",
+        "fused_autoencoder_best.pt",
     )
 
-    # --- PHASE -1: Bootstrap the frozen fused_features autoencoder (issue #10), once ---
-    # build_model() (train_nn.py) requires this checkpoint on every generation's training
-    # phase, so it must exist before self-play/training starts. No-op if already present.
+    # The frozen encoder is trained once and reused by every generation.
     ensure_autoencoder_ready(checkpoint_path=encoder_checkpoint_path)
-
 
     # --- PHASE 0: Clean slate if wipe=True ---
     if wipe:
@@ -168,9 +168,16 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             latest_gen = max(gen_nums)
             latest_gen_dir = os.path.join(data_dir, f"gen{latest_gen}")
             existing_games = len(glob.glob(os.path.join(latest_gen_dir, "game_*.json")))
-            model_archived = os.path.exists(os.path.join(latest_gen_dir, "mcts_model.keras"))
+            model_archived = all(
+                os.path.exists(os.path.join(latest_gen_dir, name))
+                for name in ("mcts_model.keras", "mcts_model.onnx")
+            )
+            benchmark_completed = all(
+                os.path.exists(os.path.join(latest_gen_dir, name))
+                for name in ("benchmark_report.json", "benchmark_report.txt")
+            )
             
-            if existing_games >= num_games and model_archived:
+            if existing_games >= num_games and model_archived and benchmark_completed:
                 # The latest folder is fully completed. Start next generation.
                 start_gen = latest_gen + 1
                 print(f"\n[Resume] Latest Gen {latest_gen} is fully complete. Starting on Gen {start_gen}.")
@@ -212,9 +219,19 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 use_cheating_mcts=(gen == 1),
                 model_path=onnx_path
             )
+
+            generated_games = len(glob.glob(os.path.join(next_gen_dir,"game_*.json")))
+
+            if generated_games < num_games:
+                print(f"\n[Error] Data generation failed: expected {num_games} games, but only {generated_games} were generated.")
+                print(f"\n[Error] Training and archiving were cancelled because there is not enough data.")
+                return
             
         # Check if this generation is already trained and archived
-        model_archived = os.path.exists(os.path.join(next_gen_dir, "mcts_model.keras"))
+        model_archived = all(
+            os.path.exists(os.path.join(next_gen_dir, name))
+            for name in ("mcts_model.keras", "mcts_model.onnx")
+        )
         if model_archived:
             print(f"[Skip Training] Gen {gen} model already exists in archive.")
             # Restore model to root for next generation's self-play
@@ -228,8 +245,13 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 model_save_path=keras_path,
                 max_games_buffer=10000,
                 epochs=epochs,
-                encoder_checkpoint_path=encoder_checkpoint_path
+                encoder_checkpoint_path=encoder_checkpoint_path,
             )
+
+            if not os.path.isfile(keras_path):
+                print(f"\n[Error] Training did not create the expected model: {keras_path}")
+                print("Model archiving was cancelled.")
+                return
             
             # --- PHASE 3: Archive Model ---
             print(f"\n--- [Gen {gen}] Phase 3: Archiving Model & Logs ---")
@@ -274,7 +296,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                         iterations=mcts_iterations, 
                         model_path=onnx_path
                     )
-                    champion_model_path = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.keras")
+                    champion_model_path = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.onnx")
                     agent_factories[f"Model Gen {champion_gen}"] = lambda prob, p=champion_model_path: MCTSApproximationAgent(
                         prob, 
                         iterations=mcts_iterations, 
@@ -324,6 +346,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 
             except Exception as e:
                 print(f"[Warning] Tournament benchmark failed: {e}")
+                return
             finally:
                 client.close()
                 
@@ -352,7 +375,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         if gen - champion_gen >= 10:
             print("\n========================================================")
             print(" [Early Stopping] Pipeline Halted Early!")
-            print(" Reason: The champion has not been updated for the last 3 generations.")
+            print(" Reason: The champion has not been updated for the last 10 generations.")
             print(f" Current Champion: Gen {champion_gen} | Current Generation: {gen}")
             print("========================================================\n")
             break
@@ -360,19 +383,78 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         print(f"\n=== Generation {gen} Completed Successfully! ===")
 
 
-if __name__ == "__main__":
-    import argparse
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run the MCTS approximation training pipeline.")
 
-    parser = argparse.ArgumentParser(description="AlphaZero-style training pipeline.")
-    parser.add_argument("--num-games", type=int, default=5)
-    parser.add_argument("--num-generations", type=int, default=3)
-    parser.add_argument("--mcts-iterations", type=int, default=15)
-    parser.add_argument("--epochs", type=int, default=2)
-    parser.add_argument("--wipe", action="store_true")
-    parser.add_argument("--games-per-matchup", type=int, default=5)
-    parser.add_argument("--max-rollout-depth", type=int, default=20)
-    parser.add_argument("--processes", type=int, default=None)
-    args = parser.parse_args()
+    parser.add_argument(
+        "--num-games",
+        "--num_games",
+        dest="num_games",
+        type=int,
+        default=5,
+        help="Number of self-play games per generation.",
+    )
+
+    parser.add_argument(
+        "--num-generations",
+        "--num_generations",
+        dest="num_generations",
+        type=int,
+        default=3,
+        help="Number of generations to run.",
+    )
+
+    parser.add_argument(
+        "--mcts-iterations",
+        "--mcts_iterations",
+        dest="mcts_iterations",
+        type=int,
+        default=15,
+        help="Number of MCTS iterations per move.",
+    )
+
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=2,
+        help="Number of training epochs per generation.",
+    )
+
+    parser.add_argument(
+        "--games-per-matchup",
+        "--games_per_matchup",
+        dest="games_per_matchup",
+        type=int,
+        default=5,
+        help="Number of benchmark games per agent matchup.",
+    )
+
+    parser.add_argument(
+        "--max-rollout-depth",
+        "--max_rollout_depth",
+        dest="max_rollout_depth",
+        type=int,
+        default=20,
+        help="Maximum rollout depth for Blind MCTS.",
+    )
+
+    parser.add_argument(
+        "--processes",
+        type=int,
+        default=2,
+        help="Number of parallel self-play processes.",
+    )
+
+    parser.add_argument(
+        "--wipe",
+        action="store_true",
+        help="Delete previous generations and models before running.",
+    )
+
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    args = parse_args()
 
     run_pipeline(
         num_games=args.num_games,

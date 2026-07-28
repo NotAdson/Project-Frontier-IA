@@ -1,15 +1,15 @@
 """
-Autoencoder architecture for compressing train_nn.py's "fused_features" tensor
-(3074-dim, see train_nn.py:429) into a small latent code (issue #10).
+Autoencoder architecture for compressing the tactical model's
+3062-dimensional ``fused_features`` tensor into a small latent code (issue #10).
 
-Encoder: 3074 -> encoder_dims(latent_dim)  (Linear + ReLU between layers, no
+Encoder: 3062 -> encoder_dims(latent_dim)  (Linear + ReLU between layers, no
                                              activation on the last layer)
 Decoder: mirror of the encoder (decoder_dims(latent_dim))
 
-The 3 hidden widths between 3074 and latent_dim scale WITH latent_dim (see
+The 3 hidden widths between 3062 and latent_dim scale WITH latent_dim (see
 encoder_dims()/decoder_dims() below) so that latent_dim is always the
 network's true bottleneck. For latent_dim <= 128 this is exactly
-3074 -> 512 -> 256 -> 128 -> latent_dim, same as every checkpoint trained
+3062 -> 512 -> 256 -> 128 -> latent_dim, same as every checkpoint trained
 before this scaling was added (v1/v2's latent_dim=64, v3's latent_dim=128).
 For latent_dim > 128 (e.g. 256) the hidden widths grow too, instead of
 silently staying at a fixed 512/256/128 with the true bottleneck stuck at
@@ -20,7 +20,7 @@ Decoder output activation is SEGMENTED by feature type within the dense
 block (see `compute_dense_binary_mask()` below, derived from
 state_encoder.py's offsets — not hardcoded column numbers):
   - continuous dense features (hp_ratio, level, stats, move power/accuracy),
-    embeddings, and meta_plan: linear, no activation (unbounded targets).
+    and embeddings: linear, no activation (unbounded targets).
   - binary dense features (fainted, the 6 status flags, is_active, the 18
     type flags, and each move's is_physical/is_special/is_status flags —
     within OWN_TEAM_DENSE and the opponent's mirrored block): sigmoid.
@@ -46,7 +46,7 @@ from battle_agents.mcts_approximation.state_encoder import (
 from battle_agents.mcts_approximation.state_encoder import NUM_STATUS as _NUM_STATUS
 from battle_agents.mcts_approximation.state_encoder import NUM_TYPES as _NUM_TYPES
 
-FUSED_DIM = 3074
+FUSED_DIM = 3062
 LATENT_DIM = 64
 
 # Widths of the 3 hidden layers between FUSED_DIM and latent_dim (mirrored for
@@ -74,7 +74,7 @@ def _intermediate_dims(latent_dim: int) -> list:
 def encoder_dims(latent_dim: int = LATENT_DIM, fused_dim: int = FUSED_DIM) -> list:
     """Actual encoder layer widths used by FusedFeaturesAutoencoder.__init__ --
     the real source of truth (not a separate, possibly-stale constant).
-    fused_dim is a parameter (not always FUSED_DIM=3074) because --dense-only
+    fused_dim is a parameter (not always FUSED_DIM=3062) because --dense-only
     mode builds a 758-dim autoencoder over just the dense block."""
     return [fused_dim, *_intermediate_dims(latent_dim), latent_dim]
 
@@ -128,8 +128,8 @@ def compute_dense_binary_mask() -> np.ndarray:
 
 def compute_binary_mask(fused_dim: int) -> np.ndarray:
     """Boolean mask, shape (fused_dim,) — True at binary positions within the
-    dense block, False everywhere else (continuous dense features, and, for
-    fused_dim > NUM_DENSE_FEATURES, the embeddings + meta_plan positions,
+    dense block, False everywhere else (continuous dense features and, for
+    fused_dim > NUM_DENSE_FEATURES, the embedding positions,
     which are always linear/continuous)."""
     mask = np.zeros(fused_dim, dtype=bool)
     dense_mask = compute_dense_binary_mask()

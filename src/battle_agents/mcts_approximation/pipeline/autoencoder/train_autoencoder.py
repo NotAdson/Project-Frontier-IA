@@ -7,7 +7,7 @@ Loads data/autoencoder_bootstrap/fused_features_synthetic.npy via mmap
 in RAM — a custom Dataset indexes into the memmap on demand, per batch.
 
 The reconstruction loss is a weighted sum of per-piece error (dense / each
-embedding / meta_plan), not a single flat nn.MSELoss() over all 3074 dims —
+embedding), not a single flat nn.MSELoss() over all 3062 dims —
 see compute_piece_weights() / SegmentedPieceLoss below for why and the exact
 formula. A smoke test on plain flat MSE showed the dense block (24.7% of the
 dims, where the real tactical info lives) can carry ~89% of the aggregate
@@ -29,7 +29,7 @@ Usage:
         [--lr 1e-3] [--batch-size 4096] [--epochs 100] [--patience 5] \
         [--val-fraction 0.2] [--seed 123] [--num-workers 4] \
         [--dense-weight 70.0] [--species-weight 1.0] [--moves-weight 1.0] \
-        [--items-weight 1.0] [--abilities-weight 1.0] [--meta-plan-weight 1.0] \
+        [--items-weight 1.0] [--abilities-weight 1.0] \
         [--resume-from-checkpoint data/autoencoder_bootstrap/checkpoints/fused_autoencoder_best.pt]
 
 Resuming: --resume-from-checkpoint loads model AND optimizer state (real Adam moment
@@ -66,21 +66,13 @@ from battle_agents.mcts_approximation.state_encoder import NUM_DENSE_FEATURES
 #
 # dense=8.0 was the original default and a v1 smoke test (flat, unweighted MSELoss) showed
 # dense carrying ~89% of the aggregate error while contributing only 24.7% of the dims. A v2
-# smoke test with dense=8.0 under this inverse-dim-normalized scheme actually made dense
-# WORSE (0.0703 -> 0.0805 raw MSE): meta_plan has only 12 dims, so its normalized base weight
-# (0.8475) is ~7.9x dense's weighted value even after the 8x multiplier (0.1073), and since
-# meta_plan is pure synthetic noise (independent dirichlet/uniform draws with no correlation
-# to the rest of the vector, so no encoder/decoder can reduce its error below the marginal
-# mean) it soaked up ~83% of the gradient signal for no achievable benefit. dense=70 is the
-# smallest round number whose final weight (70 * 0.013417 = 0.939) clears meta_plan's fixed
-# base weight (0.8475) — validated via a v3 smoke test.
+# The bootstrap keeps the validated v5 dense multiplier of 70.0.
 DEFAULT_PIECE_MULTIPLIERS = {
     "dense": 70.0,
     "emb_species": 1.0,
     "emb_moves": 1.0,
     "emb_items": 1.0,
     "emb_abilities": 1.0,
-    "meta_plan": 1.0,
 }
 
 
@@ -152,7 +144,7 @@ class SegmentedPieceLoss(nn.Module):
     floor, not because it's a harder target. --dense-bce-ratio's default
     (0.1) brings BCE's floor down to ~0.0693, the same order of magnitude as
     the MSE floor.
-    Every other piece (the 4 embeddings, meta_plan) is unchanged: plain MSE.
+    Every other piece (the 4 embeddings) is unchanged: plain MSE.
     """
 
     def __init__(self, weights: dict, binary_mask: torch.Tensor, bce_ratio: float = 0.1):
@@ -286,7 +278,6 @@ def main():
     parser.add_argument("--moves-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["emb_moves"])
     parser.add_argument("--items-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["emb_items"])
     parser.add_argument("--abilities-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["emb_abilities"])
-    parser.add_argument("--meta-plan-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["meta_plan"])
     parser.add_argument("--dense-bce-ratio", type=float, default=0.1,
                          help="Multiplier on the binary-features BCE term within the dense piece, "
                               "combined as cont_mse + dense_bce_ratio * bin_bce (see SegmentedPieceLoss). "
@@ -300,9 +291,9 @@ def main():
                               "whether a dense-MSE plateau is a capacity limit, not a loss-weighting one).")
     parser.add_argument("--dense-only", action="store_true",
                          help="Diagnostic mode: train on ONLY the first NUM_DENSE_FEATURES (758) "
-                              "columns of the dataset, with a 758-dim (not 3074-dim) autoencoder and "
+                              "columns of the dataset, with a 758-dim (not 3062-dim) autoencoder and "
                               "plain nn.MSELoss() — isolates whether the dense block's MSE plateau is "
-                              "caused by competing for gradient with the embeddings/meta_plan, or is "
+                              "caused by competing for gradient with the embeddings, or is "
                               "inherent to the dense data itself. Ignores all --*-weight flags.")
     parser.add_argument("--resume-from-checkpoint", type=Path, default=None,
                          help="Path to a .pt checkpoint saved by THIS script to resume from — loads "
@@ -336,7 +327,7 @@ def main():
     dataset_n_cols = NUM_DENSE_FEATURES if args.dense_only else None
     if args.dense_only:
         print(f"--dense-only: training on just the first {NUM_DENSE_FEATURES} columns "
-              f"(no embeddings, no meta_plan), plain nn.MSELoss().")
+              f"(no embeddings), plain nn.MSELoss().")
 
     train_ds = FusedFeaturesMemmapDataset(args.data_path, train_idx, n_cols=dataset_n_cols)
     val_ds = FusedFeaturesMemmapDataset(args.data_path, val_idx, n_cols=dataset_n_cols)
@@ -401,7 +392,6 @@ def main():
             "emb_moves": args.moves_weight,
             "emb_items": args.items_weight,
             "emb_abilities": args.abilities_weight,
-            "meta_plan": args.meta_plan_weight,
         }
         loss_weights = compute_piece_weights(multipliers)
         criterion = SegmentedPieceLoss(loss_weights, model.binary_mask, bce_ratio=args.dense_bce_ratio).to(device)

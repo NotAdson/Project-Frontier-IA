@@ -5,8 +5,8 @@ Loads the best checkpoint saved by train_autoencoder.py, reconstructs the
 EXACT validation split held out during training (same seed/fraction, read
 back from the checkpoint's saved args — never re-derived by guessing), and
 checks the formal acceptance criterion: aggregate reconstruction MSE < 0.01.
-Also reports MSE broken down per feature-group (dense / each embedding /
-meta_plan), reusing the same offsets already used to build the dataset in
+Also reports MSE broken down per feature-group (dense / each embedding),
+reusing the same offsets already used to build the dataset in
 generate_synthetic_dataset.py (PIECES), so this is purely a read-only check —
 no new offset constants are introduced here.
 
