@@ -22,6 +22,12 @@ types, move category flags — see model.py's compute_dense_binary_mask())
 use BCEWithLogitsLoss instead, since MSE is a poor fit for 0/1 targets. See
 SegmentedPieceLoss for the exact combination.
 
+Besides the per-epoch print, every epoch also appends a row to
+--checkpoint-dir/training_metrics.csv (see METRICS_CSV_COLUMNS below) so a
+training run's convergence can be plotted afterward without re-parsing
+stdout. export_training_metrics.py packages this CSV (plus the checkpoint's
+saved args) into a delivery folder once training finishes.
+
 Usage:
     python src/battle_agents/mcts_approximation/pipeline/autoencoder/train_autoencoder.py \
         [--data-path data/autoencoder_bootstrap/fused_features_synthetic.npy] \
@@ -42,9 +48,12 @@ must match the checkpoint's saved args, or the resume is refused (different args
 silently reproduce a different train/val split).
 """
 import argparse
+import csv
+import json
 import os
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -178,6 +187,37 @@ PROJECT_ROOT = Path(__file__).resolve().parents[5]
 DEFAULT_DATA_PATH = PROJECT_ROOT / "data" / "autoencoder_bootstrap" / "fused_features_synthetic.npy"
 DEFAULT_CHECKPOINT_DIR = PROJECT_ROOT / "data" / "autoencoder_bootstrap" / "checkpoints"
 DEFAULT_CHECKPOINT_NAME = "fused_autoencoder_best.pt"
+
+# Per-epoch metrics, written incrementally (appended, not batched) to --checkpoint-dir
+# so a crash mid-training still leaves every completed epoch on disk. export_training_metrics.py
+# reads this back once training finishes -- single source of truth for the column order.
+METRICS_CSV_FILENAME = "training_metrics.csv"
+METRICS_CSV_COLUMNS = ["epoch", "epoch_total", "train_loss", "val_loss", "is_best", "time_seconds"]
+
+# Written to --checkpoint-dir when main()'s epoch loop returns normally (full epoch
+# budget or early stopping, not a crash/interrupt) -- see write_completion_marker().
+# pipeline_bootstrap.py writes the SAME marker again, at the same path, right after
+# it calls this script as one of its own stages (ensure_autoencoder_ready() needs its
+# own record of completion even when it's driving several stages end to end, not just
+# this one). Both call sites share this one function so there's a single place that
+# defines what "training complete" means and how the marker is written.
+TRAINING_COMPLETE_MARKER_NAME = "TRAINING_COMPLETE.marker"
+
+
+def write_completion_marker(checkpoint_path: Path, marker_path: Path) -> None:
+    """Reads the epoch/val_loss actually saved in the checkpoint (not a value carried
+    over from the training loop in memory) so the marker reflects what's really on disk.
+    Idempotent by construction: Path.write_text() always overwrites, so calling this a
+    second time (e.g. once from here, once more from pipeline_bootstrap.py right after)
+    never fails just because the marker already exists -- it's the same content anyway,
+    since both calls read it from the same checkpoint file."""
+    ckpt = torch.load(str(checkpoint_path), map_location="cpu")
+    marker_path.write_text(json.dumps({
+        "completed_at": datetime.now().isoformat(timespec="seconds"),
+        "epoch": ckpt["epoch"],
+        "val_loss": ckpt["val_loss"],
+    }, indent=2))
+
 
 DEFAULT_SEED = 123  # controls the train/val split only (independent of the dataset-generation seeds)
 DEFAULT_VAL_FRACTION = 0.2
@@ -404,6 +444,11 @@ def main():
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = args.checkpoint_dir / DEFAULT_CHECKPOINT_NAME
 
+    metrics_csv_path = args.checkpoint_dir / METRICS_CSV_FILENAME
+    if not metrics_csv_path.exists():
+        with open(metrics_csv_path, "w", newline="") as f:
+            csv.writer(f).writerow(METRICS_CSV_COLUMNS)
+
     patience_counter = 0
     end_epoch = resume_start_epoch + args.epochs - 1
 
@@ -419,6 +464,13 @@ def main():
         improved = val_loss < best_val_loss
         print(f"epoch {epoch:3d}/{end_epoch}  train_loss={train_loss:.6f}  "
               f"val_loss={val_loss:.6f}  {'(best)' if improved else ''}  {elapsed:.1f}s")
+
+        # Appended immediately (not batched at the end) so a crash mid-training still
+        # leaves every completed epoch's row on disk for export_training_metrics.py.
+        with open(metrics_csv_path, "a", newline="") as f:
+            csv.writer(f).writerow([
+                epoch, end_epoch, f"{train_loss:.6f}", f"{val_loss:.6f}", improved, f"{elapsed:.3f}",
+            ])
 
         if improved:
             best_val_loss = val_loss
@@ -446,6 +498,14 @@ def main():
                 break
 
     print(f"Best val_loss: {best_val_loss:.6f}  |  checkpoint saved to {checkpoint_path}")
+
+    # Written unconditionally on normal completion (full epoch budget or early stopping
+    # above), whether this script is run standalone or as a stage inside
+    # pipeline_bootstrap.py's ensure_autoencoder_ready() -- see write_completion_marker()'s
+    # docstring for why a second write from there afterward is safe.
+    marker_path = args.checkpoint_dir / TRAINING_COMPLETE_MARKER_NAME
+    write_completion_marker(checkpoint_path, marker_path)
+    print(f"Training-complete marker written to {marker_path}")
 
 
 if __name__ == "__main__":
