@@ -21,17 +21,16 @@ pip install keras torch   # or tensorflow / jax
 
 ### 2. Engine (Pokémon Showdown)
 
-The battle simulator is a Node.js project inside `engine/`. Install its
-dependencies before running the pipeline:
+The battle simulator is a Node.js project inside `engine/`:
 
 ```bash
 cd engine
 npm install
+node build       # compiles TypeScript → dist/
 cd ..
 ```
 
-The installation also builds `engine/dist/`. Both `node_modules/` and `dist/`
-are generated locally and ignored by Git.
+> `node build` is required after `npm install`. The `dist/` folder is the compiled output used by the Python bridge (`bridge.js`).
 
 ## Quick Start
 
