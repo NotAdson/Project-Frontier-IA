@@ -88,6 +88,21 @@ Auto-resumes from the last incomplete generation. To start fresh, pass `--wipe`.
 | `JIT compilation failed` | Use `KERAS_BACKEND=torch` or set `CUDA_VISIBLE_DEVICES=-1` |
 | `node: command not found` | Install Node.js from https://nodejs.org |
 
+### Training and benchmark plots
+
+The pipeline refreshes PNG reports automatically in
+`src/data/training_plots/`, `src/data/generation_plots/`, and each
+`src/data/genN/benchmark_plots/` directory. Use `--no-plots` to disable this
+step. Existing artifacts can also be plotted without running training:
+
+```bash
+python src/battle_agents/mcts_approximation/pipeline/plot_training.py
+python src/battle_agents/mcts_approximation/pipeline/plot_generations.py
+```
+
+Benchmark objects expose `benchmark.plot_report()`, which writes the four
+standard benchmark figures to `src/benchmarks/results/` by default.
+
 ## Backend Configuration (Neural MCTS)
 
 The neural network component uses **[Keras 3](https://keras.io/)**, which is backend-agnostic. You can run training and inference on **TensorFlow**, **PyTorch**, or **JAX** without changing any code — just set the `KERAS_BACKEND` environment variable and install the matching package.

@@ -22,6 +22,56 @@ from benchmarks.round_robin import RoundRobinBenchmark
 from core.client.showdown_client import ShowdownClient
 
 
+def generate_training_plots(log_path, data_dir):
+    """Generate training figures without making plotting fatal to the pipeline."""
+    try:
+        from battle_agents.mcts_approximation.pipeline.plot_training import (
+            plot_training,
+        )
+
+        paths = plot_training(
+            log_path,
+            os.path.join(data_dir, "training_plots"),
+        )
+        print(f"[Plots] Generated {len(paths)} training plot(s).")
+        return paths
+    except Exception as error:
+        print(f"[Warning] Training plots were not generated: {error}")
+        return []
+
+
+def generate_generation_plots(data_dir):
+    """Refresh all generation figures from the archived pipeline artifacts."""
+    try:
+        from battle_agents.mcts_approximation.pipeline.plot_generations import (
+            plot_generations,
+        )
+
+        paths = plot_generations(
+            data_dir,
+            os.path.join(data_dir, "generation_plots"),
+        )
+        print(f"[Plots] Generated {len(paths)} generation plot(s).")
+        return paths
+    except Exception as error:
+        print(f"[Warning] Generation plots were not generated: {error}")
+        return []
+
+
+def generate_benchmark_plots(benchmark, generation_dir, generation):
+    """Generate benchmark figures without interrupting model evaluation."""
+    try:
+        paths = benchmark.plot_report(
+            os.path.join(generation_dir, "benchmark_plots"),
+            prefix=f"gen{generation}",
+        )
+        print(f"[Plots] Generated {len(paths)} benchmark plot(s).")
+        return paths
+    except Exception as error:
+        print(f"[Warning] Benchmark plots were not generated: {error}")
+        return []
+
+
 def copy_onnx(src_onnx: str, dst_onnx: str):
     """Copy an ONNX model, including the external .onnx.data file if present."""
     if os.path.exists(src_onnx):
@@ -89,7 +139,17 @@ def check_generation_won(gen_dir, gen_idx, champion_idx):
         return False
 
 
-def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, wipe=False, games_per_matchup=5, max_rollout_depth=20, processes=None):
+def run_pipeline(
+    num_games=5,
+    num_generations=3,
+    mcts_iterations=15,
+    epochs=2,
+    wipe=False,
+    games_per_matchup=5,
+    max_rollout_depth=20,
+    processes=None,
+    generate_plots=True,
+):
     """
     Runs the AlphaZero-style training pipeline end-to-end.
     
@@ -102,6 +162,7 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             If False, resumes seamlessly from where the last completed generation folder left off.
       games_per_matchup: Number of matches played between each pair of agents during round-robin tournament evaluation.
       max_rollout_depth: The rollout search depth limit for the Blind MCTS agent.
+      generate_plots: Refresh training and generation PNG reports automatically.
     """
     print("=== Pipeline Training ===")
     print(f"Parameters: num_games={num_games}, mcts_iterations={mcts_iterations}, epochs={epochs}")
@@ -127,6 +188,12 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         for gen_dir in glob.glob(os.path.join(data_dir, "gen*")):
             print(f"Removing generation directory: {gen_dir}")
             shutil.rmtree(gen_dir, ignore_errors=True)
+
+        for plot_directory_name in ("training_plots", "generation_plots"):
+            plot_directory = os.path.join(data_dir, plot_directory_name)
+            if os.path.isdir(plot_directory):
+                print(f"Removing generated plots: {plot_directory}")
+                shutil.rmtree(plot_directory)
             
         if os.path.exists(keras_path):
             print(f"Removing Keras model: {keras_path}")
@@ -262,6 +329,8 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             log_path = os.path.join(data_dir, "training_log.csv")
             if os.path.exists(log_path):
                 shutil.copy(log_path, os.path.join(next_gen_dir, "training_log.csv"))
+                if generate_plots:
+                    generate_training_plots(log_path, data_dir)
                 
         # --- PHASE 4: Round-Robin Tournament evaluation ---
         benchmark_json_path = os.path.join(next_gen_dir, "benchmark_report.json")
@@ -312,6 +381,8 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 with open(benchmark_json_path, "w") as f:
                     json.dump(benchmark.results, f, indent=4)
                 print(f"Saved benchmark JSON report to: {benchmark_json_path}")
+                if generate_plots:
+                    generate_benchmark_plots(benchmark, next_gen_dir, gen)
                 
                 # Save formatted report to text
                 stats = defaultdict(lambda: {'wins': 0, 'matches': 0, 'total_time': 0})
@@ -370,6 +441,9 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
             if os.path.exists(champion_keras):
                 shutil.copy(champion_keras, keras_path)
             copy_onnx(champion_onnx, onnx_path)
+
+        if generate_plots:
+            generate_generation_plots(data_dir)
                 
         # --- Early Stopping Evaluation: learning quality check ---
         if gen - champion_gen >= 10:
@@ -451,6 +525,14 @@ def parse_args():
         help="Delete previous generations and models before running.",
     )
 
+    parser.add_argument(
+        "--no-plots",
+        action="store_false",
+        dest="generate_plots",
+        default=True,
+        help="Disable automatic PNG generation after training/evaluation.",
+    )
+
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -465,4 +547,5 @@ if __name__ == "__main__":
         games_per_matchup=args.games_per_matchup,
         max_rollout_depth=args.max_rollout_depth,
         processes=args.processes,
+        generate_plots=args.generate_plots,
     )
