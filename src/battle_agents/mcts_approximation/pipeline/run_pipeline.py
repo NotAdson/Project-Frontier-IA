@@ -12,6 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
 from battle_agents.mcts_approximation.mcts_approximation_agent import \
     MCTSApproximationAgent
+from battle_agents.mcts_approximation.pipeline.autoencoder.pipeline_bootstrap import \
+    ensure_autoencoder_ready
 from battle_agents.mcts_approximation.pipeline.generate_data import \
     generate_dataset
 from battle_agents.mcts_approximation.pipeline.train_nn import train
@@ -108,6 +110,16 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"))
     keras_path = os.path.join(data_dir, "mcts_model.keras")
     onnx_path = os.path.join(data_dir, "mcts_model.onnx")
+    champion_json_path = os.path.join(data_dir, "champion.json")
+    encoder_checkpoint_path = os.path.join(
+        data_dir,
+        "autoencoder_bootstrap",
+        "checkpoints_v5_fixed256",
+        "fused_autoencoder_best.pt",
+    )
+
+    # The frozen encoder is trained once and reused by every generation.
+    ensure_autoencoder_ready(checkpoint_path=encoder_checkpoint_path)
 
     # --- PHASE 0: Clean slate if wipe=True ---
     if wipe:
@@ -122,14 +134,12 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
         if os.path.exists(onnx_path):
             print(f"Removing ONNX model: {onnx_path}")
             os.remove(onnx_path)
-        champion_json_path = os.path.join(data_dir, "champion.json")
         if os.path.exists(champion_json_path):
             os.remove(champion_json_path)
             
     engine_path = str(Path(__file__).resolve().parents[4] / "engine")
     
     # Load champion tracking metadata
-    champion_json_path = os.path.join(data_dir, "champion.json")
     if os.path.exists(champion_json_path):
         try:
             with open(champion_json_path, "r") as f:
@@ -234,7 +244,8 @@ def run_pipeline(num_games=5, num_generations=3, mcts_iterations=15, epochs=2, w
                 data_dir=data_dir,
                 model_save_path=keras_path,
                 max_games_buffer=10000,
-                epochs=epochs
+                epochs=epochs,
+                encoder_checkpoint_path=encoder_checkpoint_path,
             )
 
             if not os.path.isfile(keras_path):

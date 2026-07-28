@@ -25,9 +25,9 @@ class PokemonState:
         return hash(json.dumps(self.state_dict, sort_keys=True))
 
 class PokemonProblem(Problem):
-    def __init__(self, client: ShowdownClient, formatid='gen3randombattle'):
+    def __init__(self, client: ShowdownClient, formatid='gen3randombattle', p1_team=None, p2_team=None):
         self.client = client
-        resp = self.client.init_battle(formatid=formatid)
+        resp = self.client.init_battle(formatid=formatid, p1_team=p1_team, p2_team=p2_team)
         initial_state = PokemonState(
             resp['state'], 
             resp.get('request'), 

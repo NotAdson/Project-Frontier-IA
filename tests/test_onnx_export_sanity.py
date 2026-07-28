@@ -19,6 +19,27 @@ def _make_dummy_inputs():
 
 
 def test_onnx_export_matches_keras(tmp_path):
+    import torch
+
+    from battle_agents.mcts_approximation.pipeline.autoencoder.model import (
+        FUSED_DIM,
+        FusedFeaturesAutoencoder,
+    )
+
+    encoder_path = tmp_path / "fused_autoencoder_best.pt"
+    autoencoder = FusedFeaturesAutoencoder(
+        fused_dim=FUSED_DIM,
+        latent_dim=16,
+    )
+    torch.save(
+        {
+            "model_state_dict": autoencoder.state_dict(),
+            "fused_dim": FUSED_DIM,
+            "latent_dim": 16,
+        },
+        encoder_path,
+    )
+
     # 1. Build both model views
     inference_model, _ = build_models(
         num_dense=NUM_DENSE_FEATURES,
@@ -26,6 +47,7 @@ def test_onnx_export_matches_keras(tmp_path):
         num_species=db.get_num_species(),
         num_items=db.get_num_items(),
         num_abilities=db.get_num_abilities(),
+        encoder_checkpoint_path=encoder_path,
     )
 
     # 2. Export the inference model used by the agent

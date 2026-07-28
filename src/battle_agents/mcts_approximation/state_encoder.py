@@ -82,12 +82,6 @@ _ACCURACY_DIVISOR = 100.0
 _BOOST_DIVISOR    = 6.0
 
 # ─── Model embedding dimensions ────────────────────────────────────────────
-# Meta-Planner Transformer sub-network (per-token embeddings)
-META_EMB_SPECIES_DIM = 16
-META_EMB_MOVES_DIM   = 8
-META_EMB_ITEMS_DIM   = 8
-META_EMB_ABILITY_DIM = 8
-
 # Main tactical network trunk (full-team embeddings)
 MAIN_EMB_SPECIES_DIM  = 32
 MAIN_EMB_MOVES_DIM    = 32

@@ -8,11 +8,17 @@ from battle_agents.mcts_approximation.db.python.database import db
 from battle_agents.mcts_approximation.state_encoder import TOTAL_FEATURES
 
 from .data import load_data_from_files, split_features
-from .aux_targets import extract_aux_targets_batch, compute_counterfactual_targets
+from .aux_targets import extract_aux_targets_batch
 from .model import build_models, export_to_onnx, PrimaryLossCallback, TRAINING_LOSSES, TRAINING_LOSS_WEIGHTS, get_custom_objects
 
 
-def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras", max_games_buffer: int = 2500, epochs: int = 15):
+def train(
+    data_dir: str = "data",
+    model_save_path: str = "data/mcts_model.keras",
+    max_games_buffer: int = 2500,
+    epochs: int = 15,
+    encoder_checkpoint_path=None,
+):
     print(f"[Keras backend: {keras.backend.backend()}]")
     print(f"Locating game files in {data_dir}/gen*...")
     all_files = list(Path(data_dir).glob("gen*/game_*.json"))
@@ -181,6 +187,11 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
         num_species,
         num_items,
         num_abilities,
+        **(
+            {}
+            if encoder_checkpoint_path is None
+            else {"encoder_checkpoint_path": encoder_checkpoint_path}
+        ),
     )
 
     is_scratch = True
@@ -196,9 +207,9 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
                 custom_objects=get_custom_objects(),
             )
 
-            if len(loaded_model.outputs) != 21:
+            if len(loaded_model.outputs) != 20:
                 raise ValueError(
-                    "Architecture mismatch: expected 21 outputs, "
+                    "Architecture mismatch: expected 20 outputs, "
                     f"got {len(loaded_model.outputs)}"
                 )
 
@@ -226,21 +237,6 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
             "dynamic_matching": "categorical_accuracy",
         },
     )
-    value_model = keras.Model(
-        inputs=inference_model.inputs,
-        outputs=inference_model.get_layer(
-            "value"
-        ).output,
-    )
-
-    train_outputs["meta_plan"] = (
-        compute_counterfactual_targets(
-            value_model,
-            train_inputs,
-            is_scratch=is_scratch,
-        )
-    )
-
     train_sample_weights = create_sample_weights(
         train_outputs,
         species_target_train,
@@ -253,7 +249,6 @@ def train(data_dir: str = "data", model_save_path: str = "data/mcts_model.keras"
 
     if val_data is not None:
         val_inputs, val_outputs = val_data
-        val_outputs["meta_plan"] = compute_counterfactual_targets(value_model, val_inputs, is_scratch=is_scratch)
         val_sample_weights = create_sample_weights(
             val_outputs,
             species_target_val,

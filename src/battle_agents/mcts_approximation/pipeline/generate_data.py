@@ -26,11 +26,11 @@ def run_simulation(args):
     MCTSApproximationAgent, which requires model_path to point at an existing .onnx).
     Returns a list of tuples (encoded_state_list, p1_win)
     """
-    engine_path, formatid, mcts_iterations, use_cheating_mcts, model_path, agent_type = args
+    engine_path, formatid, mcts_iterations, use_cheating_mcts, model_path, agent_type, p1_team, p2_team = args
 
     client = ShowdownClient(engine_path)
     try:
-        problem = PokemonProblem(client, formatid=formatid)
+        problem = PokemonProblem(client, formatid=formatid, p1_team=p1_team, p2_team=p2_team)
 
         if agent_type == "random":
             agent_p1 = RandomAgent(problem)

@@ -1,24 +1,21 @@
-import os
 from pathlib import Path
 
 import keras
 import numpy as np
+import torch
 
 from battle_agents.mcts_approximation.state_encoder import (
-    ACTION_SPACE, FIELD_START, MAIN_EMB_ABILITY_DIM, MAIN_EMB_ITEMS_DIM,
-    MAIN_EMB_MOVES_DIM, MAIN_EMB_SPECIES_DIM, META_EMB_ABILITY_DIM,
-    META_EMB_ITEMS_DIM, META_EMB_MOVES_DIM, META_EMB_SPECIES_DIM,
-    NUM_ABILITY_INDICES, NUM_ACTIVE, NUM_BENCH, NUM_BOOSTS, NUM_DENSE_FEATURES,
-    NUM_EMBEDDING_INDICES, NUM_FIELD_FEATURES, NUM_ITEM_INDICES, NUM_MOVE_INDICES,
-    NUM_MOVES, NUM_SPECIES_INDICES, NUM_STATUS, NUM_STATS, NUM_TYPES,
-    OFF_ABILITIES, OFF_FAINTED, OFF_HP, OFF_IS_ACTIVE, OFF_ITEMS, OFF_LEVEL,
-    OFF_MOVES, OFF_MOVES_DENSE, OFF_SPECIES, OFF_STATS, OFF_STATUSES, OFF_TYPES,
-    OPP_BOOSTS_START, OPP_TEAM_START, OWN_BOOSTS_START, OWN_TEAM_DENSE,
-    PER_MON_DENSE, PP_START, TOTAL_FEATURES
+    ACTION_SPACE, MAIN_EMB_ABILITY_DIM, MAIN_EMB_ITEMS_DIM,
+    MAIN_EMB_MOVES_DIM, MAIN_EMB_SPECIES_DIM, NUM_ACTIVE, NUM_BOOSTS,
+    NUM_DENSE_FEATURES, NUM_FIELD_FEATURES, NUM_MOVES, NUM_STATUS, NUM_STATS,
+    NUM_TYPES,
 )
 
 from battle_agents.mcts_approximation.db.python.knowledge_base import (
     get_species_reference_data,
+)
+from battle_agents.mcts_approximation.pipeline.autoencoder.export_encoder_to_keras import (
+    build_keras_encoder,
 )
 from battle_agents.mcts_approximation.pipeline.differentiable_matching import (
     DifferentiableSpeciesMatching,
@@ -33,6 +30,15 @@ TOTAL_BASE_WEIGHT = (
     + BASE_WEIGHT_STATS
     + BASE_WEIGHT_TYPE
 )
+
+DEFAULT_ENCODER_CHECKPOINT = (
+    Path(__file__).resolve().parents[4]
+    / "data"
+    / "autoencoder_bootstrap"
+    / "checkpoints_v5_fixed256"
+    / "fused_autoencoder_best.pt"
+)
+
 
 class PrimaryLossCallback(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
@@ -93,9 +99,15 @@ class ApplyMaskLayer(keras.layers.Layer):
         return super().get_config()
 
 
-def build_models(num_dense: int, num_moves: int, num_species: int,
-                num_items: int, num_abilities: int) -> tuple[keras.Model, keras.Model]:
-    # (function body copied from original train_nn.py)
+def build_models(
+    num_dense: int,
+    num_moves: int,
+    num_species: int,
+    num_items: int,
+    num_abilities: int,
+    encoder_checkpoint_path=DEFAULT_ENCODER_CHECKPOINT,
+) -> tuple[keras.Model, keras.Model]:
+    """Build the inference/training models around a frozen fused-feature encoder."""
     inp_dense     = keras.layers.Input(shape=(num_dense,), name="dense_features")
     inp_species   = keras.layers.Input(shape=(NUM_ACTIVE,), name="species_indices", dtype="int32")
     inp_moves     = keras.layers.Input(shape=(NUM_ACTIVE * NUM_MOVES,), name="move_indices",    dtype="int32")
@@ -103,81 +115,39 @@ def build_models(num_dense: int, num_moves: int, num_species: int,
     inp_abilities = keras.layers.Input(shape=(NUM_ACTIVE,), name="ability_indices", dtype="int32")
     inp_mask      = keras.layers.Input(shape=(len(ACTION_SPACE),), name="action_mask")
 
-    emb_species_layer = keras.layers.Embedding(num_species, META_EMB_SPECIES_DIM, name="meta_emb_species")
-    emb_moves_layer   = keras.layers.Embedding(num_moves, META_EMB_MOVES_DIM, name="meta_emb_moves")
-    emb_items_layer   = keras.layers.Embedding(num_items, META_EMB_ITEMS_DIM, name="meta_emb_items")
-    emb_abilities_layer = keras.layers.Embedding(num_abilities, META_EMB_ABILITY_DIM, name="meta_emb_abilities")
-
-    field_conds = SliceLayer(FIELD_START, FIELD_START + NUM_FIELD_FEATURES, name="field_conditions")(inp_dense)
-
-    tokens = []
-    for i in range(NUM_ACTIVE):
-        if i < NUM_BENCH:
-            start_idx = i * PER_MON_DENSE
-            owner_val = 1.0
-        else:
-            start_idx = OPP_TEAM_START + (i - NUM_BENCH) * PER_MON_DENSE
-            owner_val = 0.0
-
-        p_dense = SliceLayer(start_idx, start_idx + PER_MON_DENSE, name=f"p{i}_dense")(inp_dense)
-        p_pp    = SliceLayer(PP_START + i * NUM_MOVES, PP_START + i * NUM_MOVES + NUM_MOVES, name=f"p{i}_pp")(inp_dense)
-        p_spec = SliceLayer(i, i + 1, name=f"p{i}_species")(inp_species)
-        p_item = SliceLayer(i, i + 1, name=f"p{i}_item")(inp_items)
-        p_abil = SliceLayer(i, i + 1, name=f"p{i}_ability")(inp_abilities)
-
-        m_start = i * NUM_MOVES if i < NUM_BENCH else (NUM_BENCH * NUM_MOVES) + (i - NUM_BENCH) * NUM_MOVES
-        p_moves = SliceLayer(m_start, m_start + NUM_MOVES, name=f"p{i}_moves")(inp_moves)
-
-        spec_emb = keras.layers.Flatten()(emb_species_layer(p_spec))
-        item_emb = keras.layers.Flatten()(emb_items_layer(p_item))
-        abil_emb = keras.layers.Flatten()(emb_abilities_layer(p_abil))
-        moves_emb = keras.layers.Flatten()(emb_moves_layer(p_moves))
-
-        owner_flag = ConstantLayer(owner_val, name=f"p{i}_owner")(inp_dense)
-
-        token = keras.layers.Concatenate(name=f"p{i}_token")([
-            p_dense, p_pp, spec_emb, item_emb, abil_emb, moves_emb, owner_flag, field_conds
-        ])
-
-        token_dim = (PER_MON_DENSE + NUM_MOVES + META_EMB_SPECIES_DIM
-                     + META_EMB_ITEMS_DIM + META_EMB_ABILITY_DIM
-                     + NUM_MOVES * META_EMB_MOVES_DIM + 1 + NUM_FIELD_FEATURES)
-        token_expanded = keras.layers.Reshape((1, token_dim), name=f"p{i}_token_expanded")(token)
-        tokens.append(token_expanded)
-
-    token_seq = keras.layers.Concatenate(axis=1, name="token_sequence")(tokens)
-
-    attn_out = keras.layers.MultiHeadAttention(num_heads=4, key_dim=32, name="meta_attention")(
-        query=token_seq, value=token_seq
-    )
-    attn_out = keras.layers.Add()([token_seq, attn_out])
-    attn_out = keras.layers.LayerNormalization()(attn_out)
-
-    scores = keras.layers.Dense(1, name="token_score_projection")(attn_out)
-    scores = keras.layers.Reshape((NUM_ACTIVE,), name="token_scores")(scores)
-
-    own_scores = SliceLayer(0, NUM_BENCH, name="own_scores")(scores)
-    opp_scores = SliceLayer(NUM_BENCH, name="opp_scores")(scores)
-
-    own_weights = keras.layers.Activation("softmax", name="meta_own_weights")(own_scores)
-    opp_weights = keras.layers.Activation("sigmoid", name="meta_opp_weights")(opp_scores)
-
-    meta_plan = keras.layers.Concatenate(name="meta_plan")([own_weights, opp_weights])
-
     emb_species_main   = keras.layers.Flatten()(keras.layers.Embedding(num_species,   MAIN_EMB_SPECIES_DIM, name="emb_species")(inp_species))
     emb_moves_main     = keras.layers.Flatten()(keras.layers.Embedding(num_moves,     MAIN_EMB_MOVES_DIM, name="emb_moves")(inp_moves))
     emb_items_main     = keras.layers.Flatten()(keras.layers.Embedding(num_items,     MAIN_EMB_ITEMS_DIM, name="emb_items")(inp_items))
     emb_abilities_main = keras.layers.Flatten()(keras.layers.Embedding(num_abilities, MAIN_EMB_ABILITY_DIM, name="emb_abilities")(inp_abilities))
 
-    concat_main = keras.layers.Concatenate()(
+    fused_features = keras.layers.Concatenate(name="fused_features")(
         [inp_dense, emb_species_main, emb_moves_main, emb_items_main, emb_abilities_main]
     )
 
-    fused_features = keras.layers.Concatenate(name="fused_features")([concat_main, meta_plan])
+    checkpoint = torch.load(
+        str(encoder_checkpoint_path),
+        map_location="cpu",
+    )
+    encoder_state = {
+        key: value
+        for key, value in checkpoint["model_state_dict"].items()
+        if key.startswith("encoder.")
+    }
+    encoder_fused_dim = checkpoint["fused_dim"]
+    encoder_latent_dim = checkpoint["latent_dim"]
+    if fused_features.shape[-1] != encoder_fused_dim:
+        raise ValueError(
+            f"fused_features width {fused_features.shape[-1]} does not match "
+            f"checkpoint fused_dim {encoder_fused_dim} ({encoder_checkpoint_path})"
+        )
+    fused_encoder = build_keras_encoder(
+        encoder_fused_dim,
+        encoder_latent_dim,
+        encoder_state,
+    )
 
-    x = keras.layers.Dense(512, name="dense")(fused_features)
+    x = fused_encoder(fused_features)
     x = keras.layers.BatchNormalization(name="batch_normalization")(x)
-    x = keras.layers.Activation("relu", name="activation")(x)
     x = keras.layers.Dropout(0.3, name="dropout")(x)
 
     x = keras.layers.Dense(256, name="dense_1")(x)
@@ -344,7 +314,6 @@ def build_models(num_dense: int, num_moves: int, num_species: int,
         out_opp_species,
         out_own_moves,
         out_opp_moves,
-        meta_plan,
     ]
 
     # Model that will be saved and used by the agent
@@ -432,7 +401,7 @@ def export_to_onnx(model, onnx_path):
                             "aux_opp_boosts", "aux_own_stats", "aux_opp_stats",
                             "aux_own_types", "aux_opp_types", "aux_own_species",
                             "aux_opp_species", "aux_own_moves", "aux_opp_moves",
-                            "meta_plan", "pred_weight_species", "pred_weight_stats",
+                            "pred_weight_species", "pred_weight_stats",
                             "pred_weight_type"]
             if hasattr(model, "eval"):
                 model.eval()
@@ -500,7 +469,6 @@ LOSSES = {
     "aux_opp_species": "categorical_crossentropy",
     "aux_own_moves": "binary_crossentropy",
     "aux_opp_moves": "binary_crossentropy",
-    "meta_plan": "mse",
 }
 
 TRAINING_LOSSES = {
@@ -530,7 +498,6 @@ LOSS_WEIGHTS = {
     "aux_opp_species": 0.5,
     "aux_own_moves": 0.5,
     "aux_opp_moves": 0.5,
-    "meta_plan": 0.5,
 }
 
 TRAINING_LOSS_WEIGHTS = {
