@@ -1,6 +1,6 @@
 """
 Bootstraps the frozen fused_features autoencoder checkpoint (issue #10, PROPOSTA_10.md)
-that train_nn.py's build_model() loads. Meant to run once, before the AlphaZero
+that the training model's build_models() loads. Meant to run once, before the AlphaZero
 generational loop starts (see run_pipeline.py) -- self-play data generation and NN
 training both depend on the same feature encoder, so it must exist before generation 1.
 
@@ -33,6 +33,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import torch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[5]
@@ -128,6 +129,7 @@ def _write_completion_marker(checkpoint_path: Path, marker_path: Path) -> None:
         "completed_at": datetime.now().isoformat(timespec="seconds"),
         "epoch": ckpt["epoch"],
         "val_loss": ckpt["val_loss"],
+        "fused_dim": ckpt["fused_dim"],
     }, indent=2))
 
 
@@ -151,20 +153,43 @@ def ensure_autoencoder_ready(checkpoint_path: str = None) -> None:
     returns immediately without doing any work.
 
     checkpoint_path: absolute path to the final checkpoint. Defaults to
-    DEFAULT_CHECKPOINT_PATH (the same path train_nn.py's build_model() loads by
+    DEFAULT_CHECKPOINT_PATH (the same path model.py's build_models() loads by
     default, resolved absolutely here rather than relative to cwd).
     """
     checkpoint_path = Path(checkpoint_path) if checkpoint_path else DEFAULT_CHECKPOINT_PATH
     checkpoint_dir = checkpoint_path.parent
     marker_path = checkpoint_dir / TRAINING_COMPLETE_MARKER_NAME
 
-    if marker_path.exists() and checkpoint_path.exists():
-        _log(f"Training-complete marker found at {marker_path}. Nothing to do.")
+    checkpoint_is_compatible = False
+    if checkpoint_path.exists():
+        try:
+            checkpoint = torch.load(
+                str(checkpoint_path),
+                map_location="cpu",
+            )
+            checkpoint_is_compatible = checkpoint.get("fused_dim") == gsd.FUSED_DIM
+        except Exception as exc:
+            _log(f"Could not validate checkpoint {checkpoint_path}: {exc}")
+
+    if marker_path.exists() and checkpoint_is_compatible:
+        _log(
+            f"Compatible training-complete checkpoint found at {checkpoint_path}. "
+            "Nothing to do."
+        )
         return
 
+    if marker_path.exists():
+        marker_path.unlink()
+        _log(
+            f"Removed stale completion marker because the checkpoint is not "
+            f"compatible with fused_dim={gsd.FUSED_DIM}."
+        )
+
     if checkpoint_path.exists() and not marker_path.exists():
-        _log(f"Checkpoint exists at {checkpoint_path} but {marker_path} doesn't -- "
-             "treating it as an incomplete/interrupted run and retraining from scratch.")
+        _log(
+            f"Checkpoint exists at {checkpoint_path} but is incomplete or incompatible; "
+            "retraining from scratch."
+        )
 
     _log(f"Autoencoder not ready ({checkpoint_path}). Starting bootstrap.")
 
@@ -177,8 +202,19 @@ def ensure_autoencoder_ready(checkpoint_path: str = None) -> None:
 
     def stage_generate_synthetic_dataset():
         if gsd.DEFAULT_OUTPUT.exists():
-            _log(f"{gsd.DEFAULT_OUTPUT} already exists, skipping synthetic dataset generation.")
-            return
+            existing = np.load(str(gsd.DEFAULT_OUTPUT), mmap_mode="r")
+            existing_dim = existing.shape[1] if existing.ndim == 2 else None
+            del existing
+            if existing_dim == gsd.FUSED_DIM:
+                _log(
+                    f"{gsd.DEFAULT_OUTPUT} already has fused_dim={gsd.FUSED_DIM}; "
+                    "skipping synthetic dataset generation."
+                )
+                return
+            _log(
+                f"{gsd.DEFAULT_OUTPUT} has fused_dim={existing_dim}; regenerating "
+                f"for fused_dim={gsd.FUSED_DIM}."
+            )
         with _Argv([]):
             gsd.main()
 

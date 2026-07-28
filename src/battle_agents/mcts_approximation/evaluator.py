@@ -156,18 +156,44 @@ class NeuralStateEvaluator(BaseStateEvaluator):
             "ability_indices":  self._buf_abilities,
         }
 
+    @staticmethod
+    def _scalar_weight(value, default: float) -> float:
+        if value is None:
+            return default
+
+        array = np.asarray(
+            value,
+            dtype=np.float32,
+        ).reshape(-1)
+
+        if array.size == 0:
+            return default
+
+        scalar = float(array[0])
+
+        if not np.isfinite(scalar):
+            return default
+
+        if scalar <= 0.0:
+            return default
+
+        return scalar
+
     def _resolve_onnx_outputs(self, ort_outs):
         """Extract opponent auxiliary predictions from ONNX outputs using output name mapping.
 
         Returns a tuple (opp_stats, opp_types, opp_species, opp_moves). If a particular
         output is not found, the corresponding entry will be ``None``.
         """
-        opp_stats = opp_types = opp_species = opp_moves = None
+        opp_stats = opp_types = opp_species = opp_moves = weight_species = weight_stats = weight_type = None
         name_map = {
             "aux_opp_stats": "opp_stats",
             "aux_opp_types": "opp_types",
             "aux_opp_species": "opp_species",
             "aux_opp_moves": "opp_moves",
+            "pred_weight_species": "weight_species",
+            "pred_weight_stats": "weight_stats",
+            "pred_weight_type": "weight_type"
         }
 
         for idx, name in enumerate(self.output_names):
@@ -181,7 +207,13 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                         opp_species = ort_outs[idx][0]
                     elif var == "opp_moves":
                         opp_moves = ort_outs[idx][0]
-        return opp_stats, opp_types, opp_species, opp_moves
+                    elif var == "weight_species":
+                        weight_species = ort_outs[idx][0]
+                    elif var == "weight_stats":
+                        weight_stats = ort_outs[idx][0]
+                    elif var == "weight_type":
+                        weight_type = ort_outs[idx][0]
+        return opp_stats, opp_types, opp_species, opp_moves, weight_species, weight_stats, weight_type
 
     def evaluate(self, state, player: str, valid_actions: list) -> tuple[float, dict[str, float]]:
         if not valid_actions:
@@ -263,14 +295,42 @@ class NeuralStateEvaluator(BaseStateEvaluator):
                 raise ValueError(f"Missing ONNX input '{name}' (clean: '{clean_name}')")
             ort_inputs[name] = inputs[clean_name]
         ort_outs = self.onnx_session.run(self.output_names, ort_inputs)
-        opp_stats, opp_types, opp_species, opp_moves = self._resolve_onnx_outputs(ort_outs)
+        (
+            opp_stats,
+            opp_types,
+            opp_species,
+            opp_moves,
+            predicted_weight_species,
+            predicted_weight_stats,
+            predicted_weight_type,
+        ) = self._resolve_onnx_outputs(ort_outs)
+
 
         # If we have the three core outputs, proceed to find the closest species
         if opp_stats is not None and opp_types is not None and opp_species is not None:
+            weight_species = self._scalar_weight(
+                predicted_weight_species,
+                default=1.0,
+            )
+    
+            weight_stats = self._scalar_weight(
+                predicted_weight_stats,
+                default=5.0,
+            )
+    
+            weight_type = self._scalar_weight(
+                predicted_weight_type,
+                default=5.0,
+            )
+            
             matches = find_closest_species(
-                opp_species, opp_stats, opp_types,
-                weight_species=1.0, weight_stats=5.0, weight_types=5.0,
-                top_k=1
+                opp_species,
+                opp_stats,
+                opp_types,
+                weight_species=weight_species,
+                weight_stats=weight_stats,
+                weight_types=weight_type,
+                top_k=1,
             )
             if matches:
                 res = dict(matches[0])

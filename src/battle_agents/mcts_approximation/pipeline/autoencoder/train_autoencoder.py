@@ -7,7 +7,7 @@ Loads data/autoencoder_bootstrap/fused_features_synthetic.npy via mmap
 in RAM — a custom Dataset indexes into the memmap on demand, per batch.
 
 The reconstruction loss is a weighted sum of per-piece error (dense / each
-embedding / meta_plan), not a single flat nn.MSELoss() over all 3074 dims —
+embedding), not a single flat nn.MSELoss() over all 3062 dims —
 see compute_piece_weights() / SegmentedPieceLoss below for why and the exact
 formula. A smoke test on plain flat MSE showed the dense block (24.7% of the
 dims, where the real tactical info lives) can carry ~89% of the aggregate
@@ -22,6 +22,12 @@ types, move category flags — see model.py's compute_dense_binary_mask())
 use BCEWithLogitsLoss instead, since MSE is a poor fit for 0/1 targets. See
 SegmentedPieceLoss for the exact combination.
 
+Besides the per-epoch print, every epoch also appends a row to
+--checkpoint-dir/training_metrics.csv (see METRICS_CSV_COLUMNS below) so a
+training run's convergence can be plotted afterward without re-parsing
+stdout. export_training_metrics.py packages this CSV (plus the checkpoint's
+saved args) into a delivery folder once training finishes.
+
 Usage:
     python src/battle_agents/mcts_approximation/pipeline/autoencoder/train_autoencoder.py \
         [--data-path data/autoencoder_bootstrap/fused_features_synthetic.npy] \
@@ -29,7 +35,7 @@ Usage:
         [--lr 1e-3] [--batch-size 4096] [--epochs 100] [--patience 5] \
         [--val-fraction 0.2] [--seed 123] [--num-workers 4] \
         [--dense-weight 70.0] [--species-weight 1.0] [--moves-weight 1.0] \
-        [--items-weight 1.0] [--abilities-weight 1.0] [--meta-plan-weight 1.0] \
+        [--items-weight 1.0] [--abilities-weight 1.0] \
         [--resume-from-checkpoint data/autoencoder_bootstrap/checkpoints/fused_autoencoder_best.pt]
 
 Resuming: --resume-from-checkpoint loads model AND optimizer state (real Adam moment
@@ -42,9 +48,12 @@ must match the checkpoint's saved args, or the resume is refused (different args
 silently reproduce a different train/val split).
 """
 import argparse
+import csv
+import json
 import os
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -66,21 +75,13 @@ from battle_agents.mcts_approximation.state_encoder import NUM_DENSE_FEATURES
 #
 # dense=8.0 was the original default and a v1 smoke test (flat, unweighted MSELoss) showed
 # dense carrying ~89% of the aggregate error while contributing only 24.7% of the dims. A v2
-# smoke test with dense=8.0 under this inverse-dim-normalized scheme actually made dense
-# WORSE (0.0703 -> 0.0805 raw MSE): meta_plan has only 12 dims, so its normalized base weight
-# (0.8475) is ~7.9x dense's weighted value even after the 8x multiplier (0.1073), and since
-# meta_plan is pure synthetic noise (independent dirichlet/uniform draws with no correlation
-# to the rest of the vector, so no encoder/decoder can reduce its error below the marginal
-# mean) it soaked up ~83% of the gradient signal for no achievable benefit. dense=70 is the
-# smallest round number whose final weight (70 * 0.013417 = 0.939) clears meta_plan's fixed
-# base weight (0.8475) — validated via a v3 smoke test.
+# The bootstrap keeps the validated v5 dense multiplier of 70.0.
 DEFAULT_PIECE_MULTIPLIERS = {
     "dense": 70.0,
     "emb_species": 1.0,
     "emb_moves": 1.0,
     "emb_items": 1.0,
     "emb_abilities": 1.0,
-    "meta_plan": 1.0,
 }
 
 
@@ -152,7 +153,7 @@ class SegmentedPieceLoss(nn.Module):
     floor, not because it's a harder target. --dense-bce-ratio's default
     (0.1) brings BCE's floor down to ~0.0693, the same order of magnitude as
     the MSE floor.
-    Every other piece (the 4 embeddings, meta_plan) is unchanged: plain MSE.
+    Every other piece (the 4 embeddings) is unchanged: plain MSE.
     """
 
     def __init__(self, weights: dict, binary_mask: torch.Tensor, bce_ratio: float = 0.1):
@@ -186,6 +187,37 @@ PROJECT_ROOT = Path(__file__).resolve().parents[5]
 DEFAULT_DATA_PATH = PROJECT_ROOT / "data" / "autoencoder_bootstrap" / "fused_features_synthetic.npy"
 DEFAULT_CHECKPOINT_DIR = PROJECT_ROOT / "data" / "autoencoder_bootstrap" / "checkpoints"
 DEFAULT_CHECKPOINT_NAME = "fused_autoencoder_best.pt"
+
+# Per-epoch metrics, written incrementally (appended, not batched) to --checkpoint-dir
+# so a crash mid-training still leaves every completed epoch on disk. export_training_metrics.py
+# reads this back once training finishes -- single source of truth for the column order.
+METRICS_CSV_FILENAME = "training_metrics.csv"
+METRICS_CSV_COLUMNS = ["epoch", "epoch_total", "train_loss", "val_loss", "is_best", "time_seconds"]
+
+# Written to --checkpoint-dir when main()'s epoch loop returns normally (full epoch
+# budget or early stopping, not a crash/interrupt) -- see write_completion_marker().
+# pipeline_bootstrap.py writes the SAME marker again, at the same path, right after
+# it calls this script as one of its own stages (ensure_autoencoder_ready() needs its
+# own record of completion even when it's driving several stages end to end, not just
+# this one). Both call sites share this one function so there's a single place that
+# defines what "training complete" means and how the marker is written.
+TRAINING_COMPLETE_MARKER_NAME = "TRAINING_COMPLETE.marker"
+
+
+def write_completion_marker(checkpoint_path: Path, marker_path: Path) -> None:
+    """Reads the epoch/val_loss actually saved in the checkpoint (not a value carried
+    over from the training loop in memory) so the marker reflects what's really on disk.
+    Idempotent by construction: Path.write_text() always overwrites, so calling this a
+    second time (e.g. once from here, once more from pipeline_bootstrap.py right after)
+    never fails just because the marker already exists -- it's the same content anyway,
+    since both calls read it from the same checkpoint file."""
+    ckpt = torch.load(str(checkpoint_path), map_location="cpu")
+    marker_path.write_text(json.dumps({
+        "completed_at": datetime.now().isoformat(timespec="seconds"),
+        "epoch": ckpt["epoch"],
+        "val_loss": ckpt["val_loss"],
+    }, indent=2))
+
 
 DEFAULT_SEED = 123  # controls the train/val split only (independent of the dataset-generation seeds)
 DEFAULT_VAL_FRACTION = 0.2
@@ -286,7 +318,6 @@ def main():
     parser.add_argument("--moves-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["emb_moves"])
     parser.add_argument("--items-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["emb_items"])
     parser.add_argument("--abilities-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["emb_abilities"])
-    parser.add_argument("--meta-plan-weight", type=float, default=DEFAULT_PIECE_MULTIPLIERS["meta_plan"])
     parser.add_argument("--dense-bce-ratio", type=float, default=0.1,
                          help="Multiplier on the binary-features BCE term within the dense piece, "
                               "combined as cont_mse + dense_bce_ratio * bin_bce (see SegmentedPieceLoss). "
@@ -300,9 +331,9 @@ def main():
                               "whether a dense-MSE plateau is a capacity limit, not a loss-weighting one).")
     parser.add_argument("--dense-only", action="store_true",
                          help="Diagnostic mode: train on ONLY the first NUM_DENSE_FEATURES (758) "
-                              "columns of the dataset, with a 758-dim (not 3074-dim) autoencoder and "
+                              "columns of the dataset, with a 758-dim (not 3062-dim) autoencoder and "
                               "plain nn.MSELoss() — isolates whether the dense block's MSE plateau is "
-                              "caused by competing for gradient with the embeddings/meta_plan, or is "
+                              "caused by competing for gradient with the embeddings, or is "
                               "inherent to the dense data itself. Ignores all --*-weight flags.")
     parser.add_argument("--resume-from-checkpoint", type=Path, default=None,
                          help="Path to a .pt checkpoint saved by THIS script to resume from — loads "
@@ -336,7 +367,7 @@ def main():
     dataset_n_cols = NUM_DENSE_FEATURES if args.dense_only else None
     if args.dense_only:
         print(f"--dense-only: training on just the first {NUM_DENSE_FEATURES} columns "
-              f"(no embeddings, no meta_plan), plain nn.MSELoss().")
+              f"(no embeddings), plain nn.MSELoss().")
 
     train_ds = FusedFeaturesMemmapDataset(args.data_path, train_idx, n_cols=dataset_n_cols)
     val_ds = FusedFeaturesMemmapDataset(args.data_path, val_idx, n_cols=dataset_n_cols)
@@ -401,7 +432,6 @@ def main():
             "emb_moves": args.moves_weight,
             "emb_items": args.items_weight,
             "emb_abilities": args.abilities_weight,
-            "meta_plan": args.meta_plan_weight,
         }
         loss_weights = compute_piece_weights(multipliers)
         criterion = SegmentedPieceLoss(loss_weights, model.binary_mask, bce_ratio=args.dense_bce_ratio).to(device)
@@ -413,6 +443,11 @@ def main():
 
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = args.checkpoint_dir / DEFAULT_CHECKPOINT_NAME
+
+    metrics_csv_path = args.checkpoint_dir / METRICS_CSV_FILENAME
+    if not metrics_csv_path.exists():
+        with open(metrics_csv_path, "w", newline="") as f:
+            csv.writer(f).writerow(METRICS_CSV_COLUMNS)
 
     patience_counter = 0
     end_epoch = resume_start_epoch + args.epochs - 1
@@ -429,6 +464,13 @@ def main():
         improved = val_loss < best_val_loss
         print(f"epoch {epoch:3d}/{end_epoch}  train_loss={train_loss:.6f}  "
               f"val_loss={val_loss:.6f}  {'(best)' if improved else ''}  {elapsed:.1f}s")
+
+        # Appended immediately (not batched at the end) so a crash mid-training still
+        # leaves every completed epoch's row on disk for export_training_metrics.py.
+        with open(metrics_csv_path, "a", newline="") as f:
+            csv.writer(f).writerow([
+                epoch, end_epoch, f"{train_loss:.6f}", f"{val_loss:.6f}", improved, f"{elapsed:.3f}",
+            ])
 
         if improved:
             best_val_loss = val_loss
@@ -456,6 +498,14 @@ def main():
                 break
 
     print(f"Best val_loss: {best_val_loss:.6f}  |  checkpoint saved to {checkpoint_path}")
+
+    # Written unconditionally on normal completion (full epoch budget or early stopping
+    # above), whether this script is run standalone or as a stage inside
+    # pipeline_bootstrap.py's ensure_autoencoder_ready() -- see write_completion_marker()'s
+    # docstring for why a second write from there afterward is safe.
+    marker_path = args.checkpoint_dir / TRAINING_COMPLETE_MARKER_NAME
+    write_completion_marker(checkpoint_path, marker_path)
+    print(f"Training-complete marker written to {marker_path}")
 
 
 if __name__ == "__main__":

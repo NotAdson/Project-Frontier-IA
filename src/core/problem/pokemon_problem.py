@@ -28,6 +28,7 @@ class PokemonProblem(Problem):
     def __init__(self, client: ShowdownClient, formatid='gen3ou', p1_team=None, p2_team=None):
         self.client = client
         resp = self.client.init_battle(formatid=formatid, p1_team=p1_team, p2_team=p2_team)
+        resp = self.client.init_battle(formatid=formatid, p1_team=p1_team, p2_team=p2_team)
         initial_state = PokemonState(
             resp['state'], 
             resp.get('request'), 

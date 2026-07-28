@@ -187,8 +187,13 @@ rl.on('line', (line) => {
             };
             console.log(JSON.stringify(response));
         } else if (request.type === 'clear_cache') {
+            const retainedState = stateCache.get(request.state_id);
             stateCache.clear();
             stateIdQueue.length = 0;
+            if (retainedState !== undefined) {
+                stateCache.set(request.state_id, retainedState);
+                stateIdQueue.push(request.state_id);
+            }
             console.log(JSON.stringify({ type: "success" }));
         }
     } catch (e) {

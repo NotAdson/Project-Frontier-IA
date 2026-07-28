@@ -154,7 +154,7 @@ class MCTSApproximationAgent(BlindMCTSAgent):
             chosen_action = max(actions_list, key=lambda a: visits_dict[a])
         
         # Clear engine cache after MCTS search finishes to free memory
-        self.problem.client.clear_cache()
+        self.problem.client.clear_cache(state.state_id)
         
         return (chosen_action, action_probs) if return_probs else chosen_action
 
