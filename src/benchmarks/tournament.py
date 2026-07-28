@@ -6,7 +6,7 @@ from core.benchmark import BaseBenchmark
 
 class TournamentBenchmark(BaseBenchmark):
     """ Benchmark that structures agents into a single-elimination bracket tournament. """
-    def __init__(self, client, agent_factories, games_per_matchup=3, formatid="gen3randombattle", shuffle=True):
+    def __init__(self, client, agent_factories, games_per_matchup=3, formatid="gen3ou", shuffle=True):
         super().__init__(client, formatid)
         self.agent_factories = agent_factories # Dict: name -> factory
         self.games_per_matchup = games_per_matchup

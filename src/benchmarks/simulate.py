@@ -74,7 +74,7 @@ if __name__ == "__main__":
     
     try:
         print("Initializing Battle Simulator...")
-        problem = PokemonProblem(client, formatid="gen3randombattle")
+        problem = PokemonProblem(client, formatid="gen3ou")
         
         print("Running Monte Carlo Tree Search (MCTS) Simulation...")
         state = problem.initial

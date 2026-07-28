@@ -8,7 +8,7 @@ class BaseClient(ABC):
     """
     
     @abstractmethod
-    def init_battle(self, formatid: str = 'gen3randombattle', p1_team: Optional[list] = None, p2_team: Optional[list] = None) -> Dict[str, Any]:
+    def init_battle(self, formatid: str = 'gen3ou', p1_team: Optional[list] = None, p2_team: Optional[list] = None) -> Dict[str, Any]:
         """
         Initializes a new battle.
         """

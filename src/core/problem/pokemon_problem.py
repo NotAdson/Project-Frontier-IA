@@ -25,8 +25,9 @@ class PokemonState:
         return hash(json.dumps(self.state_dict, sort_keys=True))
 
 class PokemonProblem(Problem):
-    def __init__(self, client: ShowdownClient, formatid='gen3randombattle', p1_team=None, p2_team=None):
+    def __init__(self, client: ShowdownClient, formatid='gen3ou', p1_team=None, p2_team=None):
         self.client = client
+        resp = self.client.init_battle(formatid=formatid, p1_team=p1_team, p2_team=p2_team)
         resp = self.client.init_battle(formatid=formatid, p1_team=p1_team, p2_team=p2_team)
         initial_state = PokemonState(
             resp['state'], 
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     client = ShowdownClient(engine_path)
     try:
         print("Initializing Pokemon Problem...")
-        problem = PokemonProblem(client, formatid="gen3randombattle")
+        problem = PokemonProblem(client, formatid="gen3ou")
         state = problem.initial
         
         print("Initial Actions available:", problem.actions(state))
