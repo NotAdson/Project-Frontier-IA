@@ -90,6 +90,12 @@ class BaseBenchmark(ABC):
         """ Returns a list of the full battle logs from all completed matches. """
         return [r['log'] for r in self.results]
 
+    def plot_report(self, output_dir=None, prefix="benchmark"):
+        """Generate benchmark PNGs (by default in benchmarks/results)."""
+        from benchmarks.plotting import plot_benchmark_report
+
+        return plot_benchmark_report(self.results, output_dir, prefix)
+
     @abstractmethod
     def run(self):
         """ Abstract method for triggering the full benchmark suite. """

@@ -2,6 +2,7 @@
 keras>=3.0.0
 numpy>=1.23.0
 pyyaml>=6.0
+matplotlib>=3.7.0
 
 # ── Backend (install exactly ONE) ──────────────────────────────────────────
 # TensorFlow  : pip install tensorflow
