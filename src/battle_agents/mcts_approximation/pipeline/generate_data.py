@@ -67,14 +67,15 @@ def run_simulation(args):
                 action_p2 = agent_p2.get_action(state, player="p2")
                 probs_p1 = {action_p1: 1.0}
                 probs_p2 = {action_p2: 1.0}
-            elif agent_type == "blind_mcts" or use_cheating_mcts:
+            elif agent_type == "blind_mcts":
                 action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True)
                 action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True)
             else:
-                # Exponential decay for temperature.
-                temp = max(0.01, (0.85 ** turn_count))
-                action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True, temperature=temp)
-                action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True, temperature=temp)
+                # Turn-decaying temperature: same tau used for both action
+                # selection and the saved policy target (training label).
+                tau = max(0.1, 0.92 ** turn_count)
+                action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True, temperature=tau)
+                action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True, temperature=tau)
             
             turn_count += 1
             
@@ -154,8 +155,10 @@ def generate_dataset(num_games=1000, processes=None, output_dir="data/games", mc
                 game_data.append({"features": s, "value": 0.0 if p1_won else 1.0, "policy": p})
             game_id = str(uuid.uuid4())
             file_path = output_path / f"game_{game_id}.json"
-            with open(file_path, 'w') as f:
+            tmp_path = output_path / f".{file_path.name}.tmp"
+            with open(tmp_path, 'w') as f:
                 json.dump(game_data, f)
+            tmp_path.replace(file_path)
             saved_count += 1
     print(f"Successfully generated and saved {saved_count} new games to {output_dir}")
 

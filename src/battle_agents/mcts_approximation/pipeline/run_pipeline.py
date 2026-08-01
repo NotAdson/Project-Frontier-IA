@@ -168,12 +168,14 @@ def run_pipeline(
     print(f"Parameters: num_games={num_games}, mcts_iterations={mcts_iterations}, epochs={epochs}")
     print(f"Wipe: {wipe} | games_per_matchup={games_per_matchup} | max_rollout_depth={max_rollout_depth}")
     
+    project_root = Path(__file__).resolve().parents[4]
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"))
     keras_path = os.path.join(data_dir, "mcts_model.keras")
     onnx_path = os.path.join(data_dir, "mcts_model.onnx")
     champion_json_path = os.path.join(data_dir, "champion.json")
     encoder_checkpoint_path = os.path.join(
-        data_dir,
+        project_root,
+        "data",
         "autoencoder_bootstrap",
         "checkpoints_v5_fixed256",
         "fused_autoencoder_best.pt",
@@ -204,7 +206,7 @@ def run_pipeline(
         if os.path.exists(champion_json_path):
             os.remove(champion_json_path)
             
-    engine_path = str(Path(__file__).resolve().parents[4] / "engine")
+    engine_path = str(project_root / "engine")
     
     # Load champion tracking metadata
     if os.path.exists(champion_json_path):
@@ -310,7 +312,7 @@ def run_pipeline(
             train(
                 data_dir=data_dir,
                 model_save_path=keras_path,
-                max_games_buffer=10000,
+                max_games_buffer=2000,
                 epochs=epochs,
                 encoder_checkpoint_path=encoder_checkpoint_path,
             )

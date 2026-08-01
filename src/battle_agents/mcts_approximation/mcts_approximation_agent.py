@@ -137,10 +137,16 @@ class MCTSApproximationAgent(BlindMCTSAgent):
 
         total_visits = sum(visits_dict[a] for a in actions_list)
         
-        # 1. Calculate raw visit probabilities (Training labels)
+        # 1. Compute action probabilities for training labels,
+        #    applying the same temperature used for action selection
+        #    so the agent teaches exactly what it plays.
         if total_visits == 0:
             prob = 1.0 / len(actions_list)
             action_probs = {a: prob for a in actions_list}
+        elif temperature > 0.0:
+            weights = [math.pow(visits_dict[a], 1.0 / temperature) for a in actions_list]
+            total_weight = sum(weights)
+            action_probs = {a: w / total_weight for a, w in zip(actions_list, weights)}
         else:
             action_probs = {a: visits_dict[a] / total_visits for a in actions_list}
 
