@@ -1,0 +1,9 @@
+Total de epocas rodadas: 56
+Melhor epoca: 51 (val_loss=0.055154)
+Motivo da parada: early stopping
+Tempo total de treino: 3.12 horas (11229.2 segundos)
+
+Configuracao:
+  latent_dim: 256
+  dense_weight: 70.0
+  dense_bce_ratio: 0.1
