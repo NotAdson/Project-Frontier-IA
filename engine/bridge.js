@@ -121,9 +121,11 @@ rl.on('line', (line) => {
                 const cached = stateCache.get(request.state_id);
                 // Parse the stringified cached state to ensure a clean copy
                 battle = Battle.fromJSON(JSON.parse(cached.serializedStateStr));
-            } else {
+            } else if (request.state) {
                 // Fallback to slower pipe deserialization
                 battle = Battle.fromJSON(request.state);
+            } else {
+                throw new Error(`State ${request.state_id} is not cached and no serialized state was provided`);
             }
             battle.send = () => {};
             
@@ -152,8 +154,10 @@ rl.on('line', (line) => {
             let battle;
             if (request.state_id !== undefined && stateCache.has(request.state_id)) {
                 battle = Battle.fromJSON(JSON.parse(stateCache.get(request.state_id).serializedStateStr));
-            } else {
+            } else if (request.state) {
                 battle = Battle.fromJSON(request.state);
+            } else {
+                throw new Error(`State ${request.state_id} is not cached and no serialized state was provided`);
             }
             battle.send = () => {};
             const player = request.player;

@@ -55,12 +55,13 @@ class ShowdownClient(BaseClient):
     def get_result(self, state, p1_action, p2_action=None, state_id=None):
         req = {
             "type": "result",
-            "p1_action": p1_action
+            "p1_action": p1_action,
+            # The engine may evict old states while MCTS expands its tree.
+            # Include the snapshot so it can deserialize if state_id is absent.
+            "state": state,
         }
         if state_id is not None:
             req["state_id"] = state_id
-        else:
-            req["state"] = state
             
         if p2_action: req["p2_action"] = p2_action
         
@@ -74,12 +75,11 @@ class ShowdownClient(BaseClient):
         req = {
             "type": "rollout",
             "player": player,
-            "max_depth": max_depth
+            "max_depth": max_depth,
+            "state": state,
         }
         if state_id is not None:
             req["state_id"] = state_id
-        else:
-            req["state"] = state
         
         self._send_request(req)
         resp = self._read_response()
@@ -104,4 +104,3 @@ class ShowdownClient(BaseClient):
             self.process.stdin.close()
             self.process.terminate()
             self.process.wait()
-
