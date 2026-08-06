@@ -48,7 +48,7 @@ class GameController:
         self.is_thinking = False
         
         try:
-            self.agent = MCTSApproximationAgent(self.problem, iterations=400, model_path=model_path)
+            self.agent = MCTSApproximationAgent(self.problem, iterations=800, model_path=model_path)
         except Exception as e:
             print(f"Error loading MCTSApproximationAgent: {e}. Falling back to MCTSAgent.")
             self.agent = MCTSAgent(self.problem, iterations=400)
