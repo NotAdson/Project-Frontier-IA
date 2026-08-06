@@ -2,6 +2,7 @@
 keras>=3.0.0
 numpy>=1.23.0
 pyyaml>=6.0
+matplotlib>=3.7.0
 
 # ── Backend (install exactly ONE) ──────────────────────────────────────────
 # TensorFlow  : pip install tensorflow
@@ -19,6 +20,10 @@ pyyaml>=6.0
 onnx>=1.15.0
 onnxruntime>=1.16.0
 onnxscript>=0.7.0
+tf2onnx>=1.15.0
+
+# Hugging Face Dataset Download
+huggingface-hub>=0.16.0
 
 # CLI & Web
 tqdm>=4.64.0

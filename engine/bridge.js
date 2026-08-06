@@ -76,11 +76,23 @@ rl.on('line', (line) => {
     try {
         const request = JSON.parse(line);
         if (request.type === 'init') {
-            const format = request.formatid || 'gen3randombattle';
-            // Use random teams if none provided
-            const p1_team = request.p1_team || Teams.pack(Teams.generate(format));
-            const p2_team = request.p2_team || Teams.pack(Teams.generate(format));
-            
+            const format = request.formatid || 'gen3ou';
+
+            // Parse team strings into team objects so setPlayer/getTeam skips
+            // Teams.unpack (which rejects the multi-line format used in
+            // data/teams/gen3ou.txt). Teams.import accepts both the multi-line
+            // Showdown text format and the packed '|' format.
+            let p1_team, p2_team;
+            if (request.p1_team) {
+                p1_team = Teams.import(request.p1_team);
+            }
+            if (!p1_team || p1_team.length === 0) p1_team = Teams.generate(format);
+
+            if (request.p2_team) {
+                p2_team = Teams.import(request.p2_team);
+            }
+            if (!p2_team || p2_team.length === 0) p2_team = Teams.generate(format);
+
             const battle = new Battle({
                 formatid: format,
                 send: () => {}, // Disable default logging to avoid polluting stdout
@@ -109,9 +121,11 @@ rl.on('line', (line) => {
                 const cached = stateCache.get(request.state_id);
                 // Parse the stringified cached state to ensure a clean copy
                 battle = Battle.fromJSON(JSON.parse(cached.serializedStateStr));
-            } else {
+            } else if (request.state) {
                 // Fallback to slower pipe deserialization
                 battle = Battle.fromJSON(request.state);
+            } else {
+                throw new Error(`State ${request.state_id} is not cached and no serialized state was provided`);
             }
             battle.send = () => {};
             
@@ -140,8 +154,10 @@ rl.on('line', (line) => {
             let battle;
             if (request.state_id !== undefined && stateCache.has(request.state_id)) {
                 battle = Battle.fromJSON(JSON.parse(stateCache.get(request.state_id).serializedStateStr));
-            } else {
+            } else if (request.state) {
                 battle = Battle.fromJSON(request.state);
+            } else {
+                throw new Error(`State ${request.state_id} is not cached and no serialized state was provided`);
             }
             battle.send = () => {};
             const player = request.player;
@@ -175,8 +191,13 @@ rl.on('line', (line) => {
             };
             console.log(JSON.stringify(response));
         } else if (request.type === 'clear_cache') {
+            const retainedState = stateCache.get(request.state_id);
             stateCache.clear();
             stateIdQueue.length = 0;
+            if (retainedState !== undefined) {
+                stateCache.set(request.state_id, retainedState);
+                stateIdQueue.push(request.state_id);
+            }
             console.log(JSON.stringify({ type: "success" }));
         }
     } catch (e) {

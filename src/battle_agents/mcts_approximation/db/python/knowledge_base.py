@@ -14,6 +14,10 @@ _species_ids_by_idx = {}
 _real_stats_matrix = None  # shape (num_species, 5)
 _real_types_matrix = None  # shape (num_species, 18)
 
+DEFAULT_WEIGHT_SPECIES = 1.0
+DEFAULT_WEIGHT_STATS = 5.0
+DEFAULT_WEIGHT_TYPES = 5.0
+
 def _init_cache():
     global _db_loaded, _species_ids_by_idx, _real_stats_matrix, _real_types_matrix
     if _db_loaded:
@@ -52,9 +56,9 @@ def find_closest_species(
     pred_species_probs,
     pred_stats,
     pred_types,
-    weight_species=1.0,
-    weight_stats=1.0,
-    weight_types=1.0,
+    weight_species=DEFAULT_WEIGHT_SPECIES,
+    weight_stats=DEFAULT_WEIGHT_STATS,
+    weight_types=DEFAULT_WEIGHT_TYPES,
     top_k=5
 ):
     """
@@ -77,6 +81,10 @@ def find_closest_species(
     pred_species_probs = np.array(pred_species_probs, dtype=np.float32)
     pred_stats = np.array(pred_stats, dtype=np.float32)
     pred_types = np.array(pred_types, dtype=np.float32)
+
+    weight_species = _sanitize_weight(weight_species,DEFAULT_WEIGHT_SPECIES)
+    weight_stats = _sanitize_weight(weight_stats, DEFAULT_WEIGHT_STATS)
+    weight_types = _sanitize_weight(weight_types, DEFAULT_WEIGHT_TYPES)
     
     # 1. Species distance component: 1.0 - probability
     d_species = 1.0 - pred_species_probs
@@ -116,3 +124,44 @@ def find_closest_species(
         })
         
     return results
+
+def _sanitize_weight(value, default):
+    try:
+        array = np.asarray(
+            value,
+            dtype=np.float32,
+        ).reshape(-1)
+
+        if array.size == 0:
+            return float(default)
+
+        scalar = float(array[0])
+
+        if not np.isfinite(scalar):
+            return float(default)
+
+        if scalar <= 0.0:
+            return float(default)
+
+        return scalar
+
+    except (TypeError, ValueError):
+        return float(default)
+
+def get_species_reference_data():
+    _init_cache()
+
+    num_species = len(_real_stats_matrix)
+
+    valid_species_mask = np.ones(
+        num_species,
+        dtype=np.float32,
+    )
+
+    valid_species_mask[0] = 0.0
+
+    return (
+        _real_stats_matrix.copy(),
+        _real_types_matrix.copy(),
+        valid_species_mask,
+    )

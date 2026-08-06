@@ -11,8 +11,9 @@ if os.environ.get('KERAS_BACKEND') == 'torch':
     else:
         print('[PyTorch Backend] CUDA GPU NOT detected. Defaulting to \'cpu\'.')
 
+from .data import load_data_from_files
+from .model import build_models, export_to_onnx, get_custom_objects
 from .train import train
-
 
 if __name__ == '__main__':
     train()

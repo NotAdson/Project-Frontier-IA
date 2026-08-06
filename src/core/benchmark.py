@@ -10,9 +10,11 @@ class BaseBenchmark(ABC):
     """
     Abstract Base Class for running AI benchmarks and tracking metrics.
     """
-    def __init__(self, client: ShowdownClient, formatid="gen3randombattle"):
+    def __init__(self, client: ShowdownClient, formatid="gen3ou", p1_team=None, p2_team=None):
         self.client = client
         self.formatid = formatid
+        self.p1_team = p1_team
+        self.p2_team = p2_team
         self.results = []
         
     def _count_survivors(self, state, player):
@@ -29,7 +31,7 @@ class BaseBenchmark(ABC):
 
     def run_match(self, p1_name, p1_factory, p2_name, p2_factory):
         """ Executes a single match between two agents and tracks metrics. """
-        problem = PokemonProblem(self.client, formatid=self.formatid)
+        problem = PokemonProblem(self.client, formatid=self.formatid, p1_team=self.p1_team, p2_team=self.p2_team)
         p1_agent = p1_factory(problem)
         p2_agent = p2_factory(problem)
         
@@ -89,6 +91,12 @@ class BaseBenchmark(ABC):
     def get_logs(self):
         """ Returns a list of the full battle logs from all completed matches. """
         return [r['log'] for r in self.results]
+
+    def plot_report(self, output_dir=None, prefix="benchmark"):
+        """Generate benchmark PNGs (by default in benchmarks/results)."""
+        from benchmarks.plotting import plot_benchmark_report
+
+        return plot_benchmark_report(self.results, output_dir, prefix)
 
     @abstractmethod
     def run(self):

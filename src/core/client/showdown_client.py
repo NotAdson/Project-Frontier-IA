@@ -38,7 +38,7 @@ class ShowdownClient(BaseClient):
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Failed to parse JSON from node bridge: {line}") from e
 
-    def init_battle(self, formatid='gen3randombattle', p1_team=None, p2_team=None):
+    def init_battle(self, formatid='gen3ou', p1_team=None, p2_team=None):
         req = {
             "type": "init",
             "formatid": formatid
@@ -56,7 +56,9 @@ class ShowdownClient(BaseClient):
         req = {
             "type": "result",
             "p1_action": p1_action,
-            "state": state
+            # The engine may evict old states while MCTS expands its tree.
+            # Include the snapshot so it can deserialize if state_id is absent.
+            "state": state,
         }
         if state_id is not None:
             req["state_id"] = state_id
@@ -74,7 +76,7 @@ class ShowdownClient(BaseClient):
             "type": "rollout",
             "player": player,
             "max_depth": max_depth,
-            "state": state
+            "state": state,
         }
         if state_id is not None:
             req["state_id"] = state_id
@@ -85,11 +87,13 @@ class ShowdownClient(BaseClient):
             raise Exception(f"Error executing rollout: {resp.get('error')}\nStack: {resp.get('stack')}")
         return resp.get('reward')
 
-    def clear_cache(self):
+    def clear_cache(self, state_id=None):
         if self.process:
             req = {
                 "type": "clear_cache"
             }
+            if state_id is not None:
+                req["state_id"] = state_id
             self._send_request(req)
             resp = self._read_response()
             if resp.get('type') == 'error':
@@ -100,4 +104,3 @@ class ShowdownClient(BaseClient):
             self.process.stdin.close()
             self.process.terminate()
             self.process.wait()
-
