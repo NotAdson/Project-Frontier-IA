@@ -83,11 +83,17 @@ class _TeeStdout:
         self._file = None
 
     def write(self, data):
-        self._original.write(data)
+        try:
+            self._original.write(data)
+        except (BrokenPipeError, ValueError):
+            pass
         self._file.write(data)
 
     def flush(self):
-        self._original.flush()
+        try:
+            self._original.flush()
+        except (BrokenPipeError, ValueError):
+            pass
         self._file.flush()
 
     def isatty(self):

@@ -105,13 +105,31 @@ def reservoir_sample_raw_features(files, n_samples, seed):
     rng = np.random.default_rng(seed)
     reservoir = np.empty((n_samples, TOTAL_FEATURES), dtype=np.float32)
     seen = 0
+    skipped_files = 0
+    skipped_steps = 0
 
     t0 = time.time()
     for fi, fpath in enumerate(files):
-        with open(fpath, "r") as fh:
-            game_data = json.load(fh)
+        try:
+            with open(fpath, "r") as fh:
+                game_data = json.load(fh)
+            if not isinstance(game_data, list):
+                raise ValueError("expected a list of game steps")
+        except (json.JSONDecodeError, OSError, ValueError) as exc:
+            skipped_files += 1
+            print(f"[Warning] Skipping invalid game file {fpath}: {exc}")
+            continue
+
         for step in game_data:
-            feat = step["features"]
+            try:
+                feat = step["features"]
+                if len(feat) != TOTAL_FEATURES:
+                    raise ValueError(f"expected {TOTAL_FEATURES} features, got {len(feat)}")
+            except (KeyError, TypeError, ValueError) as exc:
+                skipped_steps += 1
+                if skipped_steps <= 10:
+                    print(f"[Warning] Skipping invalid step in {fpath}: {exc}")
+                continue
             if seen < n_samples:
                 reservoir[seen] = feat
             else:
@@ -127,6 +145,8 @@ def reservoir_sample_raw_features(files, n_samples, seed):
     elapsed = time.time() - t0
     print(f"Reservoir sampling finished in {elapsed:.1f}s. "
           f"Total steps in stream: {seen:,}  |  Reservoir size: {n_samples:,}")
+    if skipped_files or skipped_steps:
+        print(f"Skipped invalid data: {skipped_files} file(s), {skipped_steps} step(s).")
     if seen < n_samples:
         raise SystemExit(
             f"Only {seen:,} steps available across all game files — "
