@@ -9,15 +9,11 @@ from pathlib import Path
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
-from battle_agents.blind_mcts.blind_mcts_agent import BlindMCTSAgent
-from battle_agents.mcts_approximation.mcts_approximation_agent import \
-    MCTSApproximationAgent
 from battle_agents.mcts_approximation.pipeline.autoencoder.pipeline_bootstrap import \
     ensure_autoencoder_ready
 from battle_agents.mcts_approximation.pipeline.generate_data import \
     generate_dataset
 from battle_agents.mcts_approximation.pipeline.train_nn import train
-from battle_agents.random.random_agent import RandomAgent
 from benchmarks.round_robin import RoundRobinBenchmark
 from core.client.showdown_client import ShowdownClient
 
@@ -124,7 +120,7 @@ def check_generation_won(gen_dir, gen_idx, champion_idx):
         # 1. Check if current model's win rate is >= the rates of the static baselines
         for agent, rate in rates.items():
             if agent != current_model_name:
-                if ("Blind MCTS" in agent or "Random Agent" in agent) and current_rate < rate:
+                if ("Blind MCTS" in agent or "Random Agent" in agent or "MCTS Puro" in agent) and current_rate < rate:
                     return False
                     
         # 2. Check if current model's win rate is >= the rate of the champion model
@@ -344,38 +340,55 @@ def run_pipeline(
             print(f"\n--- [Gen {gen}] Phase 4: Running Generational Round-Robin Tournament ---")
             client = ShowdownClient(engine_path)
             try:
-                # Build agent factories dynamically
-                agent_factories = {}
+                # Build picklable agent specs (required for the parallel path).
+                # Every generation plays against Random + Pure MCTS baselines so
+                # the champion cannot drift into a greedy local optimum without
+                # being tested against "sane" opponents.
+                agent_specs = {}
                 
+                model_spec = {
+                    "type": "mcts_approx",
+                    "iterations": mcts_iterations,
+                    "model_path": onnx_path,
+                    # Evaluation should be pure: disable exploration noise.
+                    "dirichlet_epsilon": 0.0,
+                }
                 if gen == 1:
                     # Gen 1 plays against static baselines
-                    agent_factories[f"Model Gen {gen}"] = lambda prob: MCTSApproximationAgent(
-                        prob, 
-                        iterations=mcts_iterations, 
-                        model_path=onnx_path
-                    )
-                    agent_factories["Blind MCTS"] = lambda prob: BlindMCTSAgent(
-                        prob, 
-                        iterations=mcts_iterations,
-                        max_rollout_depth=max_rollout_depth
-                    )
-                    agent_factories["Random Agent"] = lambda prob: RandomAgent(prob)
+                    agent_specs[f"Model Gen {gen}"] = model_spec
                 else:
-                    # Gen > 1 plays Challenger vs Champion only
-                    agent_factories[f"Model Gen {gen}"] = lambda prob: MCTSApproximationAgent(
-                        prob, 
-                        iterations=mcts_iterations, 
-                        model_path=onnx_path
-                    )
+                    # Gen > 1 plays Challenger vs Champion
+                    agent_specs[f"Model Gen {gen}"] = model_spec
                     champion_model_path = os.path.join(data_dir, f"gen{champion_gen}", "mcts_model.onnx")
-                    agent_factories[f"Model Gen {champion_gen}"] = lambda prob, p=champion_model_path: MCTSApproximationAgent(
-                        prob, 
-                        iterations=mcts_iterations, 
-                        model_path=p
-                    )
+                    agent_specs[f"Model Gen {champion_gen}"] = {
+                        "type": "mcts_approx",
+                        "iterations": mcts_iterations,
+                        "model_path": champion_model_path,
+                        "dirichlet_epsilon": 0.0,
+                    }
+                agent_specs["Random Agent"] = {"type": "random"}
+                agent_specs["MCTS Puro"] = {
+                    "type": "mcts_pure",
+                    "iterations": mcts_iterations,
+                    "max_rollout_depth": max_rollout_depth,
+                }
                 
-                # Match them up in a Round Robin tournament
-                benchmark = RoundRobinBenchmark(client, agent_factories, games_per_matchup=games_per_matchup)
+                # Champion matchups get more games; baseline matchups fewer.
+                champion_key = f"Model Gen {champion_gen}"
+                matchup_games = {
+                    frozenset((f"Model Gen {gen}", champion_key)): 20,
+                    "default": 5,
+                }
+                if gen == 1:
+                    matchup_games = 20
+                
+                # Match them up in a Round Robin tournament (parallel by game)
+                benchmark = RoundRobinBenchmark(
+                    client,
+                    games_per_matchup=matchup_games,
+                    processes=processes,
+                    agent_specs=agent_specs,
+                )
                 benchmark.run()
                 benchmark.print_report()
                 
