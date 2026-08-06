@@ -66,9 +66,12 @@ class MCTSApproximationAgent(BlindMCTSAgent):
     MCTS Approximation Agent using Decoupled UCT (DUCT) to support simultaneous decision-making.
     Replaces random rollouts with a Neural Network evaluation of the state.
     """
-    def __init__(self, problem, iterations=50, model_path=None):
+    def __init__(self, problem, iterations=50, model_path=None,
+                 dirichlet_alpha=0.03, dirichlet_epsilon=0.25):
         super().__init__(problem, iterations=iterations, max_rollout_depth=0)
         self.evaluator = NeuralStateEvaluator(model_path)
+        self.dirichlet_alpha = dirichlet_alpha
+        self.dirichlet_epsilon = dirichlet_epsilon
 
     # ─── MCTS loop ──────────────────────────────────────────────────────────
 
@@ -86,6 +89,7 @@ class MCTSApproximationAgent(BlindMCTSAgent):
         
         # Initial expansion
         self._expand(root)
+        self._apply_root_dirichlet_noise(root, player)
 
         for _ in range(self.iterations):
             node = root
@@ -193,6 +197,27 @@ class MCTSApproximationAgent(BlindMCTSAgent):
             
         node.is_expanded = True
         return p1_val
+
+    def _apply_root_dirichlet_noise(self, node, player):
+        """Mix Dirichlet noise into the root priors to force exploration of
+        low-prior actions (e.g. switching) at the start of each search. Only
+        the player whose turn it is gets the noisy prior.
+        """
+        if self.dirichlet_epsilon <= 0.0:
+            return
+        if player == "p1":
+            actions = node.p1_actions
+            priors = node.p1_priors
+        else:
+            actions = node.p2_actions
+            priors = node.p2_priors
+        if not actions:
+            return
+        alpha = [self.dirichlet_alpha] * len(actions)
+        noise = np.random.dirichlet(alpha).astype(np.float64)
+        for i, a in enumerate(actions):
+            priors[a] = (1.0 - self.dirichlet_epsilon) * priors.get(a, 0.0) \
+                        + self.dirichlet_epsilon * noise[i]
 
     def _censor_opponent_state(self, state, player):
         """
