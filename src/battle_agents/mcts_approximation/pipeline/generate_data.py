@@ -73,7 +73,7 @@ def run_simulation(args):
             else:
                 # Turn-decaying temperature: same tau used for both action
                 # selection and the saved policy target (training label).
-                tau = max(0.1, 0.92 ** turn_count)
+                tau = max(0.4, 0.92 ** turn_count)
                 action_p1, probs_p1 = agent_p1.get_action(state, player="p1", return_probs=True, temperature=tau)
                 action_p2, probs_p2 = agent_p2.get_action(state, player="p2", return_probs=True, temperature=tau)
             
