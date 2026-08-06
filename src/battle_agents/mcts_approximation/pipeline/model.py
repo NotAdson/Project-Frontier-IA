@@ -150,12 +150,12 @@ def build_models(
     x = keras.layers.BatchNormalization(name="batch_normalization")(x)
     x = keras.layers.Dropout(0.3, name="dropout")(x)
 
-    x = keras.layers.Dense(256, name="dense_1")(x)
+    x = keras.layers.Dense(128, name="dense_1")(x)
     x = keras.layers.BatchNormalization(name="batch_normalization_1")(x)
     x = keras.layers.Activation("relu", name="activation_1")(x)
     x = keras.layers.Dropout(0.2, name="dropout_1")(x)
 
-    x = keras.layers.Dense(128, name="dense_2")(x)
+    x = keras.layers.Dense(64, name="dense_2")(x)
     x = keras.layers.BatchNormalization(name="batch_normalization_2")(x)
     x = keras.layers.Activation("relu", name="activation_2")(x)
     x = keras.layers.Dropout(0.1, name="dropout_2")(x)
@@ -481,7 +481,7 @@ TRAINING_LOSSES = {
 }
 
 LOSS_WEIGHTS = {
-    "value": 1.0,
+    "value": 2.0,
     "policy": 5.0,
     "aux_field": 0.2,
     "aux_own_hp": 0.5,
