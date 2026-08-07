@@ -5,7 +5,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) != 2) {
   stop(
-    "Uso: Rscript plot_autoencoder_loss.R <entrada.csv> <diretorio_saida>",
+    "Uso: Rscript autoencoderplot.R <entrada.csv> <diretorio_saida>",
     call. = FALSE
   )
 }
